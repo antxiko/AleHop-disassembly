@@ -60,7 +60,7 @@ def enlinea(t):
 
 # La web se sirve desde docs/, asi que lo que este fuera de esa carpeta no
 # existe para el navegador: esos enlaces se mandan al repositorio.
-REPO = os.environ.get("ALEHOP_REPO", "https://github.com/antxiko/alehop-disassembly")
+REPO = os.environ.get("ALEHOP_REPO", "https://github.com/antxiko/AleHop-disassembly")
 
 
 def ruta(href):

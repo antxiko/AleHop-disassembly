@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from estilo_web import ESTILO          # noqa: E402
 from render_maps import PALETA, png    # noqa: E402
 
-REPO = "https://github.com/antxiko/alehop-disassembly"
+REPO = "https://github.com/antxiko/AleHop-disassembly"
 
 # Juego de graficos "B", el de la pantalla de presentacion, de donde se recorta
 # el logo de la cabecera.
