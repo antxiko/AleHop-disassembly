@@ -7,7 +7,7 @@ extracted/
 dump/
 dump_rebuild/
 build/
-work/
+work/*
 !work/msx.sym
 
 # -----------------------------------------------------------------------------

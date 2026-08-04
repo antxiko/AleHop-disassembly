@@ -7,13 +7,14 @@
 # verde, cualquier cambio en el juego se puede atribuir con seguridad a lo que
 # hemos tocado y no a un error de interpretacion del binario.
 #
-# Particularidad de Ale Hop! frente a Temptations: el bloque del juego se carga
-# entero en 0x0000 y luego el cargador recoloca tres trozos a 0xB000, 0xBD00 y
-# 0xD000. Por eso el juego no es un listado sino CINCO, cada uno con el `org` de
-# donde se ejecuta de verdad; concatenados en orden de carga dan el bloque
-# original. Ver tools/split_trace.py.
+# Particularidad de este juego: el bloque se carga entero en 0x0000 y luego el
+# cargador recoloca tres trozos a 0xB000, 0xBD00 y 0xD000. Por eso el juego no
+# es un listado sino CINCO, cada uno con el `org` de donde se ejecuta de verdad;
+# concatenados en orden de carga dan el bloque original. Ver tools/split_trace.py.
 
 TSX  := alehop.tsx
+# sha256 de la cinta con la que se hizo este desensamblado.
+TSX_SHA := 499d74c7a3612e8db402d041c909f3d1b5ae193f11194a85586a665edc73bb64
 SYMS := work/msx.sym
 MSXGL ?= /Users/fx-media/Documents/BARCOEMESEKS/MSXgl/engine/src
 
@@ -25,8 +26,33 @@ TROZOS := datos:0x0000 sonido:0xB000 nucleo:0xBD00 extra:0xD000 cola:0xA694
 all: verify
 
 # ---------------------------------------------------------------- extraccion
+# La cinta no se distribuye con el repositorio (ver AVISO-LEGAL.md), asi que lo
+# primero es decirlo claro en vez de soltar un error de make que no explica nada.
+cinta:
+	@if [ ! -f "$(TSX)" ]; then \
+	  echo ""; \
+	  echo "  Falta la imagen de cinta: $(TSX)"; \
+	  echo ""; \
+	  echo "  No se distribuye con este repositorio, solo el desensamblado"; \
+	  echo "  comentado (ver AVISO-LEGAL.md). Para reconstruirlo todo hace"; \
+	  echo "  falta tu propia copia del TSX de Ale Hop!, con ese nombre y en"; \
+	  echo "  la raiz del proyecto:"; \
+	  echo ""; \
+	  echo "      cp \"/donde/lo/tengas/Ale Hop! ... .tsx\"  $(TSX)"; \
+	  echo ""; \
+	  echo "  Debe dar este sha256:"; \
+	  echo "      $(TSX_SHA)"; \
+	  echo ""; \
+	  echo "  Sin la cinta si puedes: leer los listados de src/, y ejecutar"; \
+	  echo "  los tests que no dependen del binario, con 'make test'."; \
+	  echo ""; \
+	  exit 1; \
+	fi
+
+.PHONY: cinta
+
 extract: extracted/.stamp
-extracted/.stamp: tools/tsx_parse.py $(TSX)
+extracted/.stamp: tools/tsx_parse.py | cinta
 	python3 tools/tsx_parse.py "$(TSX)" extracted
 	@mkdir -p work dump
 	python3 -c "d=open('extracted/07_TOPO.bin','rb').read(); open('work/TOPO.raw','wb').write(d[6:])"
@@ -48,7 +74,7 @@ syms:
 # de 64K tal y como queda justo antes de arrancar, porque es ahi donde las
 # direcciones de los CALL y los JP significan algo. La produce openMSX cargando
 # la cinta original, o sea que el propio cargador del juego hace de decodificador.
-dump/full_recolocado.bin: tools/omsx_load.tcl $(TSX)
+dump/full_recolocado.bin: tools/omsx_load.tcl | cinta
 	@mkdir -p dump
 	ALEHOP_TSX="$(PWD)/$(TSX)" ALEHOP_OUT="$(PWD)/dump" \
 	  openmsx -machine Philips_VG_8020-20 -script tools/omsx_load.tcl
