@@ -44,17 +44,15 @@ T = {
                 ("THE-CODE.html", "The code"), ("FINDINGS.html", "Findings"),
                 ("DEAD-BYTES.html", "Dead bytes")],
         otro=("es/", "En castellano"),
-        h_num="The numbers", h_find="What turned up", h_scr="The six levels",
-        h_met="How it was done",
-        cifras=[("42,645", "bytes in the game block"), ("4,588", "bytes of code"),
-                ("38,057", "bytes of data"), ("0", "bytes unexplained"),
-                ("6", "levels"), ("135", "bytes that never run"),
-                ("36", "tests"), ("4/4", "modules reassembling exactly")],
-        nota_num="Only 11 % being code doesn't mean there's disassembly left to do: "
-                 "an MSX game of this era fits in very few instructions, and what "
-                 "takes up room is the artwork. What measures progress is that "
-                 "nothing is left unexplained — every byte is either code the "
-                 "tracer reaches or a data range identified in the notes.",
+        h_num="The game in numbers", h_find="What turned up when we took it apart",
+        h_scr="The six levels", h_met="How it was done",
+        cifras=[("100%", "of the binary accounted for"), ("57", "routines identified"),
+                ("16", "maps"), ("4,588", "bytes of code"),
+                ("38,057", "bytes of data"), ("0", "bytes unidentified")],
+        nota_num="Only 11% being code doesn't mean anything is missing: this game is "
+                 "<b style='color:var(--tinta);font-weight:400'>89% data</b>. The "
+                 "graphics, six level strips of 256 columns each and their parallax "
+                 "backgrounds.",
         nota_scr="These aren't screen captures. They're drawn from the game's own "
                  "data: decompressing the graphics with the routine the game uses "
                  "and assembling the maps. Each level is a 256-column strip of "
@@ -77,17 +75,15 @@ T = {
                 ("HALLAZGOS.html", "Hallazgos"),
                 ("BYTES-MUERTOS.html", "Bytes muertos")],
         otro=("../", "In English"),
-        h_num="Las cifras", h_find="Lo que apareció", h_scr="Los seis niveles",
-        h_met="Cómo se hizo",
-        cifras=[("42.645", "bytes del bloque del juego"), ("4.588", "bytes de código"),
-                ("38.057", "bytes de datos"), ("0", "bytes sin explicar"),
-                ("6", "niveles"), ("135", "bytes que no se ejecutan"),
-                ("36", "tests"), ("4/4", "módulos que reensamblan exactos")],
-        nota_num="Que solo el 11 % sea código no significa que falte desensamblar: "
-                 "un juego de MSX de esta época cabe en muy pocas instrucciones y "
-                 "lo que ocupa son los dibujos. Lo que mide el avance es que no "
-                 "quede nada sin explicar: cada byte es o código que el trazador "
-                 "alcanza, o un rango de datos identificado en las notas.",
+        h_num="El juego en cifras", h_find="Lo que apareció al desmontarlo",
+        h_scr="Los seis niveles", h_met="Cómo se hizo",
+        cifras=[("100%", "del binario explicado"), ("57", "rutinas identificadas"),
+                ("16", "mapas"), ("4.588", "bytes de código"),
+                ("38.057", "bytes de datos"), ("0", "bytes sin identificar")],
+        nota_num="Que solo el 11% sea código no significa que falte nada: este juego es "
+                 "<b style='color:var(--tinta);font-weight:400'>89% datos</b>. Los "
+                 "gráficos, seis tiras de nivel de 256 columnas cada una y sus fondos "
+                 "de parallax.",
         nota_scr="No son capturas de pantalla. Están dibujadas a partir de los "
                  "datos del propio juego: descomprimiendo los gráficos con la "
                  "misma regla que usa él y montando los mapas. Cada nivel es una "
