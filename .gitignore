@@ -1,0 +1,31 @@
+# -----------------------------------------------------------------------------
+# Ficheros de trabajo que no aportan nada a quien se descargue esto
+# -----------------------------------------------------------------------------
+# Son volcados intermedios y resultados que `make` vuelve a generar solo.
+
+extracted/
+dump/
+dump_rebuild/
+build/
+work/
+!work/msx.sym
+
+# -----------------------------------------------------------------------------
+# La cinta original
+# -----------------------------------------------------------------------------
+# No se distribuye la imagen de cinta: cada cual pone la suya. Los .asm
+# comentados SI van incluidos (ver AVISO-LEGAL.md).
+
+*.tsx
+*.cas
+*.wav
+*.rom
+*.dsk
+
+# -----------------------------------------------------------------------------
+# Basura del sistema y del entorno
+# -----------------------------------------------------------------------------
+.DS_Store
+__pycache__/
+*.pyc
+.forja/

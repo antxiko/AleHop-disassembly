@@ -1,0 +1,111 @@
+# Trozo "datos": los 35393 bytes que la cinta deja en la pagina 0 (0x0000-0x8A40).
+#
+# Es el 83% del juego y no hay ni una instruccion viva: son mapas y graficos. Y
+# estan ESCONDIDOS casi todo el tiempo: el juego corre con la ROM del BIOS
+# mapeada en 0x0000-0x3FFF, asi que estos bytes solo se ven durante las pocas
+# instrucciones en que el cargador de nivel (0xD61C) conmuta la pagina 0 a RAM
+# con `call 0xF00F`, copia lo que necesita y la devuelve a ROM con `call 0xF000`.
+#
+# Como se verifico el reparto (2026-08-04):
+#   - El descompresor RLE se reimplemento desde la rutina de 0xD2BE y se
+#     comprobo que los 11 bloques comprimidos dan EXACTAMENTE 2048 bytes cada
+#     uno y encadenan sin un hueco desde 0x4800 hasta 0x884D. Con una regla de
+#     descompresion equivocada esa cadena no cierra.
+#   - La prueba definitiva es visual: descomprimiendo el juego de graficos B y
+#     pintando el mapa de 0x4000 sale la pantalla de presentacion LEGIBLE.
+#     Ver docs/presentacion.png.
+
+B 0x0000 ############################################################
+B 0x0000 MAPAS DE LOS 6 NIVELES
+B 0x0000 ############################################################
+B 0x0000 Un byte por casilla, sin comprimir, 256 columnas x 8 filas =
+B 0x0000 2048 bytes por nivel. Indexado fila*256 + columna, que es
+B 0x0000 justo lo que hace el volcado a VRAM: `inc h` para pasar de
+B 0x0000 una fila a la siguiente.
+B 0x0000 Son TIRAS LARGAS de scroll horizontal: de las 256 columnas solo
+B 0x0000 se ven 32 a la vez, y la columna de camara vive en 0xDB54.
+B 0x0000 De cada byte, los 6 bits bajos son el COMPORTAMIENTO de la
+B 0x0000 casilla (la fisica solo mira esos) y los bits 7-6 la variante
+B 0x0000 grafica. Por eso cada nivel usa un banco de 64 tiles distinto.
+B 0x0000 Los carga 0xD61C: HL = nivel*0x800 -> buffer 0xDD7A.
+
+D 0x0000 0x0800 mapa_nivel_1   Nivel 1, 256x8 casillas
+D 0x0800 0x1000 mapa_nivel_2   Nivel 2, 256x8 casillas
+D 0x1000 0x1800 mapa_nivel_3   Nivel 3, 256x8 casillas
+D 0x1800 0x2000 mapa_nivel_4   Nivel 4, 256x8 casillas
+D 0x2000 0x2800 mapa_nivel_5   Nivel 5, 256x8 casillas
+D 0x2800 0x3000 mapa_nivel_6   Nivel 6, 256x8 casillas
+
+B 0x3000 ############################################################
+B 0x3000 MAPAS DE FONDO (el parallax)
+B 0x3000 ############################################################
+B 0x3000 64 columnas x 8 filas = 512 bytes por nivel, en la banda
+B 0x3000 superior de la pantalla (filas 0-7, VRAM 0x1800).
+B 0x3000 El truco del parallax esta en una sola instruccion: el volcado
+B 0x3000 del fondo (0xD0A4) hace `and 0x3F` sobre la columna de camara,
+B 0x3000 mientras que el del primer plano usa los 8 bits enteros. Como
+B 0x3000 el fondo tiene 64 columnas y el mapa 256, el fondo se desplaza
+B 0x3000 cuatro veces mas despacio.
+B 0x3000 Los carga 0xD61C: HL = (0x18 + nivel) * 0x200.
+
+D 0x3000 0x3200 fondo_nivel_1   Fondo del nivel 1, 64x8
+D 0x3200 0x3400 fondo_nivel_2   Fondo del nivel 2, 64x8
+D 0x3400 0x3600 fondo_nivel_3   Fondo del nivel 3, 64x8
+D 0x3600 0x3800 fondo_nivel_4   Fondo del nivel 4, 64x8
+D 0x3800 0x3A00 fondo_nivel_5   Fondo del nivel 5, 64x8
+D 0x3A00 0x3C00 fondo_nivel_6   Fondo del nivel 6, 64x8
+
+B 0x3C00 ------------------------------------------------------------
+B 0x3C00 1024 bytes de relleno 0xFF. Por la formula 0x3000+nivel*0x200
+B 0x3C00 serian los fondos de los niveles 7 y 8, pero el cargador corta
+B 0x3C00 en el 6 (`cp 006h / jp z,0C000h` en 0xD61F). Espacio reservado
+B 0x3C00 para dos niveles que no llegaron a existir.
+B 0x3C00 ------------------------------------------------------------
+D 0x3C00 0x4000 relleno_ff   1024 bytes 0xFF sin usar
+
+B 0x4000 ############################################################
+B 0x4000 MAPAS DE PANTALLA COMPLETOS (tabla de nombres)
+B 0x4000 ############################################################
+B 0x4000 Estos van directos a la tabla de nombres de la VRAM sin pasar
+B 0x4000 por ningun buffer intermedio.
+D 0x4000 0x4300 mapa_presentacion   Presentacion, 32x24. La vuelca 0xC074 a VRAM 0x1800. Con el juego de graficos B se lee: TOPO SOFT PRESENTA / ALE HOP! / PROGRAMA: ALBERTO L. NAVARRO / GRAFICOS: LUIGILOPEZ / TOPO SOFT 1988
+D 0x4300 0x4500 mapa_intro          Escena de intro, 32x16. La vuelca 0xD787 a VRAM 0x1800 y ademas la copia al buffer de mapa para poder animarla
+D 0x4500 0x4600 mapa_marcador       Panel del marcador, 32x8 -> VRAM 0x1A00 (filas 16-23). Lo vuelca 0xD6CB
+D 0x4600 0x4800 mapa_sin_referencia Otro mapa de 32x16 que renderiza como una escena coherente pero al que NO se ha encontrado ninguna referencia en el codigo. Contenido verificado, uso sin demostrar
+
+B 0x4800 ############################################################
+B 0x4800 GRAFICOS COMPRIMIDOS (11 bloques RLE)
+B 0x4800 ############################################################
+B 0x4800 Formato, leido de la rutina de 0xD2BE y verificado bloque a
+B 0x4800 bloque: se lee una palabra de 16 bits en little-endian.
+B 0x4800   0xFFFF        -> fin del bloque
+B 0x4800   bit 15 a 1    -> repetir el byte siguiente (n & 0x7FFF) veces
+B 0x4800   bit 15 a 0    -> copiar n bytes literales
+B 0x4800 Cada bloque descomprime a 2048 bytes exactos, que es un tercio
+B 0x4800 de pantalla de SCREEN 2 (patrones o colores) o los patrones de
+B 0x4800 los sprites. El destino siempre es el buffer 0xDD7A y de ahi
+B 0x4800 va a la VRAM con LDIRVM.
+B 0x4800 Hay DOS juegos de graficos que comparten el tercio 2 y los
+B 0x4800 sprites; las tablas de pares (origen, destino VRAM) estan en
+B 0x4800 0xDB17 (juego, "A") y 0xDB35 (presentacion, "B").
+
+D 0x4800 0x4CE2 gfx_A_patrones_t0   Juego A: patrones del tercio 0 -> VRAM 0x0000
+D 0x4CE2 0x5148 gfx_A_color_t0      Juego A: color del tercio 0 -> VRAM 0x2000
+D 0x5148 0x58E9 gfx_A_patrones_t1   Juego A: patrones del tercio 1 -> VRAM 0x0800
+D 0x58E9 0x5FEE gfx_A_color_t1      Juego A: color del tercio 1 -> VRAM 0x2800
+D 0x5FEE 0x66C9 gfx_patrones_t2     Patrones del tercio 2 -> VRAM 0x1000. COMPARTIDO por los dos juegos
+D 0x66C9 0x6D35 gfx_color_t2        Color del tercio 2 -> VRAM 0x3000. COMPARTIDO por los dos juegos
+D 0x6D35 0x7137 gfx_B_patrones_t0   Juego B: patrones del tercio 0 -> VRAM 0x0000
+D 0x7137 0x74CF gfx_B_color_t0      Juego B: color del tercio 0 -> VRAM 0x2000
+D 0x74CF 0x7BE9 gfx_B_patrones_t1   Juego B: patrones del tercio 1 -> VRAM 0x0800
+D 0x7BE9 0x8293 gfx_B_color_t1      Juego B: color del tercio 1 -> VRAM 0x2800
+D 0x8293 0x884D gfx_sprites         Patrones de sprites -> VRAM 0x3800. 2048 B = 64 sprites de 16x16. COMPARTIDO
+
+B 0x884D ------------------------------------------------------------
+B 0x884D COLA INSERVIBLE: 500 bytes que el juego no usa jamas. Empieza
+B 0x884D justo detras del ultimo bloque comprimido, y ahi se acaba lo
+B 0x884D que la cinta trae para la pagina 0.
+B 0x884D ------------------------------------------------------------
+D 0x884D 0x8850 tres_ceros          Tres bytes 0x00 detras del ultimo bloque RLE
+D 0x8850 0x887D codigo_muerto       45 bytes de CODIGO Z80 de otra compilacion: un recolocador que copiaria 0x184D bytes de 0x9000 a 0x7000 y saltaria a 0xC000. No es lo que hace el cargador de esta version y nada salta ahi
+D 0x887D 0x8A41 cola_del_empaquetador  452 bytes que son un duplicado exacto de 0x666C-0x682F: al compresor no se le vacio el buffer al escribir el ultimo bloque

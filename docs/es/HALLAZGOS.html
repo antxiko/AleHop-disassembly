@@ -1,0 +1,101 @@
+<title>Hallazgos — Ale Hop! (1988)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,640px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="LA-CINTA.html">La cinta</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html" style=color:var(--tinta)>Hallazgos</a><a href="BYTES-MUERTOS.html">Bytes muertos</a><a href="../FINDINGS.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1>Hallazgos</h1>
+<p>Lo que apareció al desmontar el juego, ordenado de más a menos sorprendente.</p>
+<h2>Un mensaje que casi nadie llegó a leer</h2>
+<p>Al superar el sexto y último nivel aparece una pantalla con un texto que hace scroll:</p>
+<p><img src="../mensaje-final.png" alt="El mensaje final"></p>
+<blockquote>ENHORABUENA!!! HAS CONSEGUIDO SUPERAR LOS OBSTACULOS QUE TE SEPARABAN DE LA VICTORIA... TOPO SOFT TE FELICITA. PERO... <b>PODRAS CON TEMPTATION??</b></blockquote>
+<p>Lo curioso es cómo está hecho. La pantalla que lo enmarca tiene dos recuadros <b>vacíos</b>: el texto no está dibujado en ninguna parte. Está en ASCII en 0xC3F0 y lo pasa una rutina que lee letra a letra, saca el dibujo de cada una de la propia memoria de vídeo con una llamada al BIOS, y lo desplaza un píxel por fotograma. Un scroll suave hecho a mano.</p>
+<p>La despedida remata invitando a otro juego que Topo Soft había publicado el año anterior, <em>Temptations</em>, que a su vez terminaba invitando a éste. Se llaman el uno al otro.</p>
+<p>Y solo se ve terminándose el juego entero, así que en 1988 no debió leerlo mucha gente.</p>
+<h2>El juego se carga encima de la ROM</h2>
+<p>Un MSX de 64 KB no tiene los 64 KB a mano: la página de abajo, de 0x0000 a 0x3FFF, la ocupa la ROM del BIOS, y la RAM que hay debajo está tapada. Lo habitual en un juego de cinta es no complicarse y cargar a partir de 0x4000.</p>
+<p><em>Ale Hop!</em> hace lo contrario. Mete el bloque de 42645 bytes <b>en la página 0</b>, encima de donde está el BIOS, y después mueve tres trozos a RAM alta y vuelve a tapar lo que queda con la ROM.</p>
+<p>O sea que los 35 KB de gráficos y mapas están <b>escondidos debajo del BIOS</b> casi todo el tiempo. El juego solo los destapa un instante cada vez que carga un nivel, entre un <code>call 0xF00F</code> y un <code>call 0xF000</code>, copia lo que necesita y vuelve a taparlos. Así puede seguir llamando al BIOS como si nada el resto del tiempo.</p>
+<p>Es la decisión que da forma a todo lo demás, incluido que este desensamblado sean cinco listados en vez de uno.</p>
+<h2>Hay sitio para dos niveles que no existen</h2>
+<p>Los mapas de fondo se buscan con la fórmula <code>0x3000 + nivel * 0x200</code>. Hay espacio para ocho, pero solo seis tienen datos: los 1024 bytes que ocuparían el 7 y el 8 son <b>relleno 0xFF</b>, y el cargador corta en el sexto con un <code>cp 6 / jp z,0xC000</code>.</p>
+<h2>135 bytes que no se ejecutan nunca</h2>
+<p>Cuatro trozos de código Z80 perfectamente coherente a los que no llega ningún camino. Entre ellos, un <b>efecto de color a pantalla completa</b> que convierte todo el negro en transparente —3673 de los 6144 bytes de color de la pantalla— y que solo tiene sentido acompañado de un cambio del color de fondo. Medio fundido que se quedó fuera.</p>
+<p><img src="../efecto-muerto.png" alt="El efecto que no llegó a usarse"></p>
+<p>La historia completa de los cuatro, en <a href="BYTES-MUERTOS.html">BYTES-MUERTOS.md</a>.</p>
+<h2>El parallax cabe en una instrucción</h2>
+<p>El fondo se mueve cuatro veces más despacio que la pista, y el truco es de una sencillez desarmante. Las dos rutinas de volcado leen la misma variable —la columna de cámara— pero la del fondo le hace un <code>and 0x3F</code> y su mapa tiene 64 columnas, mientras que la de la pista usa el byte entero sobre un mapa de 256. Nada más. Efecto de profundidad a coste cero.</p>
+<h2>Un sprite multicolor en una máquina que no los tiene</h2>
+<p>El MSX1 solo admite un color por sprite. El protagonista se dibuja superponiendo <b>tres sprites</b> en la misma posición, uno por color —negro, blanco y amarillo claro—, montados de nuevo en cada fotograma. La bola que rebota en la pantalla de título usa exactamente lo mismo.</p>
+<h2>El motor de sonido viene de fuera</h2>
+<p>El reproductor de música no parece escrito para este juego, sino integrado como librería. La pista está en el propio binario: trae <b>su propio manejador de interrupción</b>, listo para engancharse al sistema... y el juego no lo usa, porque tiene el suyo. Se quedó ahí, 21 bytes que no ejecuta nadie.</p>
+<h2>Los créditos</h2>
+<p>La pantalla de presentación, reconstruida descomprimiendo los gráficos y montando el mapa, dice:</p>
+<blockquote><b>PROGRAMA:</b> ALBERTO L. NAVARRO · <b>GRÁFICOS:</b> LUIGILOPEZ · TOPO SOFT 1988</blockquote>
+<p>Está leído del binario, no de fuentes externas. Es lo que el propio juego declara.</p>
+<footer><p><em>Ale Hop!</em> lo publico Topo Soft en 1988; segun sus propios creditos, el programa es de Alberto L. Navarro y los graficos de LuigiLopez. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion.</p></footer></div>

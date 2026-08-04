@@ -1,0 +1,136 @@
+<title>Inside the code — Ale Hop! (1988)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,640px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-TAPE.html">The tape</a><a href="THE-CODE.html" style=color:var(--tinta)>The code</a><a href="FINDINGS.html">Findings</a><a href="DEAD-BYTES.html">Dead bytes</a><a href="es/EL-CODIGO.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1>Inside the code</h1>
+<p>The 42645 bytes of the game block break down like this:</p>
+<table><tr><th></th><th>bytes</th><th></th></tr><tr><td>Traced code</td><td>4588</td><td>10.8 %</td></tr><tr><td>Identified data</td><td>38057</td><td>89.2 %</td></tr><tr><td><b>Unexplained</b></td><td><b>0</b></td><td></td></tr></table>
+<p>Only 11 % being code doesn&#x27;t mean there&#x27;s disassembly left to do: it means <em>Ale Hop!</em> is mostly graphics. An MSX game of this era fits in very few instructions; what takes up room is the artwork.</p>
+<h2>Five listings, not one</h2>
+<p>The loader relocates three chunks before starting the game, so tape addresses and runtime addresses don&#x27;t line up. To have the listing read with the <b>real</b> addresses and still reassemble to the original binary, the game is split into five modules:</p>
+<table><tr><th>listing</th><th>runs at</th><th>on the tape at</th><th>bytes</th></tr><tr><td><code>alehop_game_datos.asm</code></td><td>0x0000</td><td>0x00000</td><td>35393</td></tr><tr><td><code>alehop_game_sonido.asm</code></td><td>0xB000</td><td>0x08A41</td><td>2201</td></tr><tr><td><code>alehop_game_nucleo.asm</code></td><td>0xBD00</td><td>0x092DA</td><td>2112</td></tr><tr><td><code>alehop_game_extra.asm</code></td><td>0xD000</td><td>0x09B1A</td><td>2938</td></tr><tr><td><code>alehop_game_cola.asm</code></td><td>0xA694</td><td>0x0A694</td><td>1</td></tr></table>
+<p>Concatenated in that order they come to exactly 42645 bytes. <code>tools/split_trace.py</code> does the splitting and a test checks the result.</p>
+<h2>Living with the ROM</h2>
+<p>The game starts at 0xC000, and the first thing it does after setting the stack is configure memory through three calls into a slot switcher the loader left at 0xF000:</p>
+<pre><code>ld sp,0xF37F
+ld (0xC52E),a      ; 0 = normal boot, non-zero = returning from a finished game
+call 0xF000        ; page 0 -&gt; BIOS ROM
+call 0xF014        ; page 1 -&gt; RAM
+call 0xF019        ; page 2 -&gt; RAM</code></pre>
+<p>That switcher has <b>six entry points</b> doing the same job with different parameters: three put a page into the BASIC configuration and three into the all-RAM one, covering pages 0, 1 and 2.</p>
+<p>The practical consequence, worth keeping in mind while reading the listing: **any address below 0x4000 appearing in a <code>CALL</code> or <code>JP</code> is the BIOS**, not game data. The 35 KB of graphics sitting underneath are only visible inside the level loader.</p>
+<h2>The frame routine</h2>
+<p>The engine has no conventional main loop. Instead there&#x27;s a 16-bit <b>task mask</b> at 0xDB69. The frame routine waits for the vertical blank and then checks it bit by bit:</p>
+<pre><code>ld ix,0xDB69
+halt
+bit 7,(ix+0) / call nz,BLIT_MAP
+bit 6,(ix+0) / call nz,BLIT_BACKGROUND
+bit 5,(ix+0) / call nz,ANIMATE_TILES
+bit 4,(ix+0) / call nz,APPLY_SPEED
+bit 3,(ix+0) / call nz,ADVANCE_CAMERA
+bit 2,(ix+0) / call nz,APPLY_HEIGHT
+bit 1,(ix+0) / call nz,FRAME_PATTERN
+bit 0,(ix+0) / call nz,DRAW_PLAYER
+bit 7,(ix+1) / call nz,COLLISION
+bit 6,(ix+1) / call nz,JUMP
+bit 5,(ix+1) / call nz,COUNTDOWN</code></pre>
+<p>Change the mask and you change the game&#x27;s state without touching the flow: 0xE0FF during normal play, smaller values while the player is dying or the stage is ending. The main loop puts it back every time round:</p>
+<pre><code>MAIN_LOOP:
+    ld sp,0xF37F        ; the stack is reset: collision handlers jump without unwinding
+    call FRAME
+    ld hl,0xE0FF
+    ld (0xDB69),hl
+    jr MAIN_LOOP</code></pre>
+<h2>The fast interrupt</h2>
+<p>The game hooks itself into <b>H.TIMI</b> (0xFD9F), the hook the BIOS calls on every video interrupt. But it doesn&#x27;t return the way it should:</p>
+<pre><code>in a,(0x99)         ; acknowledge the VDP interrupt
+pop hl              ; THROW AWAY the return address into the BIOS handler
+di
+ld hl,0xDB75
+inc (hl)            ; frame counter
+call SOUND_FRAME
+pop ix / pop iy / pop af / pop bc / pop de / pop hl
+ex af,af&#x27; / exx
+pop af / pop bc / pop de / pop hl
+ei
+ret</code></pre>
+<p>It discards the way back into the BIOS and unwinds by hand the registers the BIOS had just pushed, skipping the rest of the system interrupt routine. In a game this tight on time, that&#x27;s a lot. There are three copies of this same skeleton in the binary: the title screen&#x27;s, the gameplay one, and a third that never runs.</p>
+<h2>Sound</h2>
+<p>Each of the PSG&#x27;s three channels gets a <b>46-byte</b> state block — the code says so itself: <code>ld de,0x002E</code> — holding its melody pointer twice over (one advances, the other is there to loop), the remaining note duration, volume, period, and offsets that get added every frame to produce vibrato.</p>
+<p>A melody is a byte stream: values under 0x80 are notes, 0x80 and above are commands dispatched through a <b>12-entry</b> jump table at 0xB486.</p>
+<p>All three channels write into an 11-byte shadow buffer at 0xB4A0, laid out in the chip&#x27;s own register order, and a single routine flushes the lot at the end of the frame.</p>
+<p>The player doesn&#x27;t look like code written for this game so much as a library dropped into it. The tell is in the binary: it comes with <b>its own interrupt handler</b>, ready to hook into the system — and the game never uses it, because it has its own.</p>
+<h2>Graphics</h2>
+<p>Compressed with a <b>16-bit token RLE</b>:</p>
+<pre><code>0xFFFF        end of block
+bit 15 set    repeat the next byte (n &amp; 0x7FFF) times
+bit 15 clear  copy n literal bytes</code></pre>
+<p>Eleven blocks, each decompressing to exactly 2048 bytes — one screen third of patterns or colours, or the sprite patterns — chaining without a single spare byte from 0x4800 to 0x884D.</p>
+<p>There are <b>two graphics sets</b>, one for gameplay and one for the title screen, sharing the third screen band and the sprites. Their tables live at 0xDB17 and 0xDB35 and are lists of (compressed source, VRAM destination) pairs terminated by 0x0000.</p>
+<footer><p><em>Ale Hop!</em> lo publico Topo Soft en 1988; segun sus propios creditos, el programa es de Alberto L. Navarro y los graficos de LuigiLopez. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion.</p></footer></div>

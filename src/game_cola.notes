@@ -1,0 +1,20 @@
+# El ultimo byte del bloque del juego: uno solo, y no lo usa nadie.
+#
+# El bloque turbo 2 son 42645 bytes (0x0000-0xA694 en direcciones de carga). Las
+# tres recolocaciones que hace SLOTS cubren hasta 0xA693:
+#     0x8A41..0x92D9 -> 0xB000
+#     0x92DA..0x9B19 -> 0xBD00
+#     0x9B1A..0xA693 -> 0xD000
+# El byte 0xA694 se queda fuera de las tres y ahi termina la cinta. Vale 0x00.
+#
+# Existe por como se empaqueto el bloque, no por nada que haga el juego: la
+# ultima tabla del motor acaba en 0xFF y este cero es el relleno que vino
+# detras. Hay que emitirlo igual, porque sin el el bloque no reensambla al
+# original.
+
+B 0xA694 ------------------------------------------------------------
+B 0xA694 Byte de relleno del final del bloque. Ninguna de las tres
+B 0xA694 recolocaciones lo copia, asi que en la RAM del juego no llega
+B 0xA694 a existir: solo esta en la cinta.
+B 0xA694 ------------------------------------------------------------
+D 0xA694 0xA695 relleno_final   Un 0x00 de relleno al final del bloque turbo 2

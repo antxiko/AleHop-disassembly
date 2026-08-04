@@ -1,0 +1,19 @@
+# Puntos de entrada del juego, en direcciones de EJECUCION sobre la imagen de
+# 64K dump/full_recolocado.bin.
+#
+# Aqui SOLO va lo que el trazador no puede alcanzar por si mismo, y cada linea
+# dice por que. Sembrar de mas es como se fabrica cobertura falsa: una semilla
+# que caiga en los graficos convierte 16 KB de dibujos en "codigo" y el listado
+# miente sin que el reensamblado se entere.
+0xC000   # arranque en frio: es a donde salta SLOTS. Verificado con breakpoint en openMSX
+0xC105   # manejador de interrupcion de la pantalla de TITULO. No lo llama nadie:
+         # el arranque lo engancha en H.TIMI escribiendo 0xC3 en 0xFD9F y 0xC105
+         # en 0xFDA0 (instruccion en 0xC04B), o sea que corre 50/60 veces por
+         # segundo. Sin esta semilla el trazador no llega hasta el.
+0xD345   # manejador de interrupcion de la PARTIDA. Se instala igual, en 0xD6AF
+         # (ld hl,0xD345 / ld (0xFDA0),hl / ld a,0xC3 / ld (0xFD9F),a).
+         # Es la semilla que cierra el trozo 3.
+0xF005   # conmutador de slots, entradas 2 y 3. Las otras cuatro (0xF000, 0xF00A,
+0xF00A   # 0xF00F, 0xF014, 0xF019) si se alcanzan con un CALL normal. Las seis son
+         # puntos de entrada de la misma rutina, cada uno con su pagina y su
+         # configuracion; se siembran para que el listado las muestre completas.

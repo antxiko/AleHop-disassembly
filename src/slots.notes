@@ -1,0 +1,114 @@
+# SLOTS: buscador de RAM + cargador turbo de Topo Soft.
+#
+# Se carga en 0xC350 y se ejecuta en 0xC58F. Es la pieza mas interesante de la
+# cinta: deja el MSX con 64 KB de RAM utilizables y luego lee los dos bloques
+# turbo directamente del cassette, sin usar la BIOS de cinta.
+#
+# AVISO AL LEER ESTE LISTADO: el cargador se copia a si mismo a RAM alta antes
+# de ejecutarse. Tres trozos aparecen aqui en la direccion donde ESTAN cargados,
+# pero las direcciones absolutas que contienen apuntan a donde se EJECUTAN:
+#     0xC418 -> 0x9C40   (200 bytes)
+#     0xC490 -> 0xE22C   ( 71 bytes)   [solapa con el bloque anterior]
+#     0xC5BB -> 0xE09C   (133 bytes)
+# El cargador turbo (0xC4D7) es la excepcion: se ejecuta EN SU SITIO, con un
+# `call 0xC4D7` normal y corriente.
+
+B 0xC350 ############################################################
+B 0xC350 BUSCADOR DE RAM EN LOS SLOTS
+B 0xC350 ############################################################
+B 0xC350 Recorre los 4 slots primarios x 4 secundarios probando a
+B 0xC350 escribir y releer, para localizar RAM en cada pagina. Guarda
+B 0xC350 los identificadores de slot encontrados en 0xE290..0xE293 y
+B 0xC350 deja los slots como estaban al salir: quien conmuta de verdad
+B 0xC350 es luego la secuencia de carga.
+B 0xC350 Anota DOS configuraciones: en 0xE290/0xE291 la que habia al
+B 0xC350 entrar (la del BASIC, con ROM abajo) y en 0xE292/0xE293 la de
+B 0xC350 "todo RAM". El juego alternara entre las dos toda la partida.
+L 0xC350 BUSCA_RAM        Localiza RAM en todas las paginas y anota los slots
+C 0xC350 Nada de interrupciones mientras se toquetean los slots
+C 0xC351 Guarda un byte de 0x8000 para restaurarlo: la prueba lo machaca
+C 0xC358 Codigo automodificable: escribe 0x0024 (ENASLT) como destino del CALL de 0xC3B2
+C 0xC35E Sondea la pagina 1 (0x4000)
+C 0xC364 Sondea la pagina 2 (0x8000)
+C 0xC36A Copia el buscador a 0x9C40, en RAM...
+C 0xC375 ...y reescribe el CALL para usar esa copia en vez de la BIOS
+C 0xC37B Ahora ya se puede sondear la pagina 0, donde la BIOS dejaria de estar mapeada
+C 0xC384 Restaura los slots tal y como estaban
+L 0xC395 GUARDA_SLOTS_A   Anota en 0xE290 el estado actual de slots
+L 0xC39A GUARDA_SLOTS_B   Anota en 0xE292 el estado actual de slots
+L 0xC3A7 SONDEA_PAGINA    Prueba todos los slots de la pagina HL y se queda con el que tenga RAM
+C 0xC3A7 0x80 = marca de slot expandido
+C 0xC3A9 4 slots primarios
+C 0xC3AD 4 slots secundarios por cada primario
+C 0xC3B2 ENASLT o su copia en RAM (ver 0xC358 y 0xC375)
+C 0xC3B6 Prueba de RAM: escribe 0x20 y lo relee...
+C 0xC3BD ...y luego 0xFA, para descartar que sea ROM o bus flotante
+
+B 0xC490 ############################################################
+B 0xC490 CONMUTADOR DE SLOTS  (se ejecuta en 0xE22C, y el juego se
+B 0xC490 queda con una copia en 0xF000)
+B 0xC490 ############################################################
+B 0xC490 71 bytes con SEIS puntos de entrada que hacen todos lo mismo
+B 0xC490 con distintos parametros: conmutar una pagina a una de las dos
+B 0xC490 configuraciones anotadas por el buscador. Tres entradas usan la
+B 0xC490 del BASIC y tres la de todo RAM, y cada terna cubre las paginas
+B 0xC490 0, 1 y 2. La pagina 3 no se toca nunca.
+B 0xC490 Antes de arrancar el juego, la secuencia de carga los copia a
+B 0xC490 0xF000 y les reescribe los punteros a la tabla: por eso el
+B 0xC490 juego llama luego a 0xF000, 0xF014 y 0xF019.
+
+B 0xC4D7 ############################################################
+B 0xC4D7 CARGADOR TURBO
+B 0xC4D7 ############################################################
+B 0xC4D7 Lee un bloque de cinta a (IX) con longitud DE. No usa la BIOS
+B 0xC4D7 de cassette: mide a mano la anchura de los pulsos leyendo el
+B 0xC4D7 bit 7 del puerto 0xA2 (la entrada de cinta del PSG).
+B 0xC4D7 Formato del bloque, verificado comparando con la RAM que vuelca
+B 0xC4D7 openMSX: un byte 0x00 de sincronismo, los datos, y un byte de
+B 0xC4D7 checksum tal que el XOR de todo da cero.
+L 0xC4D7 CARGA_TURBO      Lee un bloque de cinta a (IX), longitud DE
+C 0xC4D7 Mete 0xC580 en la pila: al hacer RET se ira a apagar el motor
+C 0xC4DC Escribe en el PPI para arrancar el motor del cassette
+L 0xC580 PARA_MOTOR       Apaga el motor del cassette y restaura el registro 1 del VDP
+C 0xC584 PPI: motor del cassette parado
+
+B 0xC58F ############################################################
+B 0xC58F ENTRADA DEL CARGADOR  (BLOAD "cas:",R)
+B 0xC58F ############################################################
+B 0xC58F Verificado en openMSX: breakpoint alcanzado a los 100,7 s de
+B 0xC58F tiempo emulado, justo despues del logo de Topo.
+L 0xC58F SLOTS_START      Punto de entrada: relocaliza todo y arranca la carga
+C 0xC58F Apaga interrupciones para el resto del proceso
+C 0xC590 Copia 100 bytes de 0xDAC0 a 0xDEA8: deja preparada la zona de parcheo por cinta
+C 0xC59B DISSCR: apaga la pantalla durante la carga
+C 0xC59E Localiza la RAM de todas las paginas
+C 0xC5A2 Copia el conmutador de slots a 0xE22C
+C 0xC5AD Copia la secuencia de carga a 0xE09C
+C 0xC5B8 Y salta a ella: a partir de aqui se ejecuta desde RAM alta
+
+B 0xC5BB ############################################################
+B 0xC5BB SECUENCIA DE CARGA  (se ejecuta en 0xE09C)
+B 0xC5BB ############################################################
+B 0xC5BB Aqui esta lo mas llamativo de toda la carga: el juego se mete en
+B 0xC5BB la PAGINA 0, encima de donde esta la ROM del BIOS, y despues se
+B 0xC5BB recolocan tres trozos a RAM alta. Los 35 KB que quedan abajo son
+B 0xC5BB graficos y mapas, y el juego los volvera a tapar con la ROM:
+B 0xC5BB solo los destapa un momento cada vez que carga un nivel.
+L 0xC5BB SECUENCIA_CARGA  Carga los dos bloques turbo, recoloca y arranca el juego
+C 0xC5BB Conmuta una pagina a RAM antes de cargar la portada
+C 0xC5BE Destino del bloque 1: la pantalla de portada
+C 0xC5C2 12388 bytes
+C 0xC5CA Ejecuta la portada, que la vuelca a la VRAM y vuelve
+C 0xC5CD Ahora si: mete RAM tambien en la pagina 0
+C 0xC5D3 Destino del bloque 2: el juego entero, en la pagina 0
+C 0xC5D7 42645 bytes
+C 0xC5DF Recoloca el reproductor de sonido a 0xB000 (2201 bytes)
+C 0xC5EA Recoloca el nucleo a 0xBD00 (2112 bytes): ahi va el punto de entrada
+C 0xC5F5 Recoloca el motor del juego a 0xD000 (2938 bytes)
+C 0xC600 Reapunta los tres primeros vectores del conmutador a la tabla de 0xF065
+C 0xC60C Y los otros tres a la de 0xF067
+C 0xC618 Copia el conmutador de slots a 0xF000, ya parcheado
+C 0xC623 Mecanismo de parcheo: si en 0xDEA8 hay tres 0xC9 seguidos...
+C 0xC630 ...lee un contador y aplica esa cantidad de parches (direccion, valor)
+C 0xC63B A = 0: le dice al juego que es un arranque normal, no un fin de partida
+C 0xC63D Arranca el juego

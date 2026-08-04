@@ -1,0 +1,4 @@
+# Entrada del bloque turbo 1 (portada). La secuencia de carga de SLOTS hace
+# "ld ix,088b8h / ... / call 088b8h": se carga y se ejecuta en su inicio.
+# Verificado: breakpoint en 0x88B8 alcanzado a los 181.4 s de tiempo emulado.
+0x88B8

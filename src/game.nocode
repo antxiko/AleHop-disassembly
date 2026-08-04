@@ -1,0 +1,21 @@
+# Zonas por las que el trazador NO debe pasar, trabajando sobre la imagen de 64K
+# dump/full_recolocado.bin (org 0x0000).
+#
+# Por que hace falta: sin esto, una sola semilla mala mete el trazador en los
+# graficos de la pagina 0 y da una cobertura falsa del 47%. Es el error que en
+# Temptations disparo la cobertura del 13% al 80% y parecia un exito.
+#
+# La huella de EJECUCION del juego son solo cuatro trozos:
+#     0xB000..0xB898   recolocado desde la carga 0x8A41
+#     0xBD00..0xC53F   recolocado desde la carga 0x92DA  (aqui esta la entrada 0xC000)
+#     0xD000..0xDB79   recolocado desde la carga 0x9B1A
+#     0xF000..0xF06D   rutinas de conmutacion de slots que copia SLOTS
+# Todo lo demas de la imagen de 64K es, o datos del juego, o restos de SLOTS y
+# del BASIC, o el area de trabajo del BIOS. Nada de eso es codigo del juego.
+
+0x0000 0x8A40   # datos del juego cargados en la pagina 0 (35393 B): graficos y mapas
+0x8A41 0xAFFF   # copias MUERTAS: son el origen de las tres recolocaciones, ya movidas
+0xB899 0xBCFF   # hueco entre el trozo 1 y el trozo 2: no es del juego
+0xC540 0xCFFF   # entre el trozo 2 y el trozo 3: restos de SLOTS, no es del juego
+0xDB7A 0xEFFF   # detras del trozo 3: restos de SLOTS y del BASIC
+0xF06E 0xFFFF   # area de trabajo del BIOS, variables del sistema y pila

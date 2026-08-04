@@ -1,0 +1,18 @@
+# Manejadores de los 12 comandos del reproductor de sonido.
+# La tabla vive en 0xB486 y se indexa con (byte de melodia - 0x80) desde el
+# JP (HL) de 0xB071. Ninguno se alcanza siguiendo el flujo: hay que sembrarlos.
+# Verificado: los 12 destinos caen dentro del reproductor (0xB000..0xB898) y el
+# 13o apuntaria a 0x0102, o sea que la tabla acaba justo en el 12.
+
+0xB22A   # comando 0x80
+0xB248   # comando 0x81
+0xB294   # comando 0x82
+0xB233   # comando 0x83
+0xB290   # comando 0x84
+0xB262   # comando 0x85
+0xB2A3   # comando 0x86
+0xB2DA   # comando 0x87
+0xB27C   # comando 0x88
+0xB323   # comando 0x89
+0xB2C6   # comando 0x8A
+0xB253   # comando 0x8B

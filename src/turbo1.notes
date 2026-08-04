@@ -1,0 +1,28 @@
+# Bloque turbo 1: la PANTALLA DE PORTADA.
+#
+# 12388 bytes de los que solo 34 son codigo: el resto es una imagen SCREEN 2
+# completa. Se carga en 0x88B8 y la secuencia de carga de SLOTS la ejecuta con
+# 'call 088b8h'; al volver, carga encima el juego (que ocupa 0x4000..0xDE00 y
+# por tanto pisa este bloque).
+#
+# Atribuida a Javier Cano en el manual, aunque Julio Martin Erro la reivindica.
+
+B 0x88B8 ############################################################
+B 0x88B8 PANTALLA DE PORTADA
+B 0x88B8 ############################################################
+B 0x88B8 Una imagen de SCREEN 2 ocupa 6144 bytes de patrones y otros
+B 0x88B8 6144 de color (768 tiles x 8 lineas). Aqui se vuelcan los dos
+B 0x88B8 bloques enteros de una tacada y se enciende la pantalla.
+B 0x88B8 La tabla de nombres no se toca: INIGRP ya la dejo con la
+B 0x88B8 secuencia 0,1,2,...255 repetida, que es justo lo que hace
+B 0x88B8 falta para mostrar un bitmap a pantalla completa.
+L 0x88B8 PORTADA          Vuelca la imagen de portada a la VRAM y la muestra
+C 0x88B8 Apaga la pantalla: volcar 12 KB a la VRAM se veria como un destrozo
+C 0x88BC Patrones de la imagen -> VRAM 0x0000 (los tres tercios de golpe)
+C 0x88C9 Color de la imagen -> VRAM 0x2000 (los tres tercios)
+C 0x88D5 Ya esta la imagen entera: encender pantalla
+C 0x88D9 Vuelve al cargador, que seguira con el bloque del juego
+
+D 0x88DA 0x891C relleno   Residuo entre el codigo y la imagen; no se ejecuta (?)
+D 0x891C 0xA11C img_patrones  Imagen de portada: tabla de PATRONES (6144 bytes)
+D 0xA11C 0xB91C img_colores   Imagen de portada: tabla de COLOR (6144 bytes)

@@ -1,0 +1,95 @@
+# Trozo "sonido": el reproductor de musica y efectos. Se ejecuta en
+# 0xB000-0xB898 y viaja en la cinta en 0x8A41-0x92D9.
+#
+# No parece codigo escrito para este juego, sino una libreria integrada: viene
+# con su propio manejador de interrupcion (0xB000), que el juego ni siquiera
+# llega a usar porque tiene el suyo.
+# La idea es sencilla: la melodia es un flujo de bytes; por debajo de 0x80 son
+# notas y de 0x80 para arriba son comandos, que se despachan por una tabla de
+# saltos con `jp (hl)`.
+
+B 0xB000 ------------------------------------------------------------
+B 0xB000 CODIGO MUERTO: manejador de interrupcion de la libreria de
+B 0xB000 sonido, 21 bytes que no ejecuta nadie.
+B 0xB000 Desensambla limpiamente y tiene toda la pinta de ser el bueno:
+B 0xB000    di / pop hl / call 0xB036 / pop ix / pop iy / pop af /
+B 0xB000    pop bc / pop de / pop hl / ex af,af' / exx /
+B 0xB000    pop af / pop bc / pop de / pop hl / ei / ret
+B 0xB000 Es la misma "interrupcion rapida" que usan 0xC105 y 0xD345.
+B 0xB000 Pero este juego no lo usa: engancha sus propios manejadores,
+B 0xB000 que llaman a 0xB036 por su cuenta. Buscado en todo el binario
+B 0xB000 el puntero 00 B0 y no aparece ni una vez en zona de codigo o
+B 0xB000 de tablas. Es la entrada estandar de la libreria, que aqui se
+B 0xB000 quedo sin usar.
+B 0xB000 NO se integra como codigo a proposito: que algo desensamble
+B 0xB000 bien no prueba que se ejecute.
+B 0xB000 ------------------------------------------------------------
+D 0xB000 0xB015 isr_sin_usar     Manejador de interrupcion de la libreria de sonido, inalcanzable
+
+B 0xB015 ############################################################
+B 0xB015 REPRODUCTOR DE MUSICA
+B 0xB015 ############################################################
+B 0xB015 Cada canal lleva su puntero dentro de la melodia en un bloque
+B 0xB015 de variables indexado por IX. Se lee un byte:
+B 0xB015   < 0x80  -> es una NOTA: se busca su periodo en la tabla de
+B 0xB015              0xB3C6 y se programa el canal
+B 0xB015   >= 0x80 -> es un COMANDO: se le resta 0x80 y se salta al
+B 0xB015              manejador que diga la tabla de 0xB486
+L 0xB015 ASIGNA_MELODIA   Pone la melodia DE en el canal A: le busca su bloque de 46 bytes, lo borra y guarda el puntero
+L 0xB036 SONIDO_FRAME     Una vuelta del reproductor, para los 3 canales; la llama la interrupcion
+L 0xB357 PSG_ESCRIBE      Escribe un registro del PSG
+L 0xB374 MULTIPLICA       HL = A * DE. Se usa para saltar al bloque del canal (A * 46)
+L 0xB3A4 INDEXA_TABLA     HL = palabra que hay en (HL + A*2). Sirve para las dos tablas
+L 0xB3B1 VUELCA_PSG       Manda los 11 registros del PSG de una tacada desde el buffer 0xB4A0
+
+C 0xB018 46 bytes por canal: es el tamano del bloque de estado
+C 0xB01E Los tres bloques empiezan en 0xB4AB
+C 0xB024 Borra el bloque entero antes de empezar la melodia
+C 0xB02C Guarda el puntero de la melodia por duplicado: uno avanza y el otro sirve para repetir
+C 0xB037 Los tres canales del PSG
+C 0xB03A Bloque de estado del canal 0; se avanza de 46 en 46 bytes
+C 0xB03E En el buffer, la parte de los periodos (registros 0 a 5)
+C 0xB041 Y aqui la de los volumenes (registros 8 a 10)
+C 0xB044 Vuelta por canal: se entra tres veces, con A = 0, 1 y 2
+C 0xB04B Si al canal le queda duracion pendiente no se lee nota nueva
+C 0xB058 El puntero de la melodia, en el bloque del canal
+C 0xB060 Puntero a cero: este canal esta parado
+C 0xB165 Volumen del canal mas su ajuste, recortado a 4 bits
+C 0xB16E Periodo del tono, 16 bits, con su ajuste sumado con acarreo
+C 0xB17F Salta al bloque del canal siguiente
+C 0xB18C Ya estan los tres canales; ahora los efectos globales
+
+C 0xB063 Lee el siguiente byte de la melodia
+C 0xB064 Menos de 0x80 es nota; 0x80 o mas es comando
+C 0xB06B Tabla de saltos de los 12 comandos
+C 0xB071 Salto indirecto: aqui es donde se despacha cada comando
+C 0xB072 Tabla de periodos de las notas
+C 0xB3BA Puerto de direccion del PSG
+C 0xB3BD Puerto de dato del PSG
+
+B 0xB3C6 ############################################################
+B 0xB3C6 DATOS DEL SONIDO
+B 0xB3C6 ############################################################
+D 0xB3C6 0xB486 tabla_notas      Periodos de las notas, indexada por el byte de melodia
+D 0xB486 0xB49E tabla_comandos   12 punteros a los manejadores de comando. La entrada 13 apuntaria a 0x0102, o sea que la tabla se acaba justo ahi
+D 0xB49E 0xB4A0 var_B49E         Dos variables sueltas del reproductor: 0xB49E (canal en curso) y 0xB49F (palabra de trabajo)
+D 0xB4A0 0xB4AB buffer_psg       Sombra de los 11 registros del PSG, en el orden del chip: 0xB4A0-0xB4A5 los periodos de tono de los tres canales (registros 0-5), 0xB4A6 el periodo del ruido (registro 6, lo escribe 0xB1D6), 0xB4A7 el mezclador (registro 7, lo lleva 0xB36A) y 0xB4A8-0xB4AA los volumenes (registros 8-10). VUELCA_PSG los manda los once de golpe cada frame
+D 0xB4AB 0xB535 estado_canales   Los TRES bloques de estado, 46 bytes cada uno (0x2E, tamano dicho por el propio codigo en 0xB018 y 0xB024). Canal 0 en 0xB4AB, canal 1 en 0xB4D9, canal 2 en 0xB507. Dentro de cada bloque, deducido de como lo indexa IX: +0/+1 puntero al principio de la melodia (para repetirla), +2/+3 puntero de lectura, +4/+5 duracion que le queda a la nota, +9 volumen, +0x0A/+0x0B periodo del tono, y +0x2A/+0x2B/+0x2C los ajustes que se suman al volumen y al periodo (lo que da el vibrato y la envolvente)
+D 0xB535 0xB542 estado_global    Bloque de 10 bytes al que apunta IY, mas las variables 0xB53F, 0xB540 y 0xB541
+D 0xB542 0xB58D tabla_B542       Tabla de 75 bytes que se carga con `ld de,0xB542` desde 0xB2EA (manejador del comando 0x86)
+D 0xB58D 0xB593 tabla_B58D       Tabla de 6 bytes, se carga desde 0xB333 (manejador del comando 0x89)
+
+B 0xB593 ############################################################
+B 0xB593 LAS TRES MELODIAS DE LA PANTALLA DE TITULO
+B 0xB593 ############################################################
+B 0xB593 Las arranca de una tacada la rutina 0xC3B9, que hace tres
+B 0xB593 llamadas seguidas a ASIGNA_MELODIA con A = 0, 1 y 2:
+B 0xB593    ld de,0xB593 / xor a / call 0xB015
+B 0xB593    ld de,0xB640 / inc a / call 0xB015
+B 0xB593    ld de,0xB877 / inc a / jp   0xB015
+B 0xB593 O sea que son las voces de una misma pieza, una por canal del
+B 0xB593 PSG. Que la tercera sea tan corta encaja con que lleve el bajo
+B 0xB593 o la percusion.
+D 0xB593 0xB640 melodia_canal_0  Voz del canal 0, 173 bytes
+D 0xB640 0xB877 melodia_canal_1  Voz del canal 1, 567 bytes
+D 0xB877 0xB899 melodia_canal_2  Voz del canal 2, 34 bytes

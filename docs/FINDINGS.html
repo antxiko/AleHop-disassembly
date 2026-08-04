@@ -1,0 +1,102 @@
+<title>Findings — Ale Hop! (1988)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,640px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-TAPE.html">The tape</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html" style=color:var(--tinta)>Findings</a><a href="DEAD-BYTES.html">Dead bytes</a><a href="es/HALLAZGOS.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1>Findings</h1>
+<p>What turned up while taking the game apart, roughly most to least surprising.</p>
+<h2>A message almost nobody got to read</h2>
+<p>Clear the sixth and last level and you get a screen with scrolling text:</p>
+<p><img src="mensaje-final.png" alt="The ending message"></p>
+<blockquote>ENHORABUENA!!! HAS CONSEGUIDO SUPERAR LOS OBSTACULOS QUE TE SEPARABAN DE LA VICTORIA... TOPO SOFT TE FELICITA. PERO... <b>PODRAS CON TEMPTATION??</b></blockquote>
+<p>(&quot;Congratulations!!! You&#x27;ve overcome the obstacles that stood between you and victory... Topo Soft congratulates you. But... think you can handle <em>Temptations</em>?&quot;)</p>
+<p>The interesting part is how it&#x27;s done. The screen framing it has two <b>empty</b> boxes: the text isn&#x27;t drawn anywhere. It sits in ASCII at 0xC3F0, and a routine reads it letter by letter, pulls each glyph&#x27;s bitmap back out of video memory with a BIOS call, and shifts it one pixel per frame. A hand-rolled smooth scroller.</p>
+<p>The sign-off advertises another game Topo Soft had published the year before, <em>Temptations</em> — which in turn ended by pointing at this one. They call out to each other.</p>
+<p>And you only see it by finishing the whole game, so not many people can have read it in 1988.</p>
+<h2>The game loads on top of the ROM</h2>
+<p>A 64 KB MSX doesn&#x27;t have 64 KB within reach: the bottom page, 0x0000 to 0x3FFF, is occupied by the BIOS ROM, and the RAM underneath is covered. The usual move for a tape game is not to bother and load from 0x4000 up.</p>
+<p><em>Ale Hop!</em> does the opposite. It puts the 42645-byte block <b>into page 0</b>, on top of where the BIOS lives, then moves three chunks up into high RAM and covers what&#x27;s left with the ROM again.</p>
+<p>So the 35 KB of graphics and maps spend nearly all their time <b>hidden under the BIOS</b>. The game only uncovers them for an instant each time it loads a level, between a <code>call 0xF00F</code> and a <code>call 0xF000</code>, copies what it needs and covers them back up. That way it can keep calling the BIOS normally the rest of the time.</p>
+<p>It&#x27;s the decision that shapes everything else, including why this disassembly is five listings instead of one.</p>
+<h2>There&#x27;s room for two levels that don&#x27;t exist</h2>
+<p>Background maps are located with <code>0x3000 + level * 0x200</code>. There&#x27;s space for eight, but only six have data: the 1024 bytes that levels 7 and 8 would occupy are <b>0xFF filler</b>, and the loader stops at the sixth with a <code>cp 6 / jp z,0xC000</code>.</p>
+<h2>135 bytes that never execute</h2>
+<p>Four stretches of perfectly coherent Z80 that no path reaches. Among them, a <b>full-screen colour effect</b> that turns every black into transparent — 3673 of the screen&#x27;s 6144 colour bytes — and which only makes sense paired with a change of backdrop colour. Half a fade that got left out.</p>
+<p><img src="efecto-muerto.png" alt="The effect that was never used"></p>
+<p>The full story of all four is in <a href="DEAD-BYTES.html">DEAD-BYTES.md</a>.</p>
+<h2>Parallax in one instruction</h2>
+<p>The background moves four times slower than the track, and the trick is disarmingly simple. Both blit routines read the same variable — the camera column — but the background&#x27;s does an <code>and 0x3F</code> on it and its map is 64 columns wide, while the track&#x27;s uses the whole byte over a 256-column map. That&#x27;s all. Depth at zero cost.</p>
+<h2>A multicolour sprite on a machine without them</h2>
+<p>The MSX1 allows one colour per sprite. The main character is drawn by stacking <b>three sprites</b> at the same position, one per colour — black, white and light yellow — rebuilt every frame. The bouncing ball on the title screen does exactly the same.</p>
+<h2>The sound engine came from outside</h2>
+<p>The music player doesn&#x27;t look like it was written for this game so much as dropped into it as a library. The evidence is in the binary itself: it brings <b>its own interrupt handler</b>, ready to hook into the system — and the game doesn&#x27;t use it, because it has its own. It just sits there, 21 bytes nobody executes.</p>
+<h2>The credits</h2>
+<p>The title screen, reconstructed by decompressing the graphics and assembling the map, reads:</p>
+<blockquote><b>PROGRAMA:</b> ALBERTO L. NAVARRO · <b>GRÁFICOS:</b> LUIGILOPEZ · TOPO SOFT 1988</blockquote>
+<p>That&#x27;s read out of the binary, not from external sources. It&#x27;s what the game itself claims.</p>
+<footer><p><em>Ale Hop!</em> lo publico Topo Soft en 1988; segun sus propios creditos, el programa es de Alberto L. Navarro y los graficos de LuigiLopez. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion.</p></footer></div>

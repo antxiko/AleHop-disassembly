@@ -1,0 +1,13 @@
+# Puntos de entrada de SLOTS (carga en 0xC350, ejecuta en 0xC58F).
+0xC58F   # entrada real (BLOAD ,R): cabecera BIN exec=0xC58F
+0xC350   # buscador de RAM; se llama desde 0xC58F
+
+# Estos bloques NO se alcanzan siguiendo el flujo: el cargador se los copia con
+# LDIR a RAM alta y los ejecuta alli. Se siembran a mano para que salgan
+# desensamblados. OJO al leerlos: las direcciones absolutas que contienen
+# apuntan a donde se EJECUTAN, no a donde estan.
+0xC418   # -> se copia a 0x9C40 : RDSLT/ENASLT relocalizado
+0xC490   # -> se copia a 0xE22C (0x47 = 71 bytes) : selector de slot por pagina
+0xC4D7   # cargador turbo. A diferencia de Temptations, aqui se ejecuta EN SU SITIO
+         # (la secuencia de carga hace `call 0xC4D7`), no se copia a RAM alta.
+0xC5BB   # -> se copia a 0xE09C (0x85 = 133 bytes) : secuencia principal de carga

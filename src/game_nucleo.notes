@@ -1,0 +1,133 @@
+# Trozo "nucleo": el arranque y la PANTALLA DE TITULO. Se ejecuta en
+# 0xBD00-0xC53F y viaja en la cinta en 0x92DA-0x9B19.
+#
+# Aqui esta el punto de entrada del juego (0xC000), que es a donde salta el
+# cargador SLOTS. Lo primero que hace es poner la pila y configurar la memoria;
+# a partir de ahi el MSX queda con la ROM del BIOS en la pagina 0 y RAM en las
+# paginas 1, 2 y 3, que es la razon de que los `call 0x0056` y `call 0x005C` de
+# todo el juego funcionen sin conmutar nada.
+#
+# Los primeros 768 bytes del trozo (0xBD00-0xBFFF) NO son codigo: son una tabla
+# de nombres de pantalla que se vuelca entera a la VRAM.
+
+B 0xBD00 ############################################################
+B 0xBD00 TABLA DE NOMBRES (768 bytes de datos, no codigo)
+B 0xBD00 ############################################################
+B 0xBD00 32x24 casillas que 0xC05F manda a VRAM 0x1800 de una tacada.
+D 0xBD00 0xC000 tabla_nombres   Pantalla completa de 32x24 -> VRAM 0x1800
+
+B 0xC000 ############################################################
+B 0xC000 ARRANQUE EN FRIO
+B 0xC000 ############################################################
+B 0xC000 A donde salta SLOTS cuando ha terminado de cargar la cinta.
+B 0xC000 Verificado con un breakpoint en openMSX.
+L 0xC000 ARRANQUE          Punto de entrada del juego
+L 0xC086 BUCLE_ATRACCION   El bucle del modo atraccion: encadena las cinco escenas y vuelve a empezar
+L 0xC097 ESCENA_1          Primera escena: coloca la bola y la deja rebotando hasta que se pulsa disparo
+L 0xC0C0 PREPARA_BOLA      Deja la bola en su fotograma inicial y pinta los cuatro sprites
+L 0xC0CE HL_MAS_A          Utilidad: HL += A. La misma que 0xD123 en el motor
+L 0xC0D5 LEE_DISPARO       GTTRIG: mira el espacio y tambien el boton del joystick
+L 0xC0E2 DESCOMPRIME_2     El mismo descompresor RLE que 0xD2BE, pero volcando a 0xC540
+L 0xC105 INTERRUPCION_TITULO  Manejador enganchado en H.TIMI durante el titulo
+L 0xC12B FOTOGRAMA_BOLA    Saca el fotograma de la bola de los bits 2-3 del contador de frames
+L 0xC134 PINTA_BOLA        Monta los tres planos de color de la bola y los escribe como sprites
+L 0xC16F EMPIEZA_PARTIDA   Desengancha la interrupcion, silencia el PSG y salta al motor
+L 0xC17A LEE_DISPARO_2     Otra lectura del disparo, la que usan las escenas
+L 0xC189 ESCENA_5          Ultima escena del modo atraccion
+L 0xC1B5 ESCENA_3          Tercera escena
+L 0xC1E2 ESCENA_4          Cuarta escena
+L 0xC20B CARGA_GRAFICOS_2  Gemelo de 0xD5FC: recorre una tabla de pares (origen, destino VRAM)
+L 0xC22A ESCRIBE_SPRITE_2  Vuelca los 4 bytes de atributo de un sprite. Gemelo de 0xD885
+L 0xC27E PINTA_N_SPRITES   Pinta B sprites seguidos
+L 0xC28A ESCENA_2          Segunda escena
+L 0xC2A4 LIMPIA_PANTALLA   Prepara la pantalla antes de dibujar
+L 0xC2BC SCROLL_MENSAJE    Hace pasar el mensaje de fin de partida, letra a letra y pixel a pixel
+L 0xC30E DESPLAZA_UNA_FILA Rota un pixel a la izquierda las 8 filas del renglon
+L 0xC333 REINICIA_SCROLL   Limpia el renglon y vuelve a poner el puntero al principio del mensaje
+L 0xC3B9 ARRANCA_MUSICA    Pone las tres voces de la musica del titulo, una por canal del PSG
+
+C 0xC086 Las cinco escenas del modo atraccion, en bucle hasta que alguien pulse
+C 0xC0A3 0x4C es la columna de partida de la bola
+C 0xC0BD Espera al retrazo: la animacion va a 50/60 fotogramas por segundo
+C 0xC10B Contador de frames del titulo, el equivalente a 0xDB75 en la partida
+C 0xC10C Mueve la musica: el reproductor va enganchado a la interrupcion
+C 0xC11E Doce NOP de relleno, sitio reservado para parches
+C 0xC12E Los bits 2 y 3 del contador dan cuatro fotogramas de animacion
+C 0xC134 Tres pasadas, una por plano de color: asi se hace un sprite multicolor en el MSX1
+C 0xC158 El numero de patron va multiplicado por 4 porque los sprites son de 16x16
+C 0xC172 Mete un RET en el hook H.TIMI para desenganchar la interrupcion del titulo
+C 0xC174 BIOS GICINI: calla el PSG antes de entrar en la partida
+C 0xC2C6 Lee la siguiente letra del mensaje; el 0x00 lo devuelve al principio
+C 0xC2CF El espacio (0x20) se cambia por 0x96 para que caiga en el hueco blanco de la tipografia
+C 0xC2D1 Sumando 0x69 el codigo ASCII se convierte en numero de tile
+C 0xC2EC BIOS LDIRMV: se lee el dibujo de la letra desde la propia VRAM
+C 0xC301 Dos esperas de retrazo: es lo que marca la velocidad del scroll
+
+B 0xC264 ------------------------------------------------------------
+B 0xC264 CODIGO MUERTO (26 bytes). Desensambla como un bucle coherente:
+B 0xC264    ld hl,0xC532 / ld a,(0xC52F) / add a,(hl) / ld (hl),a
+B 0xC264    call 0xC17A / push af / call 0xC134
+B 0xC264    ld bc,0x7C05 / call 0xC245 / pop af / ret z / halt / jr -26
+B 0xC264 Pero no hay una sola instruccion que salte aqui, ni ningun
+B 0xC264 puntero 64 C2 en todo el binario. Es codigo de otra version.
+B 0xC264 ------------------------------------------------------------
+D 0xC264 0xC27E codigo_muerto_1   26 bytes de codigo al que no llega nadie
+
+B 0xC38E ------------------------------------------------------------
+B 0xC38E CODIGO MUERTO (43 bytes). Es un efecto de cambio de color:
+B 0xC38E recorre los 0x1830 bytes de la tabla de color de la VRAM
+B 0xC38E (desde 0x2000), lee cada byte con RDVRM, le da dos vueltas a
+B 0xC38E la rutina de 0xC3A7 -que rota los nibbles y cambia el color 1
+B 0xC38E por el 0- y lo devuelve con WRTVRM.
+B 0xC38E Nadie lo llama: buscado el puntero 8E C3 en todo el binario,
+B 0xC38E cero apariciones. Y 0xC3A7 solo se referencia desde dentro de
+B 0xC38E este mismo trozo. Un efecto que se quedo fuera.
+B 0xC38E ------------------------------------------------------------
+D 0xC38E 0xC3B9 codigo_muerto_2   43 bytes: efecto de cambio de color de la VRAM, sin usar
+
+B 0xC3CE ############################################################
+B 0xC3CE DATOS Y VARIABLES DE LA PANTALLA DE TITULO
+B 0xC3CE ############################################################
+D 0xC3CE 0xC3E0 tabla_C3CE       18 bytes que lee 0xC03A al arrancar, antes de llamar a 0xC2AE
+D 0xC3E0 0xC3EC tablas_cortas    Dos tablitas: 0xC3E0 (la lee 0xC36D) y 0xC3E4 (la lee 0xC1F5)
+D 0xC3EC 0xC3F0 buffer_sprite    Los 4 bytes de atributo (Y, X, patron, color) que monta PINTA_BOLA con IY. El equivalente en la partida es 0xDADD
+
+B 0xC3EF ############################################################
+B 0xC3EF EL MENSAJE DE FIN DE PARTIDA
+B 0xC3EF ############################################################
+B 0xC3EF Texto en ASCII, con el que la rutina de 0xC2BC hace un scroll
+B 0xC3EF suave letra a letra. El puntero vive en 0xC53D y REINICIA_SCROLL
+B 0xC3EF lo pone en 0xC3EF; el bucle hace `inc hl` antes de leer, asi
+B 0xC3EF que el primer caracter es el de 0xC3F0. El 0x00 del final
+B 0xC3EF devuelve el puntero al principio: el mensaje se repite en bucle.
+B 0xC3EF (Por eso el puntero arranca justo en el ultimo byte del buffer
+B 0xC3EF de sprite de aqui arriba: se solapan, pero nunca se usan a la
+B 0xC3EF vez, uno es del titulo y otro de la pantalla final.)
+B 0xC3EF Cada byte se convierte en numero de tile sumandole 0x69, salvo
+B 0xC3EF el espacio (0x20), que se sustituye por 0x96 antes de sumar.
+B 0xC3EF Por eso los signos de puntuacion se ven como \ [ ] al leer los
+B 0xC3EF bytes en ASCII: son ! . ? en la tipografia del juego.
+B 0xC3EF Dice, literalmente:
+B 0xC3EF   ENHORABUENA!!!  HAS CONSEGUIDO SUPERAR LOS OBSTACULOS QUE
+B 0xC3EF   TE SEPARABAN DE LA VICTORIA...  TOPO SOFT TE FELICITA.
+B 0xC3EF   PERO...  PODRAS CON  TEMPTATION??
+B 0xC3EF La despedida es un anuncio de otro juego que Topo Soft habia
+B 0xC3EF publicado el ano anterior.
+D 0xC3F0 0xC4A7 mensaje_final    El texto que hace scroll al terminar el juego, en ASCII, terminado en 0x00
+D 0xC4A7 0xC510 relleno_mensaje  El 0x00 que cierra el mensaje y espacios de relleno hasta la tabla de graficos
+D 0xC510 0xC52E tabla_graficos   Juego de graficos de la presentacion. Es el MISMO contenido que la tabla de 0xDB35 del motor: pares (origen comprimido, destino VRAM) terminados en 0x0000
+D 0xC52E 0xC531 bandera_arranque 0xC52E: 0 = arranque normal, distinto de 0 = se vuelve de terminar la partida. La escribe 0xC003 con el valor que trae SLOTS y la lee 0xC059
+D 0xC531 0xC540 variables_titulo Las variables de la pantalla de titulo. Las mas usadas: 0xC532 (12 accesos), 0xC533 (10), 0xC531 y 0xC534 (7 cada una), 0xC53B (contador de frames de la interrupcion, igual que 0xDB75 en la partida) y 0xC53D (puntero de 16 bits)
+
+C 0xC000 Lo primero de todo: la pila
+C 0xC003 Guarda A, que trae SLOTS: 0 = arranque normal, distinto de 0 = venimos de terminar la partida
+C 0xC00A Pagina 0 -> ROM del BIOS. Por eso valen los CALL a 0x0056 y 0x005C
+C 0xC00D Pagina 1 -> RAM
+C 0xC010 Pagina 2 -> RAM
+C 0xC017 Hueco de 32 NOP: sitio reservado para parches
+C 0xC040 Apaga los 32 sprites poniendolos fuera de pantalla (Y = 0xC0)
+C 0xC04B Engancha 0xC105 en el hook H.TIMI, que el BIOS llama en cada interrupcion de video
+C 0xC059 Segun la bandera, portada normal o pantalla de final de partida
+C 0xC05F Vuelca la tabla de nombres de 0xBD00 a la VRAM
+C 0xC074 Vuelca el mapa de la pantalla de presentacion (0x4000)
+C 0xC177 Al pulsar disparo se salta al motor del juego: es la unica entrada a 0xD000

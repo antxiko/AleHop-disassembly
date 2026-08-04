@@ -1,0 +1,18 @@
+# TOPO: el logo animado de Topo Soft que sale antes de la portada.
+#
+# Se carga en 0x9470 con BLOAD"cas:",R desde el cargador BASIC y se ejecuta en
+# su primera direccion. Al terminar hace RET y el BASIC sigue con la linea 30,
+# que carga SLOTS.
+#
+# A diferencia del juego, esto corre con el BASIC vivo y la RAM sin conmutar.
+
+B 0x9470 ############################################################
+B 0x9470 LOGO DE TOPO SOFT
+B 0x9470 ############################################################
+B 0x9470 Primera cosa que se ve al cargar la cinta. Verificado en
+B 0x9470 openMSX: breakpoint en 0x9470 alcanzado a los 65,6 s.
+L 0x9470 TOPO_START       Punto de entrada (BLOAD ,R)
+C 0x9470 El codigo util empieza mas adelante; esto solo salta alli
+L 0x9473 TOPO_ANIMA       Rutina de animacion del logo
+C 0x947C Compara HL con DE para saber si ha llegado al final del recorrido
+C 0x949F Espera 3 interrupciones de barrido: asi se temporiza la animacion

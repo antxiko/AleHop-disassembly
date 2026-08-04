@@ -1,0 +1,122 @@
+<title>The 135 bytes that never execute — Ale Hop! (1988)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,640px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-TAPE.html">The tape</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html">Findings</a><a href="DEAD-BYTES.html" style=color:var(--tinta)>Dead bytes</a><a href="es/BYTES-MUERTOS.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1>The 135 bytes that never execute</h1>
+<p>Inside the game block there are four stretches that disassemble as perfectly coherent Z80 and that <b>no path reaches</b>: no <code>CALL</code>, no <code>JP</code>, no pointer in any table. 135 bytes out of 42645.</p>
+<p>They were hunted down one at a time: for each address, its pointer (the two bytes, little-endian) was searched across the <b>whole</b> binary — all three code regions, the engine&#x27;s tables, and the 35 KB of page-0 data — and it doesn&#x27;t appear. The search was done over the real disassembly, not by scanning bytes: a naive scan mistakes operands for opcodes and produces false positives. The first four candidates found that way collapsed on inspection.</p>
+<p>They&#x27;re deliberately marked as data in the listing. <b>Something disassembling cleanly doesn&#x27;t prove it runs</b>, and taking that for granted is the easiest way for a disassembly to end up lying: the bytes come out identical when reassembled — they haven&#x27;t changed, only their interpretation has — so a reproducibility check notices nothing.</p>
+<p>They&#x27;re still worth something, though: they say things about the game that the live code doesn&#x27;t.</p>
+<hr>
+<h2>1. The colour effect that was left out — 43 bytes at 0xC38E</h2>
+<p>The most interesting of the four. It walks the 0x1830 bytes of the VRAM colour table and applies the routine at 0xC3A7 to each byte <b>twice</b>:</p>
+<pre><code>0xC3A7:  rlc a / rlc a / rlc a / rlc a   ; swap the two nibbles
+         ld d,a
+         and 0x0F                        ; look at the result&#x27;s low nibble
+         xor 0x01                        ; is it 1?
+         ld a,d
+         ret nz                          ; if not, return the rotated value
+         and 0xF0                        ; if so, zero it
+         ret</code></pre>
+<p>Applied twice the nibbles end up back where they started, and the net effect is a one-line rule: <b>every nibble equal to 1 becomes 0</b>. Tested across all 256 possible combinations: 31 change.</p>
+<p>On the TMS9918, colour 1 is <b>black</b> and colour 0 is <b>transparent</b>, and transparent shows the backdrop colour from register R7. So this routine turns every black on screen into &quot;whatever the backdrop says&quot;.</p>
+<p>On the actual title screen it changes <b>3673 of the 6144 colour bytes</b>, 60 % of the display. With the black backdrop the game uses (R7 = 0x01) you&#x27;d see nothing: it only makes sense alongside a change to R7. In other words, it was half of a full-screen fade or flash.</p>
+<p>Here&#x27;s how it would look with a blue backdrop:</p>
+<p><img src="efecto-muerto.png" alt="The colour effect that was never used"></p>
+<hr>
+<h2>2. A title-screen loop from another version — 26 bytes at 0xC264</h2>
+<pre><code>ld hl,0xC532 / ld a,(0xC52F) / add a,(hl) / ld (hl),a
+call 0xC17A / push af / call 0xC134
+ld bc,0x7C05 / call 0xC245 / pop af
+ret z / halt / jr 0xC264</code></pre>
+<p>It calls three routines that are very much alive (0xC17A, 0xC134 and 0xC245) and touches a variable that&#x27;s in use (0xC532), so this is code from this game, not some other one. What gives it away is <b>0xC52F</b>: not a single live instruction reads or writes that variable. It&#x27;s a title animation loop that was replaced by another, leaving an orphaned variable behind.</p>
+<hr>
+<h2>3. The sound library&#x27;s interrupt handler — 21 bytes at 0xB000</h2>
+<pre><code>di / pop hl / call 0xB036 / pop ix / pop iy / pop af / pop bc / pop de / pop hl
+ex af,af&#x27; / exx / pop af / pop bc / pop de / pop hl / ei / ret</code></pre>
+<p>This is the classic &quot;fast interrupt&quot;: <code>pop hl</code> throws away the return address into the BIOS handler and the registers the BIOS had just saved are unwound by hand, skipping the rest of the system interrupt routine.</p>
+<p>It sits immediately before the music player and calls its frame routine (0xB036), which makes it the <b>library&#x27;s standard entry point</b> — the one you&#x27;d hook into H.TIMI if all you wanted was music. <em>Ale Hop!</em> doesn&#x27;t use it because it has its own handlers, at 0xC105 for the title screen and 0xD345 during play, which do the same thing plus keep a frame counter. All three are the same skeleton byte for byte.</p>
+<p>It&#x27;s the best evidence that the sound player arrived as a <b>reusable library</b> rather than as code written for this game: it travels with its own interrupt handler even though the game integrating it never calls it.</p>
+<hr>
+<h2>4. A loader from another build — 45 bytes at 0x8850</h2>
+<p>This one isn&#x27;t among the code but at the end of the data, right behind the last block of compressed graphics.</p>
+<pre><code>in a,(0xA8) / and 0xC0 / ld c,a / ld b,3
+[srl c / srl c / or c / djnz]      ; replicate page 3&#x27;s slot across all four
+ld (0xA87D),a
+and 0xFC / di / out (0xA8),a       ; page 0 -&gt; ROM, pages 1,2,3 -&gt; RAM
+ld hl,0x9000 / ld de,0x7000 / ld bc,0x184D / ldir
+ld a,(0xA87D) / and 0xF0 / out (0xA8),a   ; pages 0 and 1 -&gt; ROM, 2 and 3 -&gt; RAM
+ei / xor a / jp 0xC000</code></pre>
+<p>It ends by jumping to 0xC000, the same entry point the real game uses. But <b>the memory layout it leaves behind is different</b>: ROM in pages 0 <em>and</em> 1 (0x0000-0x7FFF), RAM only in the top two. The shipped version puts ROM in page 0 only and RAM in the other three.</p>
+<p>In that version, then, the game lived in the top 32 KB and hid its data under the <b>BASIC ROM</b> in page 1, rather than under the BIOS as the shipped one does. It moves 0x184D bytes (6221) to 0x7000, and the arithmetic lands exactly on 0x884D — which happens to be where the compressed graphics end in the shipped version.</p>
+<p>One more thing places it outside this build: it uses a variable at 0xA87D, and the game block ends at 0xA694. That address doesn&#x27;t exist here.</p>
+<hr>
+<h2>Summary</h2>
+<table><tr><th>where</th><th>bytes</th><th>what</th></tr><tr><td>0x8850</td><td>45</td><td>Loader from a build with a different memory layout</td></tr><tr><td>0xC38E</td><td>43</td><td>Full-screen colour effect, never invoked</td></tr><tr><td>0xC264</td><td>26</td><td>Title-screen loop replaced by another</td></tr><tr><td>0xB000</td><td>21</td><td>The sound library&#x27;s interrupt handler, unused</td></tr><tr><td></td><td><b>135</b></td><td></td></tr></table>
+<footer><p><em>Ale Hop!</em> lo publico Topo Soft en 1988; segun sus propios creditos, el programa es de Alberto L. Navarro y los graficos de LuigiLopez. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion.</p></footer></div>
