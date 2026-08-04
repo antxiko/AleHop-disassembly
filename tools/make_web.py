@@ -47,7 +47,7 @@ T = {
         h_num="The game in numbers", h_find="What turned up when we took it apart",
         h_scr="The six levels", h_met="How it was done",
         cifras=[("100%", "of the binary accounted for"), ("57", "routines identified"),
-                ("16", "maps"), ("4,588", "bytes of code"),
+                ("6", "level maps"), ("4,588", "bytes of code"),
                 ("38,057", "bytes of data"), ("0", "bytes unidentified")],
         nota_num="Only 11% being code doesn't mean anything is missing: this game is "
                  "<b style='color:var(--tinta);font-weight:400'>89% data</b>. The "
@@ -78,7 +78,7 @@ T = {
         h_num="El juego en cifras", h_find="Lo que apareció al desmontarlo",
         h_scr="Los seis niveles", h_met="Cómo se hizo",
         cifras=[("100%", "del binario explicado"), ("57", "rutinas identificadas"),
-                ("16", "mapas"), ("4.588", "bytes de código"),
+                ("6", "mapas de nivel"), ("4.588", "bytes de código"),
                 ("38.057", "bytes de datos"), ("0", "bytes sin identificar")],
         nota_num="Que solo el 11% sea código no significa que falte nada: este juego es "
                  "<b style='color:var(--tinta);font-weight:400'>89% datos</b>. Los "
