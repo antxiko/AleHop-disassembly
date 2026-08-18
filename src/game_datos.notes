@@ -30,11 +30,17 @@ B 0x0000 grafica. Por eso cada nivel usa un banco de 64 tiles distinto.
 B 0x0000 Los carga 0xD61C: HL = nivel*0x800 -> buffer 0xDD7A.
 
 D 0x0000 0x0800 mapa_nivel_1   Nivel 1, 256x8 casillas
+F 0x0000 32
 D 0x0800 0x1000 mapa_nivel_2   Nivel 2, 256x8 casillas
+F 0x0800 32
 D 0x1000 0x1800 mapa_nivel_3   Nivel 3, 256x8 casillas
+F 0x1000 32
 D 0x1800 0x2000 mapa_nivel_4   Nivel 4, 256x8 casillas
+F 0x1800 32
 D 0x2000 0x2800 mapa_nivel_5   Nivel 5, 256x8 casillas
+F 0x2000 32
 D 0x2800 0x3000 mapa_nivel_6   Nivel 6, 256x8 casillas
+F 0x2800 32
 
 B 0x3000 ############################################################
 B 0x3000 MAPAS DE FONDO (el parallax)
@@ -49,11 +55,17 @@ B 0x3000 cuatro veces mas despacio.
 B 0x3000 Los carga 0xD61C: HL = (0x18 + nivel) * 0x200.
 
 D 0x3000 0x3200 fondo_nivel_1   Fondo del nivel 1, 64x8
+F 0x3000 32
 D 0x3200 0x3400 fondo_nivel_2   Fondo del nivel 2, 64x8
+F 0x3200 32
 D 0x3400 0x3600 fondo_nivel_3   Fondo del nivel 3, 64x8
+F 0x3400 32
 D 0x3600 0x3800 fondo_nivel_4   Fondo del nivel 4, 64x8
+F 0x3600 32
 D 0x3800 0x3A00 fondo_nivel_5   Fondo del nivel 5, 64x8
+F 0x3800 32
 D 0x3A00 0x3C00 fondo_nivel_6   Fondo del nivel 6, 64x8
+F 0x3A00 32
 
 B 0x3C00 ------------------------------------------------------------
 B 0x3C00 1024 bytes de relleno 0xFF. Por la formula 0x3000+nivel*0x200
@@ -69,9 +81,13 @@ B 0x4000 ############################################################
 B 0x4000 Estos van directos a la tabla de nombres de la VRAM sin pasar
 B 0x4000 por ningun buffer intermedio.
 D 0x4000 0x4300 mapa_presentacion   Presentacion, 32x24. La vuelca 0xC074 a VRAM 0x1800. Con el juego de graficos B se lee: TOPO SOFT PRESENTA / ALE HOP! / PROGRAMA: ALBERTO L. NAVARRO / GRAFICOS: LUIGILOPEZ / TOPO SOFT 1988
+F 0x4000 32
 D 0x4300 0x4500 mapa_intro          Escena de intro, 32x16. La vuelca 0xD787 a VRAM 0x1800 y ademas la copia al buffer de mapa para poder animarla
+F 0x4300 32
 D 0x4500 0x4600 mapa_marcador       Panel del marcador, 32x8 -> VRAM 0x1A00 (filas 16-23). Lo vuelca 0xD6CB
+F 0x4500 32
 D 0x4600 0x4800 mapa_sin_referencia Otro mapa de 32x16 que renderiza como una escena coherente pero al que NO se ha encontrado ninguna referencia en el codigo. Contenido verificado, uso sin demostrar
+F 0x4600 32
 
 B 0x4800 ############################################################
 B 0x4800 GRAFICOS COMPRIMIDOS (11 bloques RLE)

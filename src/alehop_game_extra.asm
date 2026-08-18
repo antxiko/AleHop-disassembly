@@ -31,29 +31,29 @@ FRAME:		; Una vuelta de juego: HALT y despacho por la mascara 0xDB69
 	ld ix,0db69h		;d003   ; IX apunta a la mascara de tareas: los 11 `bit n,(ix+d)` de abajo la leen
 	halt			;d007
 	bit 7,(ix+000h)		;d008
-	call nz,VUELCA_MAPA	;d00c
+	call nz,VUELCA_MAPA		;d00c
 	bit 6,(ix+000h)		;d00f
-	call nz,VUELCA_FONDO	;d013
+	call nz,VUELCA_FONDO		;d013
 	bit 5,(ix+000h)		;d016
-	call nz,ANIMA_CASILLAS	;d01a
+	call nz,ANIMA_CASILLAS		;d01a
 	bit 4,(ix+000h)		;d01d
-	call nz,APLICA_VELOCIDAD	;d021
+	call nz,APLICA_VELOCIDAD		;d021
 	bit 3,(ix+000h)		;d024
-	call nz,AVANZA_CAMARA	;d028
+	call nz,AVANZA_CAMARA		;d028
 	bit 2,(ix+000h)		;d02b
-	call nz,APLICA_ALTURA	;d02f
+	call nz,APLICA_ALTURA		;d02f
 	bit 1,(ix+000h)		;d032
-	call nz,PATRON_SEGUN_FRAME	;d036
+	call nz,PATRON_SEGUN_FRAME		;d036
 	bit 0,(ix+000h)		;d039
-	call nz,PINTA_JUGADOR	;d03d
+	call nz,PINTA_JUGADOR		;d03d
 	bit 7,(ix+001h)		;d040
-	call nz,COLISION	;d044
+	call nz,COLISION		;d044
 	bit 6,(ix+001h)		;d047
-	call nz,SALTO	;d04b
+	call nz,SALTO		;d04b
 	bit 5,(ix+001h)		;d04e
-	call nz,CUENTA_ATRAS	;d052
+	call nz,CUENTA_ATRAS		;d052
 	ld a,(0db54h)		;d055
-	cp 0e0h			;d058
+	cp 0e0h		;d058
 	jp nc,L_D761		;d05a
 	ret			;d05d
 SALTO:		; Disparo: dispara el salto y lleva su fisica
@@ -102,31 +102,31 @@ L_D0BC:
 	ld bc,00020h		;d0bd
 	ld a,(0db54h)		;d0c0
 	and 03fh		;d0c3
-	cp 021h			;d0c5
+	cp 021h		;d0c5
 	jr c,L_D0D0		;d0c7
 	and 01fh		;d0c9
 	sub 020h		;d0cb
-	neg			;d0cd
+	neg		;d0cd
 	ld c,a			;d0cf
 L_D0D0:
 	call COPIA_FILA		;d0d0
 	pop bc			;d0d3
 	djnz L_D0BC		;d0d4
 	pop af			;d0d6
-	cp 021h			;d0d7
+	cp 021h		;d0d7
 	ret c			;d0d9
 	and 01fh		;d0da
 	sub 020h		;d0dc
-	neg			;d0de
+	neg		;d0de
 	ld c,a			;d0e0
 	ld hl,01800h		;d0e1
 	call HL_MAS_A		;d0e4
 	ld de,0db7ah		;d0e7
-	ex de,hl		;d0ea
+	ex de,hl			;d0ea
 	ld (0db61h),hl		;d0eb
 	ld (0db63h),de		;d0ee
 	sub 020h		;d0f2
-	neg			;d0f4
+	neg		;d0f4
 	ld c,a			;d0f6
 	ld (0db65h),bc		;d0f7
 	ld b,008h		;d0fb
@@ -141,21 +141,21 @@ COPIA_FILA:		; Copia una fila a VRAM: origen +0x40 (64 columnas), destino +0x20 
 	call 0005ch		;d109   ; BIOS LDIRVM - Block transfers to VRAM from memory
 	ld de,00040h		;d10c
 	ld hl,(0db61h)		;d10f
-	add hl,de		;d112
+	add hl,de			;d112
 	ld (0db61h),hl		;d113
 	push hl			;d116
 	ld hl,(0db63h)		;d117
-	sra e			;d11a
-	add hl,de		;d11c
+	sra e		;d11a
+	add hl,de			;d11c
 	ld (0db63h),hl		;d11d
-	ex de,hl		;d120
+	ex de,hl			;d120
 	pop hl			;d121
 	ret			;d122
 HL_MAS_A:		; Utilidad: HL += A
 	push de			;d123
 	ld e,a			;d124
 	ld d,000h		;d125
-	add hl,de		;d127
+	add hl,de			;d127
 	pop de			;d128
 	ret			;d129
 ANIMA_CASILLAS:		; Cada 8 frames avanza un fotograma las casillas especiales
@@ -165,18 +165,18 @@ ANIMA_CASILLAS:		; Cada 8 frames avanza un fotograma las casillas especiales
 	ld hl,0dd79h		;d130
 	ld de,0e57ah		;d133
 L_D136:
-	ld a,(de)		;d136
-	cp 0ffh			;d137
+	ld a,(de)			;d136
+	cp 0ffh		;d137
 	ret z			;d139
 	call HL_MAS_A		;d13a
-	ld a,(hl)		;d13d
+	ld a,(hl)			;d13d
 	inc a			;d13e
 	and 003h		;d13f
 	ld b,a			;d141
-	ld a,(hl)		;d142
+	ld a,(hl)			;d142
 	and 0fch		;d143
 	or b			;d145
-	ld (hl),a		;d146
+	ld (hl),a			;d146
 	inc de			;d147
 	jr L_D136		;d148
 VUELCA_MAPA:		; Manda las 8 filas del mapa a VRAM 0x1900 con OTIR
@@ -193,7 +193,7 @@ L_D15F:
 	ld b,020h		;d160
 	push hl			;d162
 	di			;d163
-	otir			;d164
+	otir		;d164
 	pop hl			;d166
 	inc h			;d167
 	pop bc			;d168
@@ -215,7 +215,7 @@ L_D17B:
 	ret z			;d180
 	ld c,a			;d181
 	and 003h		;d182
-	cp 003h			;d184
+	cp 003h		;d184
 	ret z			;d186
 	inc e			;d187
 	ld a,c			;d188
@@ -225,15 +225,15 @@ L_D17B:
 	dec e			;d18d
 	ret			;d18e
 L_D18F:
-	cp 00ah			;d18f
+	cp 00ah		;d18f
 	ret nc			;d191
 	push hl			;d192
 	push de			;d193
 	ld hl,(0f3dch)		;d194
 	call L_D1B6		;d197
-	sla a			;d19a
+	sla a		;d19a
 	ld b,a			;d19c
-	sla a			;d19d
+	sla a		;d19d
 	add a,b			;d19f
 	add a,00bh		;d1a0
 	ld b,003h		;d1a2
@@ -244,7 +244,7 @@ L_D1A7:
 	inc a			;d1ab
 	call 0004dh		;d1ac   ; BIOS WRTVRM - Writes data in VRAM
 	inc a			;d1af
-	add hl,de		;d1b0
+	add hl,de			;d1b0
 	djnz L_D1A7		;d1b1
 	pop de			;d1b3
 	pop hl			;d1b4
@@ -255,12 +255,12 @@ L_D1B6:
 	ld h,000h		;d1b8
 	ld b,005h		;d1ba
 L_D1BC:
-	add hl,hl		;d1bc
+	add hl,hl			;d1bc
 	djnz L_D1BC		;d1bd
 	ld d,000h		;d1bf
-	add hl,de		;d1c1
+	add hl,de			;d1c1
 	ld de,01800h		;d1c2
-	add hl,de		;d1c5
+	add hl,de			;d1c5
 	pop de			;d1c6
 	ret			;d1c7
 L_D1C8:
@@ -270,46 +270,46 @@ L_D1C8:
 	ld b,006h		;d1d2
 L_D1D4:
 	push bc			;d1d4
-	ld a,(hl)		;d1d5
-	bit 0,b			;d1d6
+	ld a,(hl)			;d1d5
+	bit 0,b		;d1d6
 	jr z,L_D1E3		;d1d8
-	srl a			;d1da
-	srl a			;d1dc
-	srl a			;d1de
-	srl a			;d1e0
+	srl a		;d1da
+	srl a		;d1dc
+	srl a		;d1de
+	srl a		;d1e0
 	inc hl			;d1e2
 L_D1E3:
 	and 00fh		;d1e3
 	call L_D18F		;d1e5
 	push hl			;d1e8
 	ld hl,0f3ddh		;d1e9
-	dec (hl)		;d1ec
-	dec (hl)		;d1ed
+	dec (hl)			;d1ec
+	dec (hl)			;d1ed
 	pop hl			;d1ee
 	pop bc			;d1ef
 	djnz L_D1D4		;d1f0
 	ret			;d1f2
 L_D1F3:
-	inc (hl)		;d1f3
-	inc (hl)		;d1f4
+	inc (hl)			;d1f3
+	inc (hl)			;d1f4
 	ld hl,0db59h		;d1f5
 	ld a,075h		;d1f8
-	add a,(hl)		;d1fa
+	add a,(hl)			;d1fa
 	daa			;d1fb
-	ld (hl),a		;d1fc
+	ld (hl),a			;d1fc
 	inc hl			;d1fd
 	ld a,000h		;d1fe
-	adc a,(hl)		;d200
+	adc a,(hl)			;d200
 	inc a			;d201
 	inc a			;d202
 	inc a			;d203
 	daa			;d204
-	ld (hl),a		;d205
+	ld (hl),a			;d205
 	inc hl			;d206
 	ld a,000h		;d207
-	adc a,(hl)		;d209
+	adc a,(hl)			;d209
 	daa			;d20a
-	ld (hl),a		;d20b
+	ld (hl),a			;d20b
 	ld hl,0dae1h		;d20c
 	call L_D986		;d20f
 	ld bc,00078h		;d212
@@ -331,9 +331,9 @@ L_D233:
 	sbc hl,bc		;d235
 	pop hl			;d237
 	jr nc,L_D255		;d238
-	ld a,(hl)		;d23a
+	ld a,(hl)			;d23a
 	and 03fh		;d23b
-	cp 018h			;d23d
+	cp 018h		;d23d
 	jr nc,L_D233		;d23f
 	push de			;d241
 	ld de,(0db61h)		;d242
@@ -342,12 +342,12 @@ L_D233:
 	sbc hl,de		;d24a
 	ld a,l			;d24c
 	pop de			;d24d
-	ld (de),a		;d24e
+	ld (de),a			;d24e
 	inc de			;d24f
 	ld hl,(0db61h)		;d250
 	jr L_D233		;d253
 L_D255:
-	ex de,hl		;d255
+	ex de,hl			;d255
 	ld (hl),0ffh		;d256
 	ret			;d258
 L_D259:
@@ -361,8 +361,8 @@ L_D259:
 	or b			;d265
 	ld b,a			;d266
 	ld hl,0db58h		;d267
-	ld a,(hl)		;d26a
-	ld (hl),b		;d26b
+	ld a,(hl)			;d26a
+	ld (hl),b			;d26b
 	cpl			;d26c
 	and b			;d26d
 	ret			;d26e
@@ -384,27 +384,27 @@ L_D26F:
 APLICA_VELOCIDAD:		; Izquierda/derecha cambian la VELOCIDAD (0xDB60), no la posicion
 	call L_D26F		;d282
 	ld hl,0db60h		;d285
-	ld a,(hl)		;d288
+	ld a,(hl)			;d288
 	add a,d			;d289
 	ret m			;d28a
-	cp 027h			;d28b
+	cp 027h		;d28b
 	jr nc,L_D291		;d28d
-	ld (hl),a		;d28f
+	ld (hl),a			;d28f
 	ret			;d290
 L_D291:
-	dec (hl)		;d291
-	dec (hl)		;d292
+	dec (hl)			;d291
+	dec (hl)			;d292
 	ret			;d293
 APLICA_ALTURA:		; Arriba/abajo mueven en diagonal
 	call L_D17B		;d294
 	ld hl,0db56h		;d297
-	ld a,(hl)		;d29a
+	ld a,(hl)			;d29a
 	add a,e			;d29b
-	cp 0b0h			;d29c
+	cp 0b0h		;d29c
 	ret nc			;d29e
-	cp 071h			;d29f
+	cp 071h		;d29f
 	ret c			;d2a1
-	ld (hl),a		;d2a2
+	ld (hl),a			;d2a2
 	jp L_D2B3		;d2a3
 AVANZA_CAMARA:		; Adelanta la columna de camara (0xDB54)
 	ld a,(0db60h)		;d2a6
@@ -415,17 +415,17 @@ AVANZA_CAMARA:		; Adelanta la columna de camara (0xDB54)
 L_D2B3:
 	ld a,(0db56h)		;d2b3
 	sub 0e0h		;d2b6
-	neg			;d2b8
+	neg		;d2b8
 	ld (0db55h),a		;d2ba
 	ret			;d2bd
 DESCOMPRIME:		; Descompresor RLE de 16 bits. Destino fijo: el buffer 0xDD7A
 	ld de,0dd7ah		;d2be
 L_D2C1:
-	ld c,(hl)		;d2c1
+	ld c,(hl)			;d2c1
 	inc hl			;d2c2
-	ld b,(hl)		;d2c3
+	ld b,(hl)			;d2c3
 	inc hl			;d2c4
-	bit 7,b			;d2c5
+	bit 7,b		;d2c5
 	jr z,L_D2DD		;d2c7
 	ld a,0ffh		;d2c9
 	cp b			;d2cb
@@ -433,9 +433,9 @@ L_D2C1:
 	cp c			;d2ce
 	ret z			;d2cf
 L_D2D0:
-	res 7,b			;d2d0
-	ld a,(hl)		;d2d2
-	ld (de),a		;d2d3
+	res 7,b		;d2d0
+	ld a,(hl)			;d2d2
+	ld (de),a			;d2d3
 	inc de			;d2d4
 	dec bc			;d2d5
 	ld a,c			;d2d6
@@ -444,27 +444,27 @@ L_D2D0:
 	inc hl			;d2da
 	jr L_D2C1		;d2db
 L_D2DD:
-	ldir			;d2dd
+	ldir		;d2dd
 	jr L_D2C1		;d2df
 CLASE_DE_CASILLA:		; Calcula que casilla pisa el jugador y devuelve su clase (0..14)
 	ld a,(0db55h)		;d2e1
 	sub 030h		;d2e4
-	srl a			;d2e6
-	srl a			;d2e8
-	srl a			;d2ea
+	srl a		;d2e6
+	srl a		;d2e8
+	srl a		;d2ea
 	ld h,a			;d2ec
 	ld a,(0db54h)		;d2ed
 	ld l,a			;d2f0
 	ld a,(0db56h)		;d2f1
-	srl a			;d2f4
-	srl a			;d2f6
-	srl a			;d2f8
+	srl a		;d2f4
+	srl a		;d2f6
+	srl a		;d2f8
 	add a,l			;d2fa
 	ld l,a			;d2fb
 	ld de,0dd7ah		;d2fc
-	add hl,de		;d2ff
+	add hl,de			;d2ff
 	ld (0db77h),hl		;d300
-	ld a,(hl)		;d303
+	ld a,(hl)			;d303
 	and 03fh		;d304
 	ld hl,0dacdh		;d306
 	ld c,0ffh		;d309
@@ -480,21 +480,21 @@ COLISION:		; Despacha segun la clase de casilla: 9 casos distintos
 	call CLASE_DE_CASILLA		;d315
 	and a			;d318
 	jp z,L_D3F7		;d319
-	cp 006h			;d31c
+	cp 006h		;d31c
 	jp z,L_D429		;d31e
-	cp 007h			;d321
+	cp 007h		;d321
 	jp z,L_D1F3		;d323
-	cp 001h			;d326
+	cp 001h		;d326
 	jp z,L_D423		;d328
-	cp 002h			;d32b
+	cp 002h		;d32b
 	jp z,L_D4C7		;d32d
-	cp 00dh			;d330
+	cp 00dh		;d330
 	jp z,L_D4F9		;d332
-	cp 00bh			;d335
+	cp 00bh		;d335
 	jp z,L_D526		;d337
-	cp 00ah			;d33a
+	cp 00ah		;d33a
 	jp z,L_D58F		;d33c
-	cp 003h			;d33f
+	cp 003h		;d33f
 	jp z,L_D5D5		;d341
 	ret			;d344
 INTERRUPCION:		; Manejador propio, enganchado en H.TIMI. Cuenta frames y mueve el sonido
@@ -502,15 +502,15 @@ INTERRUPCION:		; Manejador propio, enganchado en H.TIMI. Cuenta frames y mueve e
 	pop hl			;d347
 	di			;d348
 	ld hl,0db75h		;d349
-	inc (hl)		;d34c
+	inc (hl)			;d34c
 	call SONIDO_FRAME		;d34d
-	pop ix			;d350
-	pop iy			;d352
+	pop ix		;d350
+	pop iy		;d352
 	pop af			;d354
 	pop bc			;d355
 	pop de			;d356
 	pop hl			;d357
-	ex af,af'		;d358
+	ex af,af'			;d358
 	exx			;d359
 	pop af			;d35a
 	pop bc			;d35b
@@ -538,10 +538,10 @@ L_D372:
 	ld a,(0db67h)		;d383
 	sub b			;d386
 	add a,003h		;d387
-	sla a			;d389
-	sla a			;d38b
+	sla a		;d389
+	sla a		;d38b
 	ld (iy+002h),a		;d38d
-	ld a,(hl)		;d390
+	ld a,(hl)			;d390
 	ld (iy+003h),a		;d391
 	ld a,004h		;d394
 	sub b			;d396
@@ -560,27 +560,27 @@ PONE_REGISTROS_VDP:		; Escribe los 8 registros del VDP desde la tabla de 0xDAB2
 	ld c,000h		;d3ad
 L_D3AF:
 	push bc			;d3af
-	ld b,(hl)		;d3b0
+	ld b,(hl)			;d3b0
 	inc hl			;d3b1
 	call 00047h		;d3b2   ; BIOS WRTVDP - Writes data in the VDP-register
 	pop bc			;d3b5
 	inc c			;d3b6
 	ld a,c			;d3b7
-	cp 008h			;d3b8
+	cp 008h		;d3b8
 	ret z			;d3ba
 	jr L_D3AF		;d3bb
 CUENTA_ATRAS:		; Lleva el contador de tiempo de la partida
 	ld hl,0db72h		;d3bd
-	dec (hl)		;d3c0
+	dec (hl)			;d3c0
 	ret nz			;d3c1
 	ld (hl),005h		;d3c2
 	ld hl,0db5dh		;d3c4
 	ld b,003h		;d3c7
 	scf			;d3c9
 L_D3CA:
-	ld a,(hl)		;d3ca
+	ld a,(hl)			;d3ca
 	sbc a,000h		;d3cb
-	ld (hl),a		;d3cd
+	ld (hl),a			;d3cd
 	jr nc,L_D3D8		;d3ce
 	ld (hl),009h		;d3d0
 	inc hl			;d3d2
@@ -591,18 +591,18 @@ L_D3D8:
 	ld (0f3dch),hl		;d3db
 	ld hl,0f3ddh		;d3de
 	ld de,0db5dh		;d3e1
-	ld a,(de)		;d3e4
+	ld a,(de)			;d3e4
 	call L_D18F		;d3e5
-	dec (hl)		;d3e8
-	dec (hl)		;d3e9
-	dec (hl)		;d3ea
+	dec (hl)			;d3e8
+	dec (hl)			;d3e9
+	dec (hl)			;d3ea
 	inc de			;d3eb
-	ld a,(de)		;d3ec
+	ld a,(de)			;d3ec
 	call L_D18F		;d3ed
-	dec (hl)		;d3f0
-	dec (hl)		;d3f1
+	dec (hl)			;d3f0
+	dec (hl)			;d3f1
 	inc de			;d3f2
-	ld a,(de)		;d3f3
+	ld a,(de)			;d3f3
 	jp L_D18F		;d3f4
 L_D3F7:
 	ld hl,(0db53h)		;d3f7
@@ -622,9 +622,9 @@ L_D3F7:
 	ld (0db6dh),a		;d41d
 	jp PINTA_JUGADOR		;d420
 L_D423:
-	ld a,(hl)		;d423
+	ld a,(hl)			;d423
 	and 03fh		;d424
-	cp 00eh			;d426
+	cp 00eh		;d426
 	ret nz			;d428
 L_D429:
 	ld hl,020e9h		;d429
@@ -642,41 +642,41 @@ L_D429:
 L_D44A:
 	ld hl,0db75h		;d44a
 	bit 0,(hl)		;d44d
-	call z,L_D471	;d44f
+	call z,L_D471		;d44f
 	jr z,L_D46A		;d452
 	ld hl,0dabah		;d454
 	ld a,(0db75h)		;d457
-	sra a			;d45a
+	sra a		;d45a
 	and 007h		;d45c
 	call HL_MAS_A		;d45e
-	ld a,(hl)		;d461
+	ld a,(hl)			;d461
 	ld (0db67h),a		;d462
 	call FRAME		;d465
 	jr L_D44A		;d468
 L_D46A:
 	ld hl,0db68h		;d46a
-	dec (hl)		;d46d
+	dec (hl)			;d46d
 	jp L_D480		;d46e
 L_D471:
 	ld hl,0db6bh		;d471
-	inc (hl)		;d474
-	ld a,(hl)		;d475
-	sra a			;d476
-	sra a			;d478
+	inc (hl)			;d474
+	ld a,(hl)			;d475
+	sra a		;d476
+	sra a		;d478
 	ld hl,0db57h		;d47a
-	add a,(hl)		;d47d
-	ld (hl),a		;d47e
+	add a,(hl)			;d47d
+	ld (hl),a			;d47e
 	ret			;d47f
 L_D480:
 	ld a,(0db68h)		;d480
-	cp 0ffh			;d483
+	cp 0ffh		;d483
 	jp z,L_D4A3		;d485
-	sla a			;d488
-	sla a			;d48a
-	neg			;d48c
+	sla a		;d488
+	sla a		;d48a
+	neg		;d48c
 	add a,013h		;d48e
-	sla a			;d490
-	sla a			;d492
+	sla a		;d490
+	sla a		;d492
 	ld hl,01b2ah		;d494
 	jp 0004dh		;d497   ; BIOS WRTVRM - Writes data in VRAM
 L_D49A:
@@ -698,26 +698,26 @@ L_D4A3:
 	call 0005ch		;d4c1   ; BIOS LDIRVM - Block transfers to VRAM from memory
 	call VUELVE_AL_TITULO		;d4c4
 L_D4C7:
-	ld a,(hl)		;d4c7
+	ld a,(hl)			;d4c7
 	and 0c0h		;d4c8
-	or 018h			;d4ca
-	ld (hl),a		;d4cc
+	or 018h		;d4ca
+	ld (hl),a			;d4cc
 	call LISTA_ESPECIALES		;d4cd
 	ld hl,0db5eh		;d4d0
-	ld a,(hl)		;d4d3
+	ld a,(hl)			;d4d3
 	add a,002h		;d4d4
 	daa			;d4d6
 	push af			;d4d7
 	and 00fh		;d4d8
-	ld (hl),a		;d4da
+	ld (hl),a			;d4da
 	pop af			;d4db
 	inc hl			;d4dc
-	srl a			;d4dd
-	srl a			;d4df
-	srl a			;d4e1
-	srl a			;d4e3
-	add a,(hl)		;d4e5
-	ld (hl),a		;d4e6
+	srl a		;d4dd
+	srl a		;d4df
+	srl a		;d4e1
+	srl a		;d4e3
+	add a,(hl)			;d4e5
+	ld (hl),a			;d4e6
 	ld hl,0dae1h		;d4e7
 	call L_D986		;d4ea
 	ld bc,00032h		;d4ed
@@ -731,7 +731,7 @@ L_D4F9:
 	ld a,028h		;d4fe
 	ld (0db60h),a		;d500
 	ld a,(0db6dh)		;d503
-	cp 006h			;d506
+	cp 006h		;d506
 	jp z,PINTA_JUGADOR		;d508
 	ld hl,0dae1h		;d50b
 	call L_D986		;d50e
@@ -752,7 +752,7 @@ L_D526:
 	ld a,001h		;d533
 	ld (0db6dh),a		;d535
 	pop hl			;d538
-	ld a,(hl)		;d539
+	ld a,(hl)			;d539
 	and 001h		;d53a
 	jr z,L_D53F		;d53c
 	dec hl			;d53e
@@ -776,21 +776,21 @@ L_D53F:
 L_D56A:
 	ld hl,(0db77h)		;d56a
 	dec h			;d56d
-	ld a,(hl)		;d56e
+	ld a,(hl)			;d56e
 	and 0c0h		;d56f
-	or 02ah			;d571
+	or 02ah		;d571
 	add a,b			;d573
-	ld (hl),a		;d574
+	ld (hl),a			;d574
 	inc hl			;d575
 	inc a			;d576
-	ld (hl),a		;d577
+	ld (hl),a			;d577
 	dec l			;d578
 	inc h			;d579
 	inc a			;d57a
-	ld (hl),a		;d57b
+	ld (hl),a			;d57b
 	inc hl			;d57c
 	inc a			;d57d
-	ld (hl),a		;d57e
+	ld (hl),a			;d57e
 	ld hl,020e1h		;d57f
 	ld (0db69h),hl		;d582
 	ld b,004h		;d585
@@ -821,9 +821,9 @@ L_D5AE:
 	and a			;d5ba
 	jr z,L_D5CA		;d5bb
 	call CLASE_DE_CASILLA		;d5bd
-	cp 001h			;d5c0
+	cp 001h		;d5c0
 	jr z,L_D5CA		;d5c2
-	cp 006h			;d5c4
+	cp 006h		;d5c4
 	jr z,L_D5CA		;d5c6
 	jr L_D5AE		;d5c8
 L_D5CA:
@@ -832,10 +832,10 @@ L_D5CA:
 	call 0004dh		;d5cf   ; BIOS WRTVRM - Writes data in VRAM
 	jp 00090h		;d5d2   ; BIOS GICINI - Initialises PSG and sets initial value for the PLAY statement
 L_D5D5:
-	ld a,(hl)		;d5d5
+	ld a,(hl)			;d5d5
 	and 0c0h		;d5d6
-	or 019h			;d5d8
-	ld (hl),a		;d5da
+	or 019h		;d5d8
+	ld (hl),a			;d5da
 	call LISTA_ESPECIALES		;d5db
 	ld hl,0dae1h		;d5de
 	call L_D986		;d5e1
@@ -844,27 +844,27 @@ L_D5D5:
 	ld a,005h		;d5ea
 	ld (0db6dh),a		;d5ec
 	ld a,(0db68h)		;d5ef
-	cp 004h			;d5f2
+	cp 004h		;d5f2
 	ret z			;d5f4
 	inc a			;d5f5
 	ld (0db68h),a		;d5f6
 	jp L_D480		;d5f9
 CARGA_GRAFICOS:		; Recorre una tabla de pares (origen comprimido, destino VRAM) hasta el 0x0000
 	nop			;d5fc
-	ld e,(hl)		;d5fd
+	ld e,(hl)			;d5fd
 	inc hl			;d5fe
-	ld d,(hl)		;d5ff
+	ld d,(hl)			;d5ff
 	inc hl			;d600
 	ld a,d			;d601
 	or e			;d602
 	ret z			;d603
 	push hl			;d604
-	ex de,hl		;d605
+	ex de,hl			;d605
 	call DESCOMPRIME		;d606
 	pop hl			;d609
-	ld e,(hl)		;d60a
+	ld e,(hl)			;d60a
 	inc hl			;d60b
-	ld d,(hl)		;d60c
+	ld d,(hl)			;d60c
 	inc hl			;d60d
 	push hl			;d60e
 	ld bc,00800h		;d60f
@@ -875,28 +875,28 @@ CARGA_GRAFICOS:		; Recorre una tabla de pares (origen comprimido, destino VRAM) 
 	jr CARGA_GRAFICOS		;d61a
 CARGA_NIVEL:		; Trae mapa y fondo desde la pagina 0. Con el nivel 6 se acaba el juego
 	ld a,(0db5ch)		;d61c
-	cp 006h			;d61f
+	cp 006h		;d61f
 	jp z,0c000h		;d621   ; Nivel 6 = fin del juego: se vuelve a la pantalla de titulo
 	ld l,000h		;d624   ; HL = nivel * 0x800: cada mapa ocupa 2048 bytes
 	ld h,a			;d626
-	sla h			;d627
-	sla h			;d629
-	sla h			;d62b
+	sla h		;d627
+	sla h		;d629
+	sla h		;d62b
 	push hl			;d62d
 	call 0f00fh		;d62e   ; Conmuta la pagina 0 a RAM: los mapas estan debajo de la ROM del BIOS
 	ld de,0dd7ah		;d631
 	ld bc,00800h		;d634
 	pop hl			;d637
 	nop			;d638
-	ldir			;d639
+	ldir		;d639
 	ld a,(0db5ch)		;d63b
 	add a,018h		;d63e
 	ld h,a			;d640
-	sla h			;d641
+	sla h		;d641
 	ld l,000h		;d643
 	ld de,0db7ah		;d645
 	ld bc,00200h		;d648
-	ldir			;d64b
+	ldir		;d64b
 	call 0f000h		;d64d   ; Devuelve la ROM del BIOS a la pagina 0
 	nop			;d650
 	nop			;d651
@@ -989,9 +989,9 @@ EMPIEZA_PARTIDA:		; Inicializacion de la fase: pila, paginacion, interrupcion, g
 	ld bc,0000ch		;d6e8
 	call 0005ch		;d6eb   ; BIOS LDIRVM - Block transfers to VRAM from memory
 	ld ix,0db59h		;d6ee
-	ld (ix+000h),000h	;d6f2
-	ld (ix+001h),000h	;d6f6
-	ld (ix+002h),000h	;d6fa
+	ld (ix+000h),000h		;d6f2
+	ld (ix+001h),000h		;d6f6
+	ld (ix+002h),000h		;d6fa
 	ld a,090h		;d6fe
 	ld (0db56h),a		;d700
 	xor a			;d703
@@ -1012,7 +1012,7 @@ L_D720:
 	push bc			;d723
 	push hl			;d724
 	push de			;d725
-	ldir			;d726
+	ldir		;d726
 	ld a,0ffh		;d728
 	bit 0,(ix+001h)		;d72a
 	jr z,L_D73E		;d72e
@@ -1021,22 +1021,22 @@ L_D720:
 	ld a,(0db74h)		;d734
 	sbc hl,de		;d737
 	call HL_MAS_A		;d739
-	ld a,(hl)		;d73c
+	ld a,(hl)			;d73c
 	pop de			;d73d
 L_D73E:
-	ld (de),a		;d73e
+	ld (de),a			;d73e
 	pop hl			;d73f
 	pop de			;d740
 	pop bc			;d741
 	ld a,020h		;d742
 	call HL_MAS_A		;d744
-	ex de,hl		;d747
+	ex de,hl			;d747
 	call HL_MAS_A		;d748
 	ld a,(0db73h)		;d74b
 	dec a			;d74e
 	jr nz,L_D720		;d74f
 	ld hl,0db74h		;d751
-	inc (hl)		;d754
+	inc (hl)			;d754
 	ld hl,0dd7ah		;d755
 	ld de,01800h		;d758
 	ld bc,00200h		;d75b
@@ -1048,7 +1048,7 @@ L_D761:
 	jr z,L_D777		;d768
 	halt			;d76a
 	ld hl,0db56h		;d76b
-	inc (hl)		;d76e
+	inc (hl)			;d76e
 	call PINTA_JUGADOR		;d76f
 	call L_D471		;d772
 	jr L_D761		;d775
@@ -1057,7 +1057,7 @@ L_D777:
 	call PATRON_SEGUN_FRAME		;d778
 	call PINTA_JUGADOR		;d77b
 	ld hl,0db56h		;d77e
-	inc (hl)		;d781
+	inc (hl)			;d781
 	jr nz,L_D777		;d782
 	call L_D964		;d784
 	ld hl,04300h		;d787
@@ -1078,10 +1078,10 @@ L_D7A8:
 	ld bc,07c05h		;d7ae
 	call L_D8A0		;d7b1
 	ld hl,0db56h		;d7b4
-	inc (hl)		;d7b7
+	inc (hl)			;d7b7
 	halt			;d7b8
-	ld a,(hl)		;d7b9
-	cp 029h			;d7ba
+	ld a,(hl)			;d7b9
+	cp 029h		;d7ba
 	jr c,L_D7A8		;d7bc
 	xor a			;d7be
 	ld (0db67h),a		;d7bf
@@ -1095,14 +1095,14 @@ L_D7A8:
 	ld hl,04300h		;d7d4
 	ld de,0dd7ah		;d7d7
 	ld bc,00200h		;d7da
-	ldir			;d7dd
+	ldir		;d7dd
 	xor a			;d7df
 	ld (0db74h),a		;d7e0
 L_D7E3:
 	ld a,(0db74h)		;d7e3
 	sub 010h		;d7e6
 	jr z,L_D7FC		;d7e8
-	neg			;d7ea
+	neg		;d7ea
 	ld b,a			;d7ec
 	call L_D954		;d7ed
 	ld bc,0000bh		;d7f0
@@ -1130,7 +1130,7 @@ L_D80E:
 	ld hl,01b11h		;d829
 	call L_DA9B		;d82c
 	ld a,(0db74h)		;d82f
-	cp 00ch			;d832
+	cp 00ch		;d832
 	jr nz,L_D80E		;d834
 	ld a,001h		;d836
 	ld (0db53h),a		;d838
@@ -1141,7 +1141,7 @@ L_D83E:
 	ld bc,07c05h		;d844
 	call L_D8A0		;d847
 	ld hl,0db56h		;d84a
-	inc (hl)		;d84d
+	inc (hl)			;d84d
 	halt			;d84e
 	jr nz,L_D83E		;d84f
 	call L_DA74		;d851
@@ -1152,7 +1152,7 @@ L_D83E:
 	ld hl,0db17h		;d85e
 	call CARGA_GRAFICOS		;d861
 	ld hl,0db5ch		;d864
-	inc (hl)		;d867
+	inc (hl)			;d867
 	call CARGA_NIVEL		;d868
 	halt			;d86b
 	call VUELCA_FONDO		;d86c
@@ -1161,21 +1161,21 @@ L_D872:
 	call PATRON_SEGUN_FRAME		;d872
 	call PINTA_JUGADOR		;d875
 	ld hl,0db56h		;d878
-	inc (hl)		;d87b
+	inc (hl)			;d87b
 	halt			;d87c
-	ld a,(hl)		;d87d
-	cp 090h			;d87e
+	ld a,(hl)			;d87d
+	cp 090h		;d87e
 	jr c,L_D872		;d880
 	jp BUCLE_PRINCIPAL		;d882
 ESCRIBE_SPRITE:		; Vuelca 4 bytes de atributo al sprite n
 	push hl			;d885
 	push bc			;d886
 	push de			;d887
-	sla a			;d888
-	sla a			;d88a
+	sla a		;d888
+	sla a		;d88a
 	ld hl,01b00h		;d88c
 	call HL_MAS_A		;d88f
-	ex de,hl		;d892
+	ex de,hl			;d892
 	ld hl,0daddh		;d893
 	ld bc,00004h		;d896
 	call 0005ch		;d899   ; BIOS LDIRVM - Block transfers to VRAM from memory
@@ -1199,8 +1199,8 @@ L_D8A0:
 L_D8BF:
 	ld hl,0db56h		;d8bf
 	ld a,(0db53h)		;d8c2
-	add a,(hl)		;d8c5
-	ld (hl),a		;d8c6
+	add a,(hl)			;d8c5
+	ld (hl),a			;d8c6
 	call L_D471		;d8c7
 	push af			;d8ca
 	call PINTA_JUGADOR		;d8cb
@@ -1212,19 +1212,19 @@ L_D8BF:
 	jr L_D8BF		;d8d7
 L_D8D9:
 	ld ix,0daddh		;d8d9
-	ld (ix+001h),000h	;d8dd
-	ld (ix+002h),06ch	;d8e1
-	ld (ix+003h),005h	;d8e5
-	ld (ix+000h),00ah	;d8e9
+	ld (ix+001h),000h		;d8dd
+	ld (ix+002h),06ch		;d8e1
+	ld (ix+003h),005h		;d8e5
+	ld (ix+000h),00ah		;d8e9
 	ld a,004h		;d8ed
 	call ESCRIBE_SPRITE		;d8ef
-	ld (ix+000h),025h	;d8f2
+	ld (ix+000h),025h		;d8f2
 	ld a,005h		;d8f6
 	call ESCRIBE_SPRITE		;d8f8
-	ld (ix+000h),02dh	;d8fb
+	ld (ix+000h),02dh		;d8fb
 	ld a,006h		;d8ff
 	call ESCRIBE_SPRITE		;d901
-	ld (ix+000h),016h	;d904
+	ld (ix+000h),016h		;d904
 	ld a,007h		;d908
 	call ESCRIBE_SPRITE		;d90a
 L_D90D:
@@ -1243,8 +1243,8 @@ L_D910:
 L_D920:
 	ld hl,01b00h		;d920
 	push af			;d923
-	sla a			;d924
-	sla a			;d926
+	sla a		;d924
+	sla a		;d926
 	call HL_MAS_A		;d928
 	inc hl			;d92b
 	push hl			;d92c
@@ -1255,15 +1255,15 @@ L_D920:
 	ld e,a			;d935
 	pop af			;d936
 	sub 005h		;d937
-	neg			;d939
+	neg		;d939
 	add a,e			;d93b
 	ld e,a			;d93c
 	call 0004ah		;d93d   ; BIOS RDVRM - Reads the content of VRAM
 	add a,e			;d940
 	jp c,0004dh		;d941   ; BIOS WRTVRM - Writes data in VRAM
 	call 0004dh		;d944   ; BIOS WRTVRM - Writes data in VRAM
-	ld a,r			;d947
-	rrc a			;d949
+	ld a,r		;d947
+	rrc a		;d949
 	and 081h		;d94b
 	add a,004h		;d94d
 	inc hl			;d94f
@@ -1298,11 +1298,11 @@ L_D964:
 	halt			;d983
 	jr L_D964		;d984
 L_D986:
-	ld a,(hl)		;d986
-	cp 0ffh			;d987
+	ld a,(hl)			;d986
+	cp 0ffh		;d987
 	ret z			;d989
 	inc hl			;d98a
-	ld e,(hl)		;d98b
+	ld e,(hl)			;d98b
 	inc hl			;d98c
 	call 00093h		;d98d   ; BIOS WRTPSG - Writes data to PSG-register
 	jr L_D986		;d990
@@ -1310,21 +1310,21 @@ SONIDO_FRAME:		; Motor de efectos del PSG, llamado desde la interrupcion
 	ld a,(0db6dh)		;d992
 	and a			;d995
 	ret z			;d996
-	cp 001h			;d997
+	cp 001h		;d997
 	jp z,L_D9C0		;d999
-	cp 002h			;d99c
+	cp 002h		;d99c
 	jp z,L_D9E2		;d99e
-	cp 003h			;d9a1
+	cp 003h		;d9a1
 	jp z,L_D9F4		;d9a3
-	cp 004h			;d9a6
+	cp 004h		;d9a6
 	jp z,L_DA0A		;d9a8
-	cp 005h			;d9ab
+	cp 005h		;d9ab
 	jp z,L_DA28		;d9ad
-	cp 006h			;d9b0
+	cp 006h		;d9b0
 	jp z,L_DA37		;d9b2
-	cp 007h			;d9b5
+	cp 007h		;d9b5
 	jp z,L_DA56		;d9b7
-	cp 008h			;d9ba
+	cp 008h		;d9ba
 	jp z,L_DA63		;d9bc
 	ret			;d9bf
 L_D9C0:
@@ -1349,16 +1349,16 @@ L_D9E2:
 	xor a			;d9e2
 	call 00096h		;d9e3   ; BIOS RDPSG - Reads value from PSG-register
 	ld b,a			;d9e6
-	srl b			;d9e7
+	srl b		;d9e7
 	sub b			;d9e9
-	cp 001h			;d9ea
+	cp 001h		;d9ea
 	jp z,L_DA74		;d9ec
 	ld e,a			;d9ef
 	xor a			;d9f0
 	jp 00093h		;d9f1   ; BIOS WRTPSG - Writes data to PSG-register
 L_D9F4:
 	ld a,(0db57h)		;d9f4
-	sla a			;d9f7
+	sla a		;d9f7
 	ld hl,04000h		;d9f9
 	call HL_MAS_A		;d9fc
 	ld e,l			;d9ff
@@ -1375,14 +1375,14 @@ L_DA0A:
 	xor a			;da10
 	call 00096h		;da11   ; BIOS RDPSG - Reads value from PSG-register
 	dec a			;da14
-	cp 032h			;da15
+	cp 032h		;da15
 	ret c			;da17
 	ld e,a			;da18
 	xor a			;da19
 	call 00093h		;da1a   ; BIOS WRTPSG - Writes data to PSG-register
-	sra e			;da1d
-	sra e			;da1f
-	sra e			;da21
+	sra e		;da1d
+	sra e		;da1f
+	sra e		;da21
 	ld a,006h		;da23
 	jp 00093h		;da25   ; BIOS WRTPSG - Writes data to PSG-register
 L_DA28:
@@ -1395,7 +1395,7 @@ L_DA28:
 	jp 00093h		;da34   ; BIOS WRTPSG - Writes data to PSG-register
 L_DA37:
 	call CLASE_DE_CASILLA		;da37
-	cp 00dh			;da3a
+	cp 00dh		;da3a
 	jp nz,L_DA74		;da3c
 	xor a			;da3f
 	call 00096h		;da40   ; BIOS RDPSG - Reads value from PSG-register
@@ -1412,7 +1412,7 @@ L_DA37:
 	dec e			;da52
 	jp 00093h		;da53   ; BIOS WRTPSG - Writes data to PSG-register
 L_DA56:
-	ld a,r			;da56
+	ld a,r		;da56
 	ld b,a			;da58
 	xor a			;da59
 	call 00096h		;da5a   ; BIOS RDPSG - Reads value from PSG-register
@@ -1424,7 +1424,7 @@ L_DA63:
 	call CLASE_DE_CASILLA		;da63
 	and a			;da66
 	jp nz,L_DA74		;da67
-	ld a,r			;da6a
+	ld a,r		;da6a
 	and 00fh		;da6c
 	ld e,a			;da6e
 	ld a,008h		;da6f
@@ -1447,7 +1447,7 @@ L_DA85:
 	ret			;da8c
 L_DA8D:
 	ld hl,0db54h		;da8d
-	dec (hl)		;da90
+	dec (hl)			;da90
 	ret z			;da91
 	halt			;da92
 	call VUELCA_MAPA		;da93
@@ -1463,51 +1463,128 @@ L_DA9B:
 	and a			;daab
 	sbc hl,de		;daac
 	ret nc			;daae
-	add hl,de		;daaf
+	add hl,de			;daaf
 	jr L_DA9B		;dab0
 
 ; ----------------------------------------------------------------------
-; DATOS registros_vdp: Los 8 registros del VDP: 02 62 06 ff 03 36 07 01. R0/R1 = SCREEN 2 con sprites de 16x16; R2 = nombres en 0x1800; R5 = atributos de sprite en 0x1B00; R6 = patrones de sprite en 0x3800
+; DATOS registros_vdp: Los 8 registros del VDP: 02 62 06 ff 03 36 07 01. R0/R1
+;   = SCREEN 2 con sprites de 16x16; R2 = nombres en 0x1800; R5 = atributos de
+;   sprite en 0x1B00; R6 = patrones de sprite en 0x3800
 ;   0xdab2..0xdaba  (8 bytes)
-; DATOS tabla_DABA: 8 bytes (10 10 10 10 14 18 1C 20) que lee 0xD454. Van creciendo: tiene pinta de tabla de tiempos o de fuerza del salto
-;   0xdaba..0xdac2  (8 bytes)
-; DATOS sprites_fijos: 12 bytes que 0xD6E2 vuelca a VRAM 0x1B28: los atributos de los sprites 10, 11 y 12 (Y, X, patron, color cada uno)
-;   0xdac2..0xdace  (12 bytes)
-; DATOS umbrales_casilla: Los 15 umbrales que convierten los 6 bits bajos de una casilla en su clase de terreno: 0C 10 14 18 19 1A 20 22 24 26 28 32 38 3E FF. El puntero se carga en 0xDACD y la comparacion empieza con un `inc hl`, por eso el primer umbral util es este
-;   0xdace..0xdadd  (15 bytes)
-; DATOS buffer_sprite: Los 4 bytes de atributo que PINTA_JUGADOR monta y ESCRIBE_SPRITE vuelca: Y, X, patron y color
-;   0xdadd..0xdae1  (4 bytes)
-; DATOS tabla_DAE1: 13 bytes, la tabla mas usada de la zona (8 referencias, desde 0xD067 y 0xD20C entre otras)
-;   0xdae1..0xdaee  (13 bytes)
-; DATOS tabla_DAEE: 15 bytes que lee 0xD7A2, dentro de la secuencia de intro
-;   0xdaee..0xdafd  (15 bytes)
-; DATOS tabla_DAFD: 13 bytes que lee 0xD7FF, tambien en la intro
-;   0xdafd..0xdb0a  (13 bytes)
-; DATOS tabla_DB0A: 13 bytes que lee 0xD5A8
-;   0xdb0a..0xdb17  (13 bytes)
-; DATOS tabla_graficos_A: Juego de graficos del JUEGO: pares (origen comprimido, destino VRAM), terminados en 0x0000
-;   0xdb17..0xdb35  (30 bytes)
-; DATOS tabla_graficos_B: Juego de graficos de la PRESENTACION. Comparte con el A el tercio 2 y los sprites
-;   0xdb35..0xdb53  (30 bytes)
-; DATOS variables_partida: Las variables de la partida, 39 bytes. Identificadas por quien las toca: 0xDB53 puntero de 16 bits; 0xDB54 COLUMNA DE CAMARA (el scroll); 0xDB55 Y del jugador; 0xDB56 X del jugador; 0xDB57 desplazamiento vertical del salto; 0xDB59 marcador; 0xDB5C NIVEL en curso (0..5); 0xDB5D cuenta atras; 0xDB60 VELOCIDAD (0..0x26); 0xDB61 y 0xDB63 punteros de volcado a VRAM; 0xDB67 fotograma del sprite; 0xDB68 VIDAS (empieza en 4); 0xDB69 MASCARA DE TAREAS de 16 bits que gobierna la rutina de frame; 0xDB6E-0xDB70 los tres colores del sprite (01 0F 0B: negro, blanco y amarillo claro); 0xDB75 contador de frames que lleva la interrupcion; 0xDB77 direccion de la casilla que pisa el jugador
-;   0xdb53..0xdb7a  (39 bytes)
-; ----------------------------------------------------------------------
 
 ; ----------------------------------------------------------------------
 ; ############################################################
 ; DATOS DEL MOTOR (200 bytes, no se ejecutan nunca)
 ; ############################################################
 ; ----------------------------------------------------------------------
-	defb 002h,062h,006h,0ffh,003h,036h,007h,001h,010h,010h,010h,010h,014h,018h,01ch,020h	; dab2  .b...6......... 
-	defb 098h,08ch,00ch,001h,093h,090h,05ch,009h,0b3h,000h,06ch,00fh,00ch,010h,014h,018h	; dac2  ......\...l.....
-	defb 019h,01ah,020h,022h,024h,026h,028h,032h,038h,03eh,0ffh,000h,000h,000h,000h,007h	; dad2  .. "$&(28>......
-	defb 0fch,001h,004h,008h,010h,00dh,009h,00ch,046h,000h,001h,0ffh,007h,0f6h,008h,010h	; dae2  ........F.......
-	defb 000h,07fh,001h,000h,006h,00fh,00dh,00dh,00ch,046h,0ffh,007h,0f7h,006h,01fh,001h	; daf2  .........F......
-	defb 00ah,008h,010h,00ch,028h,00dh,009h,0ffh,007h,0feh,001h,028h,008h,010h,00bh,0c8h	; db02  ....(......(....
-	defb 00ch,000h,00dh,008h,0ffh,000h,048h,000h,000h,0e2h,04ch,000h,020h,048h,051h,000h	; db12  ......H...L. HQ.
-	defb 008h,0e9h,058h,000h,028h,0eeh,05fh,000h,010h,0c9h,066h,000h,030h,093h,082h,000h	; db22  ..X.(._...f.0...
-	defb 038h,000h,000h,035h,06dh,000h,000h,037h,071h,000h,020h,0cfh,074h,000h,008h,0e9h	; db32  8..5m..7q. .t...
-	defb 07bh,000h,028h,0eeh,05fh,000h,010h,0c9h,066h,000h,030h,093h,082h,000h,038h,000h	; db42  {.(._...f.0...8.
-	defb 000h,000h,000h,060h,080h,000h,000h,000h,000h,000h,000h,000h,005h,004h,000h,000h	; db52  ...`............
-	defb 000h,000h,000h,000h,000h,000h,004h,000h,000h,000h,000h,000h,001h,00fh,00bh,000h	; db62  ................
-	defb 001h,000h,000h,000h,000h,000h,000h,0ffh	; db72  ........
+DATA_registros_vdp:
+	defb 002h	; dab2
+	defb 062h	; dab3
+	defb 006h	; dab4
+	defb 0ffh	; dab5
+	defb 003h	; dab6
+	defb 036h	; dab7
+	defb 007h	; dab8
+	defb 001h	; dab9
+
+; ----------------------------------------------------------------------
+; DATOS tabla_DABA: 8 bytes (10 10 10 10 14 18 1C 20) que lee 0xD454. Van
+;   creciendo: tiene pinta de tabla de tiempos o de fuerza del salto
+;   0xdaba..0xdac2  (8 bytes)
+DATA_tabla_DABA:
+	defb 010h,010h,010h,010h,014h,018h,01ch,020h	; daba  ....... 
+
+; ----------------------------------------------------------------------
+; DATOS sprites_fijos: 12 bytes que 0xD6E2 vuelca a VRAM 0x1B28: los atributos
+;   de los sprites 10, 11 y 12 (Y, X, patron, color cada uno)
+;   0xdac2..0xdace  (12 bytes)
+DATA_sprites_fijos:
+	defb 098h,08ch,00ch,001h	; dac2
+	defb 093h,090h,05ch,009h	; dac6
+	defb 0b3h,000h,06ch,00fh	; daca
+
+; ----------------------------------------------------------------------
+; DATOS umbrales_casilla: Los 15 umbrales que convierten los 6 bits bajos de
+;   una casilla en su clase de terreno: 0C 10 14 18 19 1A 20 22 24 26 28 32 38
+;   3E FF. El puntero se carga en 0xDACD y la comparacion empieza con un `inc
+;   hl`, por eso el primer umbral util es este
+;   0xdace..0xdadd  (15 bytes)
+DATA_umbrales_casilla:
+	defb 00ch,010h,014h,018h,019h,01ah,020h,022h,024h,026h,028h,032h,038h,03eh,0ffh	; dace  ...... "$&(28>.
+
+; ----------------------------------------------------------------------
+; DATOS buffer_sprite: Los 4 bytes de atributo que PINTA_JUGADOR monta y
+;   ESCRIBE_SPRITE vuelca: Y, X, patron y color
+;   0xdadd..0xdae1  (4 bytes)
+DATA_buffer_sprite:
+	defb 000h,000h,000h,000h	; dadd
+
+; ----------------------------------------------------------------------
+; DATOS tabla_DAE1: 13 bytes, la tabla mas usada de la zona (8 referencias,
+;   desde 0xD067 y 0xD20C entre otras)
+;   0xdae1..0xdaee  (13 bytes)
+DATA_tabla_DAE1:
+	defb 007h,0fch,001h,004h,008h,010h,00dh,009h,00ch,046h,000h,001h,0ffh	; dae1  .........F...
+
+; ----------------------------------------------------------------------
+; DATOS tabla_DAEE: 15 bytes que lee 0xD7A2, dentro de la secuencia de intro
+;   0xdaee..0xdafd  (15 bytes)
+DATA_tabla_DAEE:
+	defb 007h,0f6h,008h,010h,000h,07fh,001h,000h,006h,00fh,00dh,00dh,00ch,046h,0ffh	; daee  .............F.
+
+; ----------------------------------------------------------------------
+; DATOS tabla_DAFD: 13 bytes que lee 0xD7FF, tambien en la intro
+;   0xdafd..0xdb0a  (13 bytes)
+DATA_tabla_DAFD:
+	defb 007h,0f7h,006h,01fh,001h,00ah,008h,010h,00ch,028h,00dh,009h,0ffh	; dafd  .........(...
+
+; ----------------------------------------------------------------------
+; DATOS tabla_DB0A: 13 bytes que lee 0xD5A8
+;   0xdb0a..0xdb17  (13 bytes)
+DATA_tabla_DB0A:
+	defb 007h,0feh,001h,028h,008h,010h,00bh,0c8h,00ch,000h,00dh,008h,0ffh	; db0a  ...(.........
+
+; ----------------------------------------------------------------------
+; DATOS tabla_graficos_A: Juego de graficos del JUEGO: pares (origen
+;   comprimido, destino VRAM), terminados en 0x0000
+;   0xdb17..0xdb35  (30 bytes)
+DATA_tabla_graficos_A:
+	defw 04800h,00000h	; db17
+	defw 04ce2h,02000h	; db1b
+	defw 05148h,00800h	; db1f
+	defw 058e9h,02800h	; db23
+	defw 05feeh,01000h	; db27
+	defw 066c9h,03000h	; db2b
+	defw 08293h,03800h	; db2f
+	defw 00000h	; db33
+
+; ----------------------------------------------------------------------
+; DATOS tabla_graficos_B: Juego de graficos de la PRESENTACION. Comparte con
+;   el A el tercio 2 y los sprites
+;   0xdb35..0xdb53  (30 bytes)
+DATA_tabla_graficos_B:
+	defw 06d35h,00000h	; db35
+	defw 07137h,02000h	; db39
+	defw 074cfh,00800h	; db3d
+	defw 07be9h,02800h	; db41
+	defw 05feeh,01000h	; db45
+	defw 066c9h,03000h	; db49
+	defw 08293h,03800h	; db4d
+	defw 00000h	; db51
+
+; ----------------------------------------------------------------------
+; DATOS variables_partida: Las variables de la partida, 39 bytes.
+;   Identificadas por quien las toca: 0xDB53 puntero de 16 bits; 0xDB54
+;   COLUMNA DE CAMARA (el scroll); 0xDB55 Y del jugador; 0xDB56 X del jugador;
+;   0xDB57 desplazamiento vertical del salto; 0xDB59 marcador; 0xDB5C NIVEL en
+;   curso (0..5); 0xDB5D cuenta atras; 0xDB60 VELOCIDAD (0..0x26); 0xDB61 y
+;   0xDB63 punteros de volcado a VRAM; 0xDB67 fotograma del sprite; 0xDB68
+;   VIDAS (empieza en 4); 0xDB69 MASCARA DE TAREAS de 16 bits que gobierna la
+;   rutina de frame; 0xDB6E-0xDB70 los tres colores del sprite (01 0F 0B:
+;   negro, blanco y amarillo claro); 0xDB75 contador de frames que lleva la
+;   interrupcion; 0xDB77 direccion de la casilla que pisa el jugador
+;   0xdb53..0xdb7a  (39 bytes)
+DATA_variables_partida:
+	defb 000h,000h,060h,080h,000h,000h,000h,000h,000h,000h,000h,005h,004h,000h,000h,000h	; db53  ..`.............
+	defb 000h,000h,000h,000h,000h,004h,000h,000h,000h,000h,000h,001h,00fh,00bh,000h,001h	; db63  ................
+	defb 000h,000h,000h,000h,000h,000h,0ffh	; db73

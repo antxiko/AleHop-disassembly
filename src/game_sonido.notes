@@ -71,7 +71,9 @@ B 0xB3C6 ############################################################
 B 0xB3C6 DATOS DEL SONIDO
 B 0xB3C6 ############################################################
 D 0xB3C6 0xB486 tabla_notas      Periodos de las notas, indexada por el byte de melodia
+F 0xB3C6 w8
 D 0xB486 0xB49E tabla_comandos   12 punteros a los manejadores de comando. La entrada 13 apuntaria a 0x0102, o sea que la tabla se acaba justo ahi
+F 0xB486 w1
 D 0xB49E 0xB4A0 var_B49E         Dos variables sueltas del reproductor: 0xB49E (canal en curso) y 0xB49F (palabra de trabajo)
 D 0xB4A0 0xB4AB buffer_psg       Sombra de los 11 registros del PSG, en el orden del chip: 0xB4A0-0xB4A5 los periodos de tono de los tres canales (registros 0-5), 0xB4A6 el periodo del ruido (registro 6, lo escribe 0xB1D6), 0xB4A7 el mezclador (registro 7, lo lleva 0xB36A) y 0xB4A8-0xB4AA los volumenes (registros 8-10). VUELCA_PSG los manda los once de golpe cada frame
 D 0xB4AB 0xB535 estado_canales   Los TRES bloques de estado, 46 bytes cada uno (0x2E, tamano dicho por el propio codigo en 0xB018 y 0xB024). Canal 0 en 0xB4AB, canal 1 en 0xB4D9, canal 2 en 0xB507. Dentro de cada bloque, deducido de como lo indexa IX: +0/+1 puntero al principio de la melodia (para repetirla), +2/+3 puntero de lectura, +4/+5 duracion que le queda a la nota, +9 volumen, +0x0A/+0x0B periodo del tono, y +0x2A/+0x2B/+0x2C los ajustes que se suman al volumen y al periodo (lo que da el vibrato y la envolvente)

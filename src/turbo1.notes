@@ -25,4 +25,6 @@ C 0x88D9 Vuelve al cargador, que seguira con el bloque del juego
 
 D 0x88DA 0x891C relleno   Residuo entre el codigo y la imagen; no se ejecuta (?)
 D 0x891C 0xA11C img_patrones  Imagen de portada: tabla de PATRONES (6144 bytes)
+F 0x891C 8
 D 0xA11C 0xB91C img_colores   Imagen de portada: tabla de COLOR (6144 bytes)
+F 0xA11C 8

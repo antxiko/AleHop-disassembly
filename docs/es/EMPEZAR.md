@@ -51,6 +51,18 @@ cada uno (2048x64) y una pantalla de verdad con sus tres bandas. No son
 capturas: se generan descomprimiendo los gráficos y montando los mapas, que es
 la mejor prueba de que el formato está bien entendido.
 
+### Como salen los bloques de datos
+
+Cada rango de datos declarado en las notas sale como un bloque aparte: su
+cabecera diciendo para que sirve, su etiqueta y el volcado alineado a su primer
+byte. Una linea opcional le da al bloque la anchura de fila de su estructura
+real, y eso es lo que hace legibles los niveles en el propio listado: 32 bytes
+por fila, que son justo las 32 columnas que ve la camara, asi que cada linea es
+una pantalla entera de esa fila de la tira. La presentacion, la intro, el
+marcador y la pantalla de titulo salen igual -una fila de la pantalla por
+linea-, los sprites fijos de cuatro en cuatro -un registro de atributos cada
+uno- y la tabla de graficos en parejas defw: origen y destino de video al lado.
+
 ## El emulador
 
 ```sh

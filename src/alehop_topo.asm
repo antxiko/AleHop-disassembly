@@ -39,18 +39,18 @@ L_947C:
 	and a			;947c   ; Compara HL con DE para saber si ha llegado al final del recorrido
 	sbc hl,de		;947d
 	ret z			;947f
-	add hl,de		;9480
+	add hl,de			;9480
 	ld a,081h		;9481
 	call L_94A6		;9483
 	push hl			;9486
-	add hl,bc		;9487
+	add hl,bc			;9487
 	ld a,081h		;9488
 	call L_94A6		;948a
 	pop hl			;948d
 	push hl			;948e
 	ld a,0f1h		;948f
 	call L_94A6		;9491
-	add hl,bc		;9494
+	add hl,bc			;9494
 	ld a,0f1h		;9495
 	call L_94A6		;9497
 	pop hl			;949a
@@ -74,23 +74,23 @@ L_94A9:
 	ret			;94b0
 L_94B1:
 	ld hl,0000dh		;94b1
-	add hl,hl		;94b4
+	add hl,hl			;94b4
 	ld de,096f8h		;94b5
-	add hl,de		;94b8
+	add hl,de			;94b8
 	ld (096f6h),hl		;94b9
 	ld hl,0000eh		;94bc
-	add hl,hl		;94bf
+	add hl,hl			;94bf
 	ld de,09694h		;94c0
-	add hl,de		;94c3
-	ld e,(hl)		;94c4
+	add hl,de			;94c3
+	ld e,(hl)			;94c4
 	inc hl			;94c5
-	ld d,(hl)		;94c6
+	ld d,(hl)			;94c6
 	ld hl,09728h		;94c7
-	add hl,de		;94ca
-	ld a,(hl)		;94cb
+	add hl,de			;94ca
+	ld a,(hl)			;94cb
 	ld (094f1h),a		;94cc
 	inc hl			;94cf
-	ld a,(hl)		;94d0
+	ld a,(hl)			;94d0
 	ld (094ddh),a		;94d1
 	inc hl			;94d4
 	ld (096f4h),hl		;94d5
@@ -98,24 +98,24 @@ L_94B1:
 	ld c,005h		;94dc
 L_94DE:
 	ld e,(ix+000h)		;94de
-	inc ix			;94e1
+	inc ix		;94e1
 	ld d,(ix+000h)		;94e3
-	inc ix			;94e6
+	inc ix		;94e6
 	ld hl,000b0h		;94e8
-	add hl,de		;94eb
+	add hl,de			;94eb
 	ld de,(096f4h)		;94ec
 	ld b,018h		;94f0
 L_94F2:
-	ld a,(de)		;94f2
+	ld a,(de)			;94f2
 L_94F3:
 	nop			;94f3
 	inc de			;94f4
-	res 7,h			;94f5
-	res 6,h			;94f7
+	res 7,h		;94f5
+	res 6,h		;94f7
 	call 0004dh		;94f9   ; BIOS WRTVRM - Writes data in VRAM
 	inc hl			;94fc
-	set 6,h			;94fd
-	set 7,h			;94ff
+	set 6,h		;94fd
+	set 7,h		;94ff
 	djnz L_94F2		;9501
 	ld (096f4h),de		;9503
 	dec c			;9507
@@ -123,15 +123,15 @@ L_94F3:
 	ret			;950a
 L_950B:
 	ld a,00fh		;950b
-	ld (L_94B1+1),a	;950d
+	ld (L_94B1+1),a		;950d
 	ld a,078h		;9510
 	ld (094e9h),a		;9512
 	xor a			;9515
 	ld (l94f3h),a		;9516
 	ld hl,096b2h		;9519
 L_951C:
-	ld a,(hl)		;951c
-	cp 0ffh			;951d
+	ld a,(hl)			;951c
+	cp 0ffh		;951d
 	ret z			;951f
 	ld (094bdh),a		;9520
 	push hl			;9523
@@ -149,10 +149,10 @@ L_9532:
 	ld a,007h		;9532
 	ld (094bdh),a		;9534
 	ld a,006h		;9537
-	ld (L_94B1+1),a	;9539
+	ld (L_94B1+1),a		;9539
 	ld a,000h		;953c
 L_953E:
-	cp 018h			;953e
+	cp 018h		;953e
 	ret z			;9540
 	ld (094e9h),a		;9541
 	push af			;9544
@@ -164,10 +164,10 @@ L_954D:
 	ld a,009h		;954d
 	ld (094bdh),a		;954f
 	ld a,007h		;9552
-	ld (L_94B1+1),a	;9554
+	ld (L_94B1+1),a		;9554
 	ld a,090h		;9557
 L_9559:
-	cp 050h			;9559
+	cp 050h		;9559
 	ret z			;955b
 	ld (094e9h),a		;955c
 	push af			;955f
@@ -187,9 +187,9 @@ L_956B:
 	ld (094e9h),a		;9577
 	ld a,000h		;957a
 L_957C:
-	cp 007h			;957c
+	cp 007h		;957c
 	jr z,L_958B		;957e
-	ld (L_94B1+1),a	;9580
+	ld (L_94B1+1),a		;9580
 	push af			;9583
 	call L_94B1		;9584
 	pop af			;9587
@@ -202,14 +202,14 @@ L_958E:
 	ld (094bdh),a		;9590
 	ld hl,096cch		;9593
 L_9596:
-	ld a,(hl)		;9596
-	cp 0ffh			;9597
+	ld a,(hl)			;9596
+	cp 0ffh		;9597
 	jr z,L_95AB		;9599
 	inc hl			;959b
 	ld (094e9h),a		;959c
-	ld a,(hl)		;959f
+	ld a,(hl)			;959f
 	inc hl			;95a0
-	ld (L_94B1+1),a	;95a1
+	ld (L_94B1+1),a		;95a1
 	push hl			;95a4
 	call L_94B1		;95a5
 	pop hl			;95a8
@@ -219,15 +219,15 @@ L_95AB:
 L_95AE:
 	ld hl,096e9h		;95ae
 L_95B1:
-	ld a,(hl)		;95b1
-	cp 0ffh			;95b2
+	ld a,(hl)			;95b1
+	cp 0ffh		;95b2
 	ret z			;95b4
 	push hl			;95b5
 	ld (094bdh),a		;95b6
 	ld a,0b0h		;95b9
 	ld (094e9h),a		;95bb
 	ld a,00dh		;95be
-	ld (L_94B1+1),a	;95c0
+	ld (L_94B1+1),a		;95c0
 	ei			;95c3
 	ld b,004h		;95c4
 L_95C6:
@@ -281,7 +281,7 @@ L_961D:
 	inc hl			;9620
 	djnz L_961D		;9621
 	ld de,000c0h		;9623
-	add hl,de		;9626
+	add hl,de			;9626
 	dec c			;9627
 	jr nz,L_961B		;9628
 	ret			;962a
@@ -296,36 +296,36 @@ L_9635:
 	ld a,071h		;9635
 	call L_967E		;9637
 	ld de,000f8h		;963a
-	add hl,de		;963d
+	add hl,de			;963d
 	djnz L_9635		;963e
 	ld b,006h		;9640
 L_9642:
 	ld a,031h		;9642
 	call L_967E		;9644
-	add hl,de		;9647
+	add hl,de			;9647
 	djnz L_9642		;9648
 	pop de			;964a
 	pop hl			;964b
 	push hl			;964c
-	add hl,de		;964d
+	add hl,de			;964d
 	push de			;964e
 	ld b,005h		;964f
 L_9651:
 	ld a,071h		;9651
 	call L_967E		;9653
 	ld de,000f8h		;9656
-	add hl,de		;9659
+	add hl,de			;9659
 	djnz L_9651		;965a
 	ld b,006h		;965c
 L_965E:
 	ld a,031h		;965e
 	call L_967E		;9660
-	add hl,de		;9663
+	add hl,de			;9663
 	djnz L_965E		;9664
 	pop de			;9666
 	pop hl			;9667
 	ld a,e			;9668
-	cp 098h			;9669
+	cp 098h		;9669
 	ret z			;966b
 	ei			;966c
 	ld b,004h		;966d
@@ -337,7 +337,7 @@ L_966F:
 	ld e,a			;9675
 	push de			;9676
 	ld de,0fff8h		;9677
-	add hl,de		;967a
+	add hl,de			;967a
 	pop de			;967b
 	jr L_9631		;967c
 L_967E:
@@ -356,7 +356,7 @@ L_9688:
 
 ; ----------------------------------------------------------------------
 ; DATOS sin identificar  0x9694..0xa50e  (3706 bytes)
-; ----------------------------------------------------------------------
+DATA_9694:
 	defb 000h,000h,082h,000h,004h,001h,086h,001h,008h,002h,08ah,002h,00ch,003h,08eh,003h	; 9694  ................
 	defb 0a8h,006h,0eah,007h,0cch,009h,0feh,00bh,078h,00ch,0f2h,00ch,06ch,00dh,001h,001h	; 96a4  ........x...l...
 	defb 002h,002h,003h,003h,004h,004h,005h,005h,006h,006h,005h,005h,004h,004h,003h,003h	; 96b4  ................

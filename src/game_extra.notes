@@ -60,8 +60,10 @@ B 0xDAB2 ############################################################
 B 0xDAB2 DATOS DEL MOTOR (200 bytes, no se ejecutan nunca)
 B 0xDAB2 ############################################################
 D 0xDAB2 0xDABA registros_vdp    Los 8 registros del VDP: 02 62 06 ff 03 36 07 01. R0/R1 = SCREEN 2 con sprites de 16x16; R2 = nombres en 0x1800; R5 = atributos de sprite en 0x1B00; R6 = patrones de sprite en 0x3800
+F 0xDAB2 1
 D 0xDABA 0xDAC2 tabla_DABA       8 bytes (10 10 10 10 14 18 1C 20) que lee 0xD454. Van creciendo: tiene pinta de tabla de tiempos o de fuerza del salto
 D 0xDAC2 0xDACE sprites_fijos    12 bytes que 0xD6E2 vuelca a VRAM 0x1B28: los atributos de los sprites 10, 11 y 12 (Y, X, patron, color cada uno)
+F 0xDAC2 4
 D 0xDACE 0xDADD umbrales_casilla Los 15 umbrales que convierten los 6 bits bajos de una casilla en su clase de terreno: 0C 10 14 18 19 1A 20 22 24 26 28 32 38 3E FF. El puntero se carga en 0xDACD y la comparacion empieza con un `inc hl`, por eso el primer umbral util es este
 D 0xDADD 0xDAE1 buffer_sprite    Los 4 bytes de atributo que PINTA_JUGADOR monta y ESCRIBE_SPRITE vuelca: Y, X, patron y color
 D 0xDAE1 0xDAEE tabla_DAE1       13 bytes, la tabla mas usada de la zona (8 referencias, desde 0xD067 y 0xD20C entre otras)
@@ -69,5 +71,7 @@ D 0xDAEE 0xDAFD tabla_DAEE       15 bytes que lee 0xD7A2, dentro de la secuencia
 D 0xDAFD 0xDB0A tabla_DAFD       13 bytes que lee 0xD7FF, tambien en la intro
 D 0xDB0A 0xDB17 tabla_DB0A       13 bytes que lee 0xD5A8
 D 0xDB17 0xDB35 tabla_graficos_A Juego de graficos del JUEGO: pares (origen comprimido, destino VRAM), terminados en 0x0000
+F 0xDB17 w2
 D 0xDB35 0xDB53 tabla_graficos_B Juego de graficos de la PRESENTACION. Comparte con el A el tercio 2 y los sprites
+F 0xDB35 w2
 D 0xDB53 0xDB7A variables_partida Las variables de la partida, 39 bytes. Identificadas por quien las toca: 0xDB53 puntero de 16 bits; 0xDB54 COLUMNA DE CAMARA (el scroll); 0xDB55 Y del jugador; 0xDB56 X del jugador; 0xDB57 desplazamiento vertical del salto; 0xDB59 marcador; 0xDB5C NIVEL en curso (0..5); 0xDB5D cuenta atras; 0xDB60 VELOCIDAD (0..0x26); 0xDB61 y 0xDB63 punteros de volcado a VRAM; 0xDB67 fotograma del sprite; 0xDB68 VIDAS (empieza en 4); 0xDB69 MASCARA DE TAREAS de 16 bits que gobierna la rutina de frame; 0xDB6E-0xDB70 los tres colores del sprite (01 0F 0B: negro, blanco y amarillo claro); 0xDB75 contador de frames que lleva la interrupcion; 0xDB77 direccion de la casilla que pisa el jugador

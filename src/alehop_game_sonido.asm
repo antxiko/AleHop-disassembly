@@ -10,9 +10,9 @@
 
 
 ; ----------------------------------------------------------------------
-; DATOS isr_sin_usar: Manejador de interrupcion de la libreria de sonido, inalcanzable
+; DATOS isr_sin_usar: Manejador de interrupcion de la libreria de sonido,
+;   inalcanzable
 ;   0xb000..0xb015  (21 bytes)
-; ----------------------------------------------------------------------
 
 ; ----------------------------------------------------------------------
 ; ------------------------------------------------------------
@@ -32,8 +32,9 @@
 ; bien no prueba que se ejecute.
 ; ------------------------------------------------------------
 ; ----------------------------------------------------------------------
+DATA_isr_sin_usar:
 	defb 0f3h,0e1h,0cdh,036h,0b0h,0ddh,0e1h,0fdh,0e1h,0f1h,0c1h,0d1h,0e1h,008h,0d9h,0f1h	; b000  ...6............
-	defb 0c1h,0d1h,0e1h,0fbh,0c9h	; b010  .....
+	defb 0c1h,0d1h,0e1h,0fbh,0c9h	; b010
 
 ; ======================================================================
 ; CODIGO 0xb015..0xb3c6  (945 bytes)
@@ -59,23 +60,23 @@ ASIGNA_MELODIA:		; Pone la melodia DE en el canal A: le busca su bloque de 46 by
 	ld de,0002eh		;b018   ; 46 bytes por canal: es el tamano del bloque de estado
 	call MULTIPLICA		;b01b
 	ld de,0b4abh		;b01e   ; Los tres bloques empiezan en 0xB4AB
-	add hl,de		;b021
+	add hl,de			;b021
 	push hl			;b022
 	xor a			;b023
 	ld b,02eh		;b024   ; Borra el bloque entero antes de empezar la melodia
 L_B026:
-	ld (hl),a		;b026
+	ld (hl),a			;b026
 	inc hl			;b027
 	djnz L_B026		;b028
 	pop hl			;b02a
 	pop de			;b02b
-	ld (hl),e		;b02c   ; Guarda el puntero de la melodia por duplicado: uno avanza y el otro sirve para repetir
+	ld (hl),e			;b02c   ; Guarda el puntero de la melodia por duplicado: uno avanza y el otro sirve para repetir
 	inc hl			;b02d
-	ld (hl),d		;b02e
+	ld (hl),d			;b02e
 	inc hl			;b02f
-	ld (hl),e		;b030
+	ld (hl),e			;b030
 	inc hl			;b031
-	ld (hl),d		;b032
+	ld (hl),d			;b032
 	pop af			;b033
 	ei			;b034
 	ret			;b035
@@ -103,8 +104,8 @@ L_B044:
 	or c			;b05f
 	jp z,L_B162		;b060   ; Puntero a cero: este canal esta parado
 L_B063:
-	ld a,(bc)		;b063   ; Lee el siguiente byte de la melodia
-	cp 080h			;b064   ; Menos de 0x80 es nota; 0x80 o mas es comando
+	ld a,(bc)			;b063   ; Lee el siguiente byte de la melodia
+	cp 080h		;b064   ; Menos de 0x80 es nota; 0x80 o mas es comando
 	jp c,L_B072		;b066
 	sub 080h		;b069
 	ld hl,0b486h		;b06b   ; Tabla de saltos de los 12 comandos
@@ -120,10 +121,10 @@ L_B07F:
 	ld a,(ix+008h)		;b07f
 	call PSG_ESCRIBE		;b082
 	call L_B1DE		;b085
-	ld (ix+02ah),000h	;b088
+	ld (ix+02ah),000h		;b088
 	call L_B1F6		;b08c
-	ld (ix+02bh),000h	;b08f
-	ld (ix+02ch),000h	;b093
+	ld (ix+02bh),000h		;b08f
+	ld (ix+02ch),000h		;b093
 L_B097:
 	ld (ix+002h),c		;b097
 	ld (ix+003h),b		;b09a
@@ -137,8 +138,8 @@ L_B0A9:
 	dec hl			;b0af
 	ld (ix+004h),l		;b0b0
 	ld (ix+005h),h		;b0b3
-	push ix			;b0b6
-	pop iy			;b0b8
+	push ix		;b0b6
+	pop iy		;b0b8
 	ld d,002h		;b0ba
 	ld c,000h		;b0bc
 L_B0BE:
@@ -163,7 +164,7 @@ L_B0CB:
 	inc c			;b0e4
 	jr L_B0EC		;b0e5
 L_B0E7:
-	inc iy			;b0e7
+	inc iy		;b0e7
 	dec d			;b0e9
 	jr nz,L_B0BE		;b0ea
 L_B0EC:
@@ -171,10 +172,10 @@ L_B0EC:
 	or a			;b0ed
 	jr nz,L_B0F7		;b0ee
 	bit 0,(ix+02dh)		;b0f0
-	call nz,L_B1DE	;b0f4
+	call nz,L_B1DE		;b0f4
 L_B0F7:
-	push ix			;b0f7
-	pop iy			;b0f9
+	push ix		;b0f7
+	pop iy		;b0f9
 	ld d,003h		;b0fb
 	ld c,000h		;b0fd
 L_B0FF:
@@ -220,7 +221,7 @@ L_B149:
 	inc c			;b14f
 	jr L_B157		;b150
 L_B152:
-	inc iy			;b152
+	inc iy		;b152
 	dec d			;b154
 	jr nz,L_B0FF		;b155
 L_B157:
@@ -228,7 +229,7 @@ L_B157:
 	or a			;b158
 	jr nz,L_B162		;b159
 	bit 1,(ix+02dh)		;b15b
-	call nz,L_B1F6	;b15f
+	call nz,L_B1F6		;b15f
 L_B162:
 	pop bc			;b162
 	pop de			;b163
@@ -236,14 +237,14 @@ L_B162:
 	ld a,(ix+009h)		;b165   ; Volumen del canal mas su ajuste, recortado a 4 bits
 	add a,(ix+02ah)		;b168
 	and 00fh		;b16b
-	ld (hl),a		;b16d
+	ld (hl),a			;b16d
 	ld a,(ix+00ah)		;b16e   ; Periodo del tono, 16 bits, con su ajuste sumado con acarreo
 	add a,(ix+02bh)		;b171
-	ld (de),a		;b174
+	ld (de),a			;b174
 	inc de			;b175
 	ld a,(ix+00bh)		;b176
 	adc a,(ix+02ch)		;b179
-	ld (de),a		;b17c
+	ld (de),a			;b17c
 	inc de			;b17d
 	push de			;b17e
 	ld de,0002eh		;b17f   ; Salta al bloque del canal siguiente
@@ -279,7 +280,7 @@ L_B1A1:
 	inc c			;b1ba
 	jr L_B1C2		;b1bb
 L_B1BD:
-	inc iy			;b1bd
+	inc iy		;b1bd
 	dec d			;b1bf
 	jr nz,L_B194		;b1c0
 L_B1C2:
@@ -287,8 +288,8 @@ L_B1C2:
 	or a			;b1c3
 	jr nz,L_B1CE		;b1c4
 	ld a,(0b53fh)		;b1c6
-	bit 2,a			;b1c9
-	call nz,L_B20E	;b1cb
+	bit 2,a		;b1c9
+	call nz,L_B20E		;b1cb
 L_B1CE:
 	ld a,(0b540h)		;b1ce
 	ld e,a			;b1d1
@@ -299,54 +300,54 @@ L_B1CE:
 	pop af			;b1dc
 	ret			;b1dd
 L_B1DE:
-	push ix			;b1de
+	push ix		;b1de
 	ld d,002h		;b1e0
 L_B1E2:
 	ld a,(ix+020h)		;b1e2
 	ld (ix+00ch),a		;b1e5
 	ld a,(ix+016h)		;b1e8
 	ld (ix+00eh),a		;b1eb
-	inc ix			;b1ee
+	inc ix		;b1ee
 	dec d			;b1f0
 	jr nz,L_B1E2		;b1f1
-	pop ix			;b1f3
+	pop ix		;b1f3
 	ret			;b1f5
 L_B1F6:
 	ld d,003h		;b1f6
-	push ix			;b1f8
+	push ix		;b1f8
 L_B1FA:
 	ld a,(ix+022h)		;b1fa
 	ld (ix+010h),a		;b1fd
 	ld a,(ix+018h)		;b200
 	ld (ix+013h),a		;b203
-	inc ix			;b206
+	inc ix		;b206
 	dec d			;b208
 	jr nz,L_B1FA		;b209
-	pop ix			;b20b
+	pop ix		;b20b
 	ret			;b20d
 L_B20E:
 	ld d,002h		;b20e
-	push iy			;b210
+	push iy		;b210
 	ld iy,0b535h		;b212
 L_B216:
 	ld a,(iy+008h)		;b216
 	ld (iy+000h),a		;b219
 	ld a,(iy+004h)		;b21c
 	ld (iy+002h),a		;b21f
-	inc iy			;b222
+	inc iy		;b222
 	dec d			;b224
 	jr nz,L_B216		;b225
-	pop iy			;b227
+	pop iy		;b227
 	ret			;b229
 L_B22A:
 	inc bc			;b22a
-	ld a,(bc)		;b22b
+	ld a,(bc)			;b22b
 	ld (ix+009h),a		;b22c
 	inc bc			;b22f
 	jp L_B063		;b230
 L_B233:
 	inc bc			;b233
-	ld a,(bc)		;b234
+	ld a,(bc)			;b234
 	ld de,(0b49fh)		;b235
 	ld d,000h		;b239
 	call MULTIPLICA		;b23b
@@ -356,26 +357,26 @@ L_B233:
 	jp L_B063		;b245
 L_B248:
 	inc bc			;b248
-	ld a,(bc)		;b249
+	ld a,(bc)			;b249
 	and 009h		;b24a
 	ld (ix+008h),a		;b24c
 	inc bc			;b24f
 	jp L_B063		;b250
 L_B253:
 	push bc			;b253
-	push ix			;b254
+	push ix		;b254
 	pop hl			;b256
 	xor a			;b257
 	ld b,02eh		;b258
 L_B25A:
-	ld (hl),a		;b25a
+	ld (hl),a			;b25a
 	inc hl			;b25b
 	djnz L_B25A		;b25c
 	pop bc			;b25e
 	jp L_B162		;b25f
 L_B262:
 	inc bc			;b262
-	ld a,(bc)		;b263
+	ld a,(bc)			;b263
 	push bc			;b264
 	ld de,00010h		;b265
 	call MULTIPLICA		;b268
@@ -390,7 +391,7 @@ L_B262:
 	jp L_B063		;b279
 L_B27C:
 	inc bc			;b27c
-	ld a,(bc)		;b27d
+	ld a,(bc)			;b27d
 	push af			;b27e
 	and 01fh		;b27f
 	ld (0b540h),a		;b281
@@ -411,19 +412,19 @@ L_B294:
 	jp L_B063		;b2a0
 L_B2A3:
 	inc bc			;b2a3
-	ld a,(bc)		;b2a4
+	ld a,(bc)			;b2a4
 	inc bc			;b2a5
 	ld de,00000h		;b2a6
 L_B2A9:
 	push af			;b2a9
-	ld a,(bc)		;b2aa
+	ld a,(bc)			;b2aa
 	push de			;b2ab
 	ld de,(0b49fh)		;b2ac
 	ld d,000h		;b2b0
 	call MULTIPLICA		;b2b2
 	pop de			;b2b5
-	add hl,de		;b2b6
-	ex de,hl		;b2b7
+	add hl,de			;b2b6
+	ex de,hl			;b2b7
 	inc bc			;b2b8
 	pop af			;b2b9
 	dec a			;b2ba
@@ -433,7 +434,7 @@ L_B2A9:
 	jp L_B063		;b2c3
 L_B2C6:
 	inc bc			;b2c6
-	ld a,(bc)		;b2c7
+	ld a,(bc)			;b2c7
 	ld e,a			;b2c8
 	or (ix+02dh)		;b2c9
 	ld (ix+02dh),a		;b2cc
@@ -446,50 +447,50 @@ L_B2DA:
 	inc bc			;b2da
 	res 0,(ix+02dh)		;b2db
 	res 1,(ix+02dh)		;b2df
-	ld a,(bc)		;b2e3
+	ld a,(bc)			;b2e3
 	ld de,0000fh		;b2e4
 	call MULTIPLICA		;b2e7
 	ld de,0b542h		;b2ea
-	add hl,de		;b2ed
-	push ix			;b2ee
+	add hl,de			;b2ed
+	push ix		;b2ee
 	ld d,00fh		;b2f0
 L_B2F2:
-	ld a,(hl)		;b2f2
+	ld a,(hl)			;b2f2
 	ld (ix+016h),a		;b2f3
 	inc hl			;b2f6
-	inc ix			;b2f7
+	inc ix		;b2f7
 	dec d			;b2f9
 	jp nz,L_B2F2		;b2fa
-	pop ix			;b2fd
+	pop ix		;b2fd
 	inc bc			;b2ff
-	ld (ix+00ch),000h	;b300
-	ld (ix+00dh),000h	;b304
-	ld (ix+010h),000h	;b308
-	ld (ix+011h),000h	;b30c
-	ld (ix+012h),000h	;b310
-	ld (ix+02ah),000h	;b314
-	ld (ix+02bh),000h	;b318
-	ld (ix+02ch),000h	;b31c
+	ld (ix+00ch),000h		;b300
+	ld (ix+00dh),000h		;b304
+	ld (ix+010h),000h		;b308
+	ld (ix+011h),000h		;b30c
+	ld (ix+012h),000h		;b310
+	ld (ix+02ah),000h		;b314
+	ld (ix+02bh),000h		;b318
+	ld (ix+02ch),000h		;b31c
 	jp L_B063		;b320
 L_B323:
 	inc bc			;b323
 	ld a,(0b53fh)		;b324
-	res 2,a			;b327
+	res 2,a		;b327
 	ld (0b53fh),a		;b329
-	ld a,(bc)		;b32c
+	ld a,(bc)			;b32c
 	ld de,00006h		;b32d
 	call MULTIPLICA		;b330
 	ld de,0b58dh		;b333
-	add hl,de		;b336
+	add hl,de			;b336
 	ld iy,0b535h		;b337
-	ld (iy+000h),000h	;b33b
-	ld (iy+001h),000h	;b33f
+	ld (iy+000h),000h		;b33b
+	ld (iy+001h),000h		;b33f
 	ld d,006h		;b343
 L_B345:
-	ld a,(hl)		;b345
+	ld a,(hl)			;b345
 	ld (iy+004h),a		;b346
 	inc hl			;b349
-	inc iy			;b34a
+	inc iy		;b34a
 	dec d			;b34c
 	jr nz,L_B345		;b34d
 	xor a			;b34f
@@ -506,8 +507,8 @@ L_B35F:
 	dec a			;b35f
 	jp m,L_B36A		;b360
 	scf			;b363
-	rl e			;b364
-	sla d			;b366
+	rl e		;b364
+	sla d		;b366
 	jr L_B35F		;b368
 L_B36A:
 	ld a,(0b4a7h)		;b36a
@@ -518,17 +519,17 @@ L_B36A:
 	ret			;b373
 MULTIPLICA:		; HL = A * DE. Se usa para saltar al bloque del canal (A * 46)
 	ld hl,00000h		;b374
-	cp 000h			;b377
+	cp 000h		;b377
 	ret z			;b379
 	push bc			;b37a
 	ld b,008h		;b37b
 L_B37D:
-	srl a			;b37d
+	srl a		;b37d
 	jr nc,L_B382		;b37f
-	add hl,de		;b381
+	add hl,de			;b381
 L_B382:
-	sla e			;b382
-	rl d			;b384
+	sla e		;b382
+	rl d		;b384
 	djnz L_B37D		;b386
 	pop bc			;b388
 	ret			;b389
@@ -538,16 +539,16 @@ L_B38A:
 	ld a,b			;b38e
 	ld b,010h		;b38f
 L_B391:
-	rl c			;b391
+	rl c		;b391
 	rla			;b393
 	adc hl,hl		;b394
 	sbc hl,de		;b396
 	jr nc,L_B39B		;b398
-	add hl,de		;b39a
+	add hl,de			;b39a
 L_B39B:
 	ccf			;b39b
 	djnz L_B391		;b39c
-	rl c			;b39e
+	rl c		;b39e
 	rla			;b3a0
 	ld b,a			;b3a1
 	pop af			;b3a2
@@ -560,9 +561,9 @@ INDEXA_TABLA:		; HL = palabra que hay en (HL + A*2). Sirve para las dos tablas
 	jr nc,L_B3AB		;b3a8
 	inc h			;b3aa
 L_B3AB:
-	ld a,(hl)		;b3ab
+	ld a,(hl)			;b3ab
 	inc hl			;b3ac
-	ld h,(hl)		;b3ad
+	ld h,(hl)			;b3ad
 	ld l,a			;b3ae
 	pop af			;b3af
 	ret			;b3b0
@@ -572,7 +573,7 @@ VUELCA_PSG:		; Manda los 11 registros del PSG de una tacada desde el buffer 0xB4
 	ld d,00bh		;b3b6
 L_B3B8:
 	push af			;b3b8
-	ld c,(hl)		;b3b9
+	ld c,(hl)			;b3b9
 	out (0a0h),a		;b3ba   ; Puerto de direccion del PSG
 	ld a,c			;b3bc
 	out (0a1h),a		;b3bd   ; Puerto de dato del PSG
@@ -586,108 +587,182 @@ L_B3B8:
 ; ----------------------------------------------------------------------
 ; DATOS tabla_notas: Periodos de las notas, indexada por el byte de melodia
 ;   0xb3c6..0xb486  (192 bytes)
-; DATOS tabla_comandos: 12 punteros a los manejadores de comando. La entrada 13 apuntaria a 0x0102, o sea que la tabla se acaba justo ahi
-;   0xb486..0xb49e  (24 bytes)
-; DATOS var_B49E: Dos variables sueltas del reproductor: 0xB49E (canal en curso) y 0xB49F (palabra de trabajo)
-;   0xb49e..0xb4a0  (2 bytes)
-; DATOS buffer_psg: Sombra de los 11 registros del PSG, en el orden del chip: 0xB4A0-0xB4A5 los periodos de tono de los tres canales (registros 0-5), 0xB4A6 el periodo del ruido (registro 6, lo escribe 0xB1D6), 0xB4A7 el mezclador (registro 7, lo lleva 0xB36A) y 0xB4A8-0xB4AA los volumenes (registros 8-10). VUELCA_PSG los manda los once de golpe cada frame
-;   0xb4a0..0xb4ab  (11 bytes)
-; DATOS estado_canales: Los TRES bloques de estado, 46 bytes cada uno (0x2E, tamano dicho por el propio codigo en 0xB018 y 0xB024). Canal 0 en 0xB4AB, canal 1 en 0xB4D9, canal 2 en 0xB507. Dentro de cada bloque, deducido de como lo indexa IX: +0/+1 puntero al principio de la melodia (para repetirla), +2/+3 puntero de lectura, +4/+5 duracion que le queda a la nota, +9 volumen, +0x0A/+0x0B periodo del tono, y +0x2A/+0x2B/+0x2C los ajustes que se suman al volumen y al periodo (lo que da el vibrato y la envolvente)
-;   0xb4ab..0xb535  (138 bytes)
-; DATOS estado_global: Bloque de 10 bytes al que apunta IY, mas las variables 0xB53F, 0xB540 y 0xB541
-;   0xb535..0xb542  (13 bytes)
-; DATOS tabla_B542: Tabla de 75 bytes que se carga con `ld de,0xB542` desde 0xB2EA (manejador del comando 0x86)
-;   0xb542..0xb58d  (75 bytes)
-; DATOS tabla_B58D: Tabla de 6 bytes, se carga desde 0xB333 (manejador del comando 0x89)
-;   0xb58d..0xb593  (6 bytes)
-; DATOS melodia_canal_0: Voz del canal 0, 173 bytes
-;   0xb593..0xb640  (173 bytes)
-; DATOS melodia_canal_1: Voz del canal 1, 567 bytes
-;   0xb640..0xb877  (567 bytes)
-; DATOS melodia_canal_2: Voz del canal 2, 34 bytes
-;   0xb877..0xb899  (34 bytes)
-; ----------------------------------------------------------------------
 
 ; ----------------------------------------------------------------------
 ; ############################################################
 ; DATOS DEL SONIDO
 ; ############################################################
 ; ----------------------------------------------------------------------
-	defb 05dh,00dh,09dh,00ch,0e7h,00bh,03ch,00bh,09bh,00ah,003h,00ah,073h,009h,0ebh,008h	; b3c6  ].....<.....s...
-	defb 06bh,008h,0f2h,007h,080h,007h,014h,007h,0aeh,006h,04eh,006h,0f4h,005h,09eh,005h	; b3d6  k.........N.....
-	defb 04dh,005h,001h,005h,0b9h,004h,075h,004h,035h,004h,0f9h,003h,0c0h,003h,08ah,003h	; b3e6  M.....u.5.......
-	defb 057h,003h,027h,003h,0fah,002h,0cfh,002h,0a7h,002h,081h,002h,05dh,002h,03bh,002h	; b3f6  W.'.........].;.
-	defb 01bh,002h,0fch,001h,0e0h,001h,0c5h,001h,0ach,001h,094h,001h,07dh,001h,068h,001h	; b406  ............}.h.
-	defb 053h,001h,040h,001h,02eh,001h,01dh,001h,00dh,001h,0feh,000h,0f0h,000h,0e2h,000h	; b416  S.@.............
-	defb 0d6h,000h,0cah,000h,0beh,000h,0b4h,000h,0aah,000h,0a0h,000h,097h,000h,08fh,000h	; b426  ................
-	defb 087h,000h,07fh,000h,078h,000h,071h,000h,06bh,000h,065h,000h,05fh,000h,05ah,000h	; b436  ....x.q.k.e._.Z.
-	defb 055h,000h,050h,000h,04ch,000h,047h,000h,043h,000h,040h,000h,03ch,000h,039h,000h	; b446  U.P.L.G.C.@.<.9.
-	defb 035h,000h,032h,000h,030h,000h,02dh,000h,02ah,000h,028h,000h,026h,000h,024h,000h	; b456  5.2.0.-.*.(.&.$.
-	defb 022h,000h,020h,000h,01eh,000h,01ch,000h,01bh,000h,019h,000h,018h,000h,016h,000h	; b466  ". .............
-	defb 015h,000h,014h,000h,013h,000h,012h,000h,011h,000h,010h,000h,00fh,000h,00eh,000h	; b476  ................
-	defb 02ah,0b2h,048h,0b2h,094h,0b2h,033h,0b2h,090h,0b2h,062h,0b2h,0a3h,0b2h,0dah,0b2h	; b486  *.H...3...b.....
-	defb 07ch,0b2h,023h,0b3h,0c6h,0b2h,053h,0b2h,002h,001h,000h,000h,000h,000h,000h,000h	; b496  |.#...S.........
-	defb 000h,03fh,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b4a6  .?..............
-	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b4b6  ................
-	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b4c6  ................
-	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b4d6  ................
-	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b4e6  ................
-	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b4f6  ................
-	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b506  ................
-	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b516  ................
-	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b526  ................
-	defb 000h,000h,000h,001h,00ah,00ah,0fdh,001h,003h,000h,000h,000h,001h,00dh,000h,000h	; b536  ................
-	defb 000h,001h,0ffh,000h,000h,000h,000h,001h,000h,000h,000h,002h,002h,001h,001h,000h	; b546  ................
-	defb 000h,000h,001h,0ffh,000h,000h,000h,001h,001h,000h,001h,00ch,000h,000h,000h,00ch	; b556  ................
-	defb 0ffh,000h,000h,000h,000h,001h,000h,000h,000h,000h,000h,001h,003h,000h,000h,000h	; b566  ................
-	defb 0fdh,001h,000h,000h,000h,000h,001h,000h,002h,00bh,001h,003h,000h,001h,0ffh,0fdh	; b576  ................
-	defb 001h,000h,009h,009h,001h,001h,000h,001h,00ah,00ah,0fdh,001h,003h,085h,064h,081h	; b586  ..............d.
-	defb 001h,087h,000h,080h,009h,083h,008h,024h,024h,027h,028h,02bh,02bh,02dh,02bh,024h	; b596  .......$$'(++-+$
-	defb 024h,027h,028h,02bh,02bh,02dh,030h,024h,024h,027h,028h,02bh,02bh,02dh,02bh,024h	; b5a6  $'(++-0$$'(++-+$
-	defb 024h,027h,028h,02bh,02bh,02dh,030h,024h,024h,027h,028h,02bh,02bh,02dh,02bh,024h	; b5b6  $'(++-0$$'(++-+$
-	defb 024h,027h,028h,02bh,02bh,02dh,030h,024h,024h,027h,028h,02bh,02bh,02dh,02bh,024h	; b5c6  $'(++-0$$'(++-+$
-	defb 024h,027h,028h,02bh,02bh,02dh,030h,01dh,01dh,020h,021h,024h,024h,026h,024h,01dh	; b5d6  $'(++-0.. !$$&$.
-	defb 01dh,020h,021h,024h,024h,026h,024h,024h,024h,028h,028h,02bh,02bh,02dh,02dh,02eh	; b5e6  . !$$&$$$((++--.
-	defb 02eh,02dh,02dh,02bh,02bh,028h,028h,01dh,01dh,020h,021h,024h,024h,026h,024h,01dh	; b5f6  .--++((.. !$$&$.
-	defb 01dh,020h,021h,024h,024h,026h,024h,024h,024h,028h,028h,02bh,02bh,02dh,02dh,02eh	; b606  . !$$&$$$((++--.
-	defb 02eh,02dh,02dh,02bh,02bh,028h,028h,02bh,02bh,02fh,02bh,031h,02bh,032h,02bh,029h	; b616  .--++((++/+1+2+)
-	defb 029h,02dh,029h,02fh,029h,030h,029h,080h,00ch,024h,024h,028h,028h,029h,029h,02ah	; b626  )-)/)0)..$$(())*
-	defb 02ah,02bh,02bh,01fh,02bh,01fh,02bh,01fh,02bh,082h,081h,001h,087h,001h,080h,00bh	; b636  *++.+.+.+.......
-	defb 083h,0a0h,084h,084h,084h,084h,084h,084h,084h,084h,083h,008h,048h,048h,046h,045h	; b646  ............HHFE
-	defb 043h,045h,03fh,03eh,03ch,037h,03eh,03ch,084h,037h,039h,03ch,03fh,084h,03fh,084h	; b656  CE?><7><.79<?.?.
-	defb 03fh,03eh,03ch,037h,039h,03ch,039h,037h,083h,020h,084h,083h,008h,048h,048h,046h	; b666  ?><79<97. ...HHF
-	defb 045h,043h,045h,03fh,03eh,03ch,037h,03eh,03ch,084h,080h,00dh,037h,039h,03ch,040h	; b676  ECE?><7><...79<@
-	defb 084h,040h,03eh,03ch,037h,039h,037h,033h,032h,030h,02dh,030h,083h,018h,080h,00bh	; b686  .@><797320-0....
-	defb 084h,083h,008h,045h,044h,045h,044h,045h,043h,041h,045h,084h,045h,046h,047h,048h	; b696  ...EDEDECAE.EFGH
-	defb 083h,010h,04dh,083h,008h,04fh,083h,002h,04bh,083h,00eh,04ch,083h,002h,04bh,083h	; b6a6  ..M..O..K..L..K.
-	defb 00eh,04ch,083h,008h,04ah,048h,043h,083h,002h,04bh,083h,00eh,04ch,083h,002h,04eh	; b6b6  .L..JHC..K..L..N
-	defb 083h,00eh,04fh,083h,002h,051h,083h,006h,04ch,083h,008h,04ah,048h,048h,084h,080h	; b6c6  ..O..Q..L..JHH..
-	defb 00bh,039h,084h,039h,038h,039h,083h,010h,03ch,083h,008h,038h,039h,038h,039h,083h	; b6d6  .9.989..<..8989.
-	defb 028h,03ch,083h,008h,037h,084h,037h,036h,037h,03ch,084h,037h,083h,008h,040h,040h	; b6e6  (<..7.767<.7..@@
-	defb 03eh,083h,028h,03ch,080h,00bh,083h,008h,047h,047h,048h,049h,04ah,043h,042h,043h	; b6f6  >.(<....GGHIJCBC
-	defb 041h,041h,083h,010h,045h,083h,008h,048h,083h,010h,04ah,083h,008h,043h,048h,048h	; b706  AA..E..H..J..CHH
-	defb 046h,046h,045h,045h,044h,044h,043h,041h,042h,083h,010h,043h,083h,008h,087h,003h	; b716  FFEEDDCAB..C....
-	defb 043h,048h,04ch,083h,010h,04fh,04fh,083h,008h,051h,083h,010h,04fh,083h,008h,043h	; b726  CHL..OO..Q..O..C
-	defb 048h,04ch,051h,083h,010h,04fh,083h,008h,043h,048h,04ch,083h,010h,04fh,04fh,083h	; b736  HLQ..O..CHL..OO.
-	defb 008h,051h,04fh,083h,010h,04fh,083h,008h,051h,054h,051h,083h,010h,054h,083h,008h	; b746  .QO..O..QTQ..T..
-	defb 037h,03ch,040h,083h,010h,043h,083h,008h,040h,045h,083h,010h,043h,040h,083h,008h	; b756  7<@..C..@E..C@..
-	defb 043h,043h,040h,045h,083h,010h,043h,040h,043h,083h,008h,040h,045h,043h,043h,045h	; b766  CC@E..C@C..@ECCE
-	defb 043h,040h,03ah,03eh,083h,010h,03ch,083h,018h,084h,083h,008h,04dh,048h,04ah,04ah	; b776  C@:>..<.....MHJJ
-	defb 045h,043h,041h,045h,048h,084h,048h,045h,083h,010h,04ah,048h,080h,000h,087h,002h	; b786  ECAEH.HE..JH....
-	defb 083h,008h,048h,084h,046h,043h,046h,084h,043h,041h,042h,043h,03fh,03eh,03ch,083h	; b796  ..H.FCF.CABC?><.
-	defb 018h,084h,083h,008h,080h,00bh,087h,003h,04dh,048h,04ah,04ah,045h,043h,041h,045h	; b7a6  ........MHJJECAE
-	defb 048h,084h,048h,045h,083h,010h,04ah,048h,080h,00ch,087h,000h,083h,008h,03ch,037h	; b7b6  H.HE..JH......<7
-	defb 039h,045h,084h,043h,084h,037h,03ch,040h,045h,043h,083h,020h,084h,080h,00bh,087h	; b7c6  9E.C.7<@EC. ....
-	defb 004h,083h,010h,04ah,04ah,083h,008h,047h,083h,010h,043h,083h,008h,045h,083h,010h	; b7d6  ...JJ..G..C..E..
-	defb 048h,083h,008h,048h,045h,04ah,04ah,083h,010h,048h,081h,009h,080h,000h,087h,002h	; b7e6  H..HEJJ..H......
-	defb 083h,008h,048h,084h,046h,084h,045h,084h,044h,084h,043h,043h,043h,083h,010h,043h	; b7f6  ..H.F.E.D.CCC..C
-	defb 083h,008h,04dh,04ch,04ah,081h,001h,080h,009h,087h,004h,083h,048h,03ch,083h,008h	; b806  ..MLJ.......H<..
-	defb 03ah,037h,036h,035h,033h,030h,02eh,083h,080h,030h,083h,048h,043h,083h,008h,043h	; b816  :76530...0.HC..C
-	defb 046h,043h,048h,046h,043h,046h,083h,080h,03ch,083h,008h,041h,084h,041h,03fh,041h	; b826  FCHFCF..<..A.A?A
-	defb 03fh,084h,084h,083h,008h,041h,084h,045h,048h,04dh,04dh,04ah,048h,083h,080h,043h	; b836  ?....A.EHMMJH..C
-	defb 083h,008h,03fh,03eh,03ch,03fh,03eh,03ch,03fh,03eh,03ch,03fh,03eh,03ch,03fh,03eh	; b846  ..?><?><?><?><?>
-	defb 03ch,039h,083h,080h,037h,083h,008h,043h,084h,043h,084h,045h,043h,084h,084h,041h	; b856  <9..7..C.C.EC..A
-	defb 084h,041h,084h,048h,045h,083h,010h,084h,048h,046h,045h,044h,043h,045h,043h,045h	; b866  .A.HE...HFEDCECE
-	defb 082h,081h,001h,087h,002h,080h,000h,08ah,000h,089h,000h,083h,008h,018h,084h,081h	; b876  ................
-	defb 008h,01eh,081h,001h,018h,018h,081h,008h,083h,008h,084h,01eh,084h,082h,0c9h,000h	; b886  ................
-	defb 000h,000h,000h	; b896  ...
+DATA_tabla_notas:
+	defw 00d5dh,00c9dh,00be7h,00b3ch,00a9bh,00a03h,00973h,008ebh	; b3c6
+	defw 0086bh,007f2h,00780h,00714h,006aeh,0064eh,005f4h,0059eh	; b3d6
+	defw 0054dh,00501h,004b9h,00475h,00435h,003f9h,003c0h,0038ah	; b3e6
+	defw 00357h,00327h,002fah,002cfh,002a7h,00281h,0025dh,0023bh	; b3f6
+	defw 0021bh,001fch,001e0h,001c5h,001ach,00194h,0017dh,00168h	; b406
+	defw 00153h,00140h,0012eh,0011dh,0010dh,000feh,000f0h,000e2h	; b416
+	defw 000d6h,000cah,000beh,000b4h,000aah,000a0h,00097h,0008fh	; b426
+	defw 00087h,0007fh,00078h,00071h,0006bh,00065h,0005fh,0005ah	; b436
+	defw 00055h,00050h,0004ch,00047h,00043h,00040h,0003ch,00039h	; b446
+	defw 00035h,00032h,00030h,0002dh,0002ah,00028h,00026h,00024h	; b456
+	defw 00022h,00020h,0001eh,0001ch,0001bh,00019h,00018h,00016h	; b466
+	defw 00015h,00014h,00013h,00012h,00011h,00010h,0000fh,0000eh	; b476
+
+; ----------------------------------------------------------------------
+; DATOS tabla_comandos: 12 punteros a los manejadores de comando. La entrada
+;   13 apuntaria a 0x0102, o sea que la tabla se acaba justo ahi
+;   0xb486..0xb49e  (24 bytes)
+DATA_tabla_comandos:
+	defw 0b22ah	; b486  -> L_B22A
+	defw 0b248h	; b488  -> L_B248
+	defw 0b294h	; b48a  -> L_B294
+	defw 0b233h	; b48c  -> L_B233
+	defw 0b290h	; b48e  -> L_B290
+	defw 0b262h	; b490  -> L_B262
+	defw 0b2a3h	; b492  -> L_B2A3
+	defw 0b2dah	; b494  -> L_B2DA
+	defw 0b27ch	; b496  -> L_B27C
+	defw 0b323h	; b498  -> L_B323
+	defw 0b2c6h	; b49a  -> L_B2C6
+	defw 0b253h	; b49c  -> L_B253
+
+; ----------------------------------------------------------------------
+; DATOS var_B49E: Dos variables sueltas del reproductor: 0xB49E (canal en
+;   curso) y 0xB49F (palabra de trabajo)
+;   0xb49e..0xb4a0  (2 bytes)
+DATA_var_B49E:
+	defb 002h,001h	; b49e
+
+; ----------------------------------------------------------------------
+; DATOS buffer_psg: Sombra de los 11 registros del PSG, en el orden del chip:
+;   0xB4A0-0xB4A5 los periodos de tono de los tres canales (registros 0-5),
+;   0xB4A6 el periodo del ruido (registro 6, lo escribe 0xB1D6), 0xB4A7 el
+;   mezclador (registro 7, lo lleva 0xB36A) y 0xB4A8-0xB4AA los volumenes
+;   (registros 8-10). VUELCA_PSG los manda los once de golpe cada frame
+;   0xb4a0..0xb4ab  (11 bytes)
+DATA_buffer_psg:
+	defb 000h,000h,000h,000h,000h,000h,000h,03fh,000h,000h,000h	; b4a0  .......?...
+
+; ----------------------------------------------------------------------
+; DATOS estado_canales: Los TRES bloques de estado, 46 bytes cada uno (0x2E,
+;   tamano dicho por el propio codigo en 0xB018 y 0xB024). Canal 0 en 0xB4AB,
+;   canal 1 en 0xB4D9, canal 2 en 0xB507. Dentro de cada bloque, deducido de
+;   como lo indexa IX: +0/+1 puntero al principio de la melodia (para
+;   repetirla), +2/+3 puntero de lectura, +4/+5 duracion que le queda a la
+;   nota, +9 volumen, +0x0A/+0x0B periodo del tono, y +0x2A/+0x2B/+0x2C los
+;   ajustes que se suman al volumen y al periodo (lo que da el vibrato y la
+;   envolvente)
+;   0xb4ab..0xb535  (138 bytes)
+DATA_estado_canales:
+	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b4ab  ................
+	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b4bb  ................
+	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b4cb  ................
+	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b4db  ................
+	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b4eb  ................
+	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b4fb  ................
+	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b50b  ................
+	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b51b  ................
+	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; b52b  ..........
+
+; ----------------------------------------------------------------------
+; DATOS estado_global: Bloque de 10 bytes al que apunta IY, mas las variables
+;   0xB53F, 0xB540 y 0xB541
+;   0xb535..0xb542  (13 bytes)
+DATA_estado_global:
+	defb 000h,000h,000h,000h,001h,00ah,00ah,0fdh,001h,003h,000h,000h,000h	; b535  .............
+
+; ----------------------------------------------------------------------
+; DATOS tabla_B542: Tabla de 75 bytes que se carga con `ld de,0xB542` desde
+;   0xB2EA (manejador del comando 0x86)
+;   0xb542..0xb58d  (75 bytes)
+DATA_tabla_B542:
+	defb 001h,00dh,000h,000h,000h,001h,0ffh,000h,000h,000h,000h,001h,000h,000h,000h,002h	; b542  ................
+	defb 002h,001h,001h,000h,000h,000h,001h,0ffh,000h,000h,000h,001h,001h,000h,001h,00ch	; b552  ................
+	defb 000h,000h,000h,00ch,0ffh,000h,000h,000h,000h,001h,000h,000h,000h,000h,000h,001h	; b562  ................
+	defb 003h,000h,000h,000h,0fdh,001h,000h,000h,000h,000h,001h,000h,002h,00bh,001h,003h	; b572  ................
+	defb 000h,001h,0ffh,0fdh,001h,000h,009h,009h,001h,001h,000h	; b582  ...........
+
+; ----------------------------------------------------------------------
+; DATOS tabla_B58D: Tabla de 6 bytes, se carga desde 0xB333 (manejador del
+;   comando 0x89)
+;   0xb58d..0xb593  (6 bytes)
+DATA_tabla_B58D:
+	defb 001h,00ah,00ah,0fdh,001h,003h	; b58d
+
+; ----------------------------------------------------------------------
+; DATOS melodia_canal_0: Voz del canal 0, 173 bytes
+;   0xb593..0xb640  (173 bytes)
+
+; ----------------------------------------------------------------------
+; ############################################################
+; LAS TRES MELODIAS DE LA PANTALLA DE TITULO
+; ############################################################
+; Las arranca de una tacada la rutina 0xC3B9, que hace tres
+; llamadas seguidas a ASIGNA_MELODIA con A = 0, 1 y 2:
+; ld de,0xB593 / xor a / call 0xB015
+; ld de,0xB640 / inc a / call 0xB015
+; ld de,0xB877 / inc a / jp   0xB015
+; O sea que son las voces de una misma pieza, una por canal del
+; PSG. Que la tercera sea tan corta encaja con que lleve el bajo
+; o la percusion.
+; ----------------------------------------------------------------------
+DATA_melodia_canal_0:
+	defb 085h,064h,081h,001h,087h,000h,080h,009h,083h,008h,024h,024h,027h,028h,02bh,02bh	; b593  .d........$$'(++
+	defb 02dh,02bh,024h,024h,027h,028h,02bh,02bh,02dh,030h,024h,024h,027h,028h,02bh,02bh	; b5a3  -+$$'(++-0$$'(++
+	defb 02dh,02bh,024h,024h,027h,028h,02bh,02bh,02dh,030h,024h,024h,027h,028h,02bh,02bh	; b5b3  -+$$'(++-0$$'(++
+	defb 02dh,02bh,024h,024h,027h,028h,02bh,02bh,02dh,030h,024h,024h,027h,028h,02bh,02bh	; b5c3  -+$$'(++-0$$'(++
+	defb 02dh,02bh,024h,024h,027h,028h,02bh,02bh,02dh,030h,01dh,01dh,020h,021h,024h,024h	; b5d3  -+$$'(++-0.. !$$
+	defb 026h,024h,01dh,01dh,020h,021h,024h,024h,026h,024h,024h,024h,028h,028h,02bh,02bh	; b5e3  &$.. !$$&$$$((++
+	defb 02dh,02dh,02eh,02eh,02dh,02dh,02bh,02bh,028h,028h,01dh,01dh,020h,021h,024h,024h	; b5f3  --..--++((.. !$$
+	defb 026h,024h,01dh,01dh,020h,021h,024h,024h,026h,024h,024h,024h,028h,028h,02bh,02bh	; b603  &$.. !$$&$$$((++
+	defb 02dh,02dh,02eh,02eh,02dh,02dh,02bh,02bh,028h,028h,02bh,02bh,02fh,02bh,031h,02bh	; b613  --..--++((++/+1+
+	defb 032h,02bh,029h,029h,02dh,029h,02fh,029h,030h,029h,080h,00ch,024h,024h,028h,028h	; b623  2+))-)/)0)..$$((
+	defb 029h,029h,02ah,02ah,02bh,02bh,01fh,02bh,01fh,02bh,01fh,02bh,082h	; b633  ))**++.+.+.+.
+
+; ----------------------------------------------------------------------
+; DATOS melodia_canal_1: Voz del canal 1, 567 bytes
+;   0xb640..0xb877  (567 bytes)
+DATA_melodia_canal_1:
+	defb 081h,001h,087h,001h,080h,00bh,083h,0a0h,084h,084h,084h,084h,084h,084h,084h,084h	; b640  ................
+	defb 083h,008h,048h,048h,046h,045h,043h,045h,03fh,03eh,03ch,037h,03eh,03ch,084h,037h	; b650  ..HHFECE?><7><.7
+	defb 039h,03ch,03fh,084h,03fh,084h,03fh,03eh,03ch,037h,039h,03ch,039h,037h,083h,020h	; b660  9<?.?.?><79<97. 
+	defb 084h,083h,008h,048h,048h,046h,045h,043h,045h,03fh,03eh,03ch,037h,03eh,03ch,084h	; b670  ...HHFECE?><7><.
+	defb 080h,00dh,037h,039h,03ch,040h,084h,040h,03eh,03ch,037h,039h,037h,033h,032h,030h	; b680  ..79<@.@><797320
+	defb 02dh,030h,083h,018h,080h,00bh,084h,083h,008h,045h,044h,045h,044h,045h,043h,041h	; b690  -0.......EDEDECA
+	defb 045h,084h,045h,046h,047h,048h,083h,010h,04dh,083h,008h,04fh,083h,002h,04bh,083h	; b6a0  E.EFGH..M..O..K.
+	defb 00eh,04ch,083h,002h,04bh,083h,00eh,04ch,083h,008h,04ah,048h,043h,083h,002h,04bh	; b6b0  .L..K..L..JHC..K
+	defb 083h,00eh,04ch,083h,002h,04eh,083h,00eh,04fh,083h,002h,051h,083h,006h,04ch,083h	; b6c0  ..L..N..O..Q..L.
+	defb 008h,04ah,048h,048h,084h,080h,00bh,039h,084h,039h,038h,039h,083h,010h,03ch,083h	; b6d0  .JHH...9.989..<.
+	defb 008h,038h,039h,038h,039h,083h,028h,03ch,083h,008h,037h,084h,037h,036h,037h,03ch	; b6e0  .8989.(<..7.767<
+	defb 084h,037h,083h,008h,040h,040h,03eh,083h,028h,03ch,080h,00bh,083h,008h,047h,047h	; b6f0  .7..@@>.(<....GG
+	defb 048h,049h,04ah,043h,042h,043h,041h,041h,083h,010h,045h,083h,008h,048h,083h,010h	; b700  HIJCBCAA..E..H..
+	defb 04ah,083h,008h,043h,048h,048h,046h,046h,045h,045h,044h,044h,043h,041h,042h,083h	; b710  J..CHHFFEEDDCAB.
+	defb 010h,043h,083h,008h,087h,003h,043h,048h,04ch,083h,010h,04fh,04fh,083h,008h,051h	; b720  .C....CHL..OO..Q
+	defb 083h,010h,04fh,083h,008h,043h,048h,04ch,051h,083h,010h,04fh,083h,008h,043h,048h	; b730  ..O..CHLQ..O..CH
+	defb 04ch,083h,010h,04fh,04fh,083h,008h,051h,04fh,083h,010h,04fh,083h,008h,051h,054h	; b740  L..OO..QO..O..QT
+	defb 051h,083h,010h,054h,083h,008h,037h,03ch,040h,083h,010h,043h,083h,008h,040h,045h	; b750  Q..T..7<@..C..@E
+	defb 083h,010h,043h,040h,083h,008h,043h,043h,040h,045h,083h,010h,043h,040h,043h,083h	; b760  ..C@..CC@E..C@C.
+	defb 008h,040h,045h,043h,043h,045h,043h,040h,03ah,03eh,083h,010h,03ch,083h,018h,084h	; b770  .@ECCEC@:>..<...
+	defb 083h,008h,04dh,048h,04ah,04ah,045h,043h,041h,045h,048h,084h,048h,045h,083h,010h	; b780  ..MHJJECAEH.HE..
+	defb 04ah,048h,080h,000h,087h,002h,083h,008h,048h,084h,046h,043h,046h,084h,043h,041h	; b790  JH......H.FCF.CA
+	defb 042h,043h,03fh,03eh,03ch,083h,018h,084h,083h,008h,080h,00bh,087h,003h,04dh,048h	; b7a0  BC?><.........MH
+	defb 04ah,04ah,045h,043h,041h,045h,048h,084h,048h,045h,083h,010h,04ah,048h,080h,00ch	; b7b0  JJECAEH.HE..JH..
+	defb 087h,000h,083h,008h,03ch,037h,039h,045h,084h,043h,084h,037h,03ch,040h,045h,043h	; b7c0  ....<79E.C.7<@EC
+	defb 083h,020h,084h,080h,00bh,087h,004h,083h,010h,04ah,04ah,083h,008h,047h,083h,010h	; b7d0  . .......JJ..G..
+	defb 043h,083h,008h,045h,083h,010h,048h,083h,008h,048h,045h,04ah,04ah,083h,010h,048h	; b7e0  C..E..H..HEJJ..H
+	defb 081h,009h,080h,000h,087h,002h,083h,008h,048h,084h,046h,084h,045h,084h,044h,084h	; b7f0  ........H.F.E.D.
+	defb 043h,043h,043h,083h,010h,043h,083h,008h,04dh,04ch,04ah,081h,001h,080h,009h,087h	; b800  CCC..C..MLJ.....
+	defb 004h,083h,048h,03ch,083h,008h,03ah,037h,036h,035h,033h,030h,02eh,083h,080h,030h	; b810  ..H<..:76530...0
+	defb 083h,048h,043h,083h,008h,043h,046h,043h,048h,046h,043h,046h,083h,080h,03ch,083h	; b820  .HC..CFCHFCF..<.
+	defb 008h,041h,084h,041h,03fh,041h,03fh,084h,084h,083h,008h,041h,084h,045h,048h,04dh	; b830  .A.A?A?....A.EHM
+	defb 04dh,04ah,048h,083h,080h,043h,083h,008h,03fh,03eh,03ch,03fh,03eh,03ch,03fh,03eh	; b840  MJH..C..?><?><?>
+	defb 03ch,03fh,03eh,03ch,03fh,03eh,03ch,039h,083h,080h,037h,083h,008h,043h,084h,043h	; b850  <?><?><9..7..C.C
+	defb 084h,045h,043h,084h,084h,041h,084h,041h,084h,048h,045h,083h,010h,084h,048h,046h	; b860  .EC..A.A.HE...HF
+	defb 045h,044h,043h,045h,043h,045h,082h	; b870
+
+; ----------------------------------------------------------------------
+; DATOS melodia_canal_2: Voz del canal 2, 34 bytes
+;   0xb877..0xb899  (34 bytes)
+DATA_melodia_canal_2:
+	defb 081h,001h,087h,002h,080h,000h,08ah,000h,089h,000h,083h,008h,018h,084h,081h,008h	; b877  ................
+	defb 01eh,081h,001h,018h,018h,081h,008h,083h,008h,084h,01eh,084h,082h,0c9h,000h,000h	; b887  ................
+	defb 000h,000h	; b897

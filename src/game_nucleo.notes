@@ -15,6 +15,7 @@ B 0xBD00 TABLA DE NOMBRES (768 bytes de datos, no codigo)
 B 0xBD00 ############################################################
 B 0xBD00 32x24 casillas que 0xC05F manda a VRAM 0x1800 de una tacada.
 D 0xBD00 0xC000 tabla_nombres   Pantalla completa de 32x24 -> VRAM 0x1800
+F 0xBD00 32
 
 B 0xC000 ############################################################
 B 0xC000 ARRANQUE EN FRIO
@@ -116,6 +117,7 @@ B 0xC3EF publicado el ano anterior.
 D 0xC3F0 0xC4A7 mensaje_final    El texto que hace scroll al terminar el juego, en ASCII, terminado en 0x00
 D 0xC4A7 0xC510 relleno_mensaje  El 0x00 que cierra el mensaje y espacios de relleno hasta la tabla de graficos
 D 0xC510 0xC52E tabla_graficos   Juego de graficos de la presentacion. Es el MISMO contenido que la tabla de 0xDB35 del motor: pares (origen comprimido, destino VRAM) terminados en 0x0000
+F 0xC510 w2
 D 0xC52E 0xC531 bandera_arranque 0xC52E: 0 = arranque normal, distinto de 0 = se vuelve de terminar la partida. La escribe 0xC003 con el valor que trae SLOTS y la lee 0xC059
 D 0xC531 0xC540 variables_titulo Las variables de la pantalla de titulo. Las mas usadas: 0xC532 (12 accesos), 0xC533 (10), 0xC531 y 0xC534 (7 cada una), 0xC53B (contador de frames de la interrupcion, igual que 0xDB75 en la partida) y 0xC53D (puntero de 16 bits)
 

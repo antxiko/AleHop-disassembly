@@ -42,7 +42,7 @@ BUSCA_RAM:		; Localiza RAM en todas las paginas y anota los slots
 	ld hl,0c418h		;c36a   ; Copia el buscador a 0x9C40, en RAM...
 	ld de,09c40h		;c36d
 	ld bc,000c8h		;c370
-	ldir			;c373
+	ldir		;c373
 	ld hl,09c40h		;c375   ; ...y reescribe el CALL para usar esa copia en vez de la BIOS
 	ld (0c3b3h),hl		;c378
 	ld hl,00000h		;c37b   ; Ahora ya se puede sondear la pagina 0, donde la BIOS dejaria de estar mapeada
@@ -63,11 +63,11 @@ GUARDA_SLOTS_B:		; Anota en 0xE292 el estado actual de slots
 	ld hl,0e292h		;c39a
 L_C39D:
 	in a,(0a8h)		;c39d
-	ld (hl),a		;c39f
+	ld (hl),a			;c39f
 	inc hl			;c3a0
 	ld a,(0ffffh)		;c3a1
 	cpl			;c3a4
-	ld (hl),a		;c3a5
+	ld (hl),a			;c3a5
 	ret			;c3a6
 SONDEA_PAGINA:		; Prueba todos los slots de la pagina HL y se queda con el que tenga RAM
 	ld a,080h		;c3a7   ; 0x80 = marca de slot expandido
@@ -82,12 +82,12 @@ L_C3AF:
 	call 00024h		;c3b2   ; BIOS ENASLT - Switches to specified slot and page definitively | ENASLT o su copia en RAM (ver 0xC358 y 0xC375)
 	pop hl			;c3b5
 	ld (hl),020h		;c3b6   ; Prueba de RAM: escribe 0x20 y lo relee...
-	ld a,(hl)		;c3b8
-	cp 020h			;c3b9
+	ld a,(hl)			;c3b8
+	cp 020h		;c3b9
 	jr nz,L_C3C4		;c3bb
 	ld (hl),0fah		;c3bd   ; ...y luego 0xFA, para descartar que sea ROM o bus flotante
-	ld a,(hl)		;c3bf
-	cp 0fah			;c3c0
+	ld a,(hl)			;c3bf
+	cp 0fah		;c3c0
 	jr z,L_C3CF		;c3c2
 L_C3C4:
 	pop bc			;c3c4
@@ -105,12 +105,12 @@ L_C3CF:
 
 ; ----------------------------------------------------------------------
 ; DATOS sin identificar  0xc3d2..0xc418  (70 bytes)
-; ----------------------------------------------------------------------
+DATA_C3D2:
 	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; c3d2  ................
 	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; c3e2  ................
 	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; c3f2  ................
 	defb 000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h,000h	; c402  ................
-	defb 000h,000h,000h,000h,000h,000h	; c412  ......
+	defb 000h,000h,000h,000h,000h,000h	; c412
 
 ; ======================================================================
 ; CODIGO 0xc418..0xc425  (13 bytes)
@@ -128,7 +128,7 @@ L_C418:
 
 ; ----------------------------------------------------------------------
 ; DATOS sin identificar  0xc425..0xc490  (107 bytes)
-; ----------------------------------------------------------------------
+DATA_C425:
 	defb 0e5h,0cdh,084h,09ch,04fh,006h,000h,07dh,0a4h,0b2h,021h,0c5h,0fch,009h,077h,0e1h	; c425  ....O..}..!...w.
 	defb 079h,018h,0e0h,0f5h,07ch,007h,007h,0e6h,003h,05fh,03eh,0c0h,007h,007h,01dh,0f2h	; c435  y...|...._>.....
 	defb 069h,09ch,05fh,02fh,04fh,0f1h,0f5h,0e6h,003h,03ch,047h,03eh,0abh,0c6h,055h,010h	; c445  i._/O....<G>..U.
@@ -159,11 +159,11 @@ L_C418:
 ; ----------------------------------------------------------------------
 L_C490:
 	ld hl,0e291h		;c490
-	jr $+27			;c493
+	jr $+27		;c493
 
 ; ----------------------------------------------------------------------
 ; DATOS sin identificar  0xc495..0xc4ae  (25 bytes)
-; ----------------------------------------------------------------------
+DATA_C495:
 	defb 021h,091h,0e2h,018h,01ah,021h,091h,0e2h,018h,01bh,021h,093h,0e2h,018h,00ah,021h	; c495  !....!....!....!
 	defb 093h,0e2h,018h,00bh,021h,093h,0e2h,018h,00ch	; c4a5  ....!....
 
@@ -175,11 +175,11 @@ L_C490:
 L_C4AE:
 	ld d,003h		;c4ae
 	ld e,0fch		;c4b0
-	jr $+12			;c4b2
+	jr $+12		;c4b2
 
 ; ----------------------------------------------------------------------
 ; DATOS sin identificar  0xc4b4..0xc4be  (10 bytes)
-; ----------------------------------------------------------------------
+DATA_C4B4:
 	defb 016h,00ch,01eh,0f3h,018h,004h,016h,030h,01eh,0cfh	; c4b4  .......0..
 
 ; ======================================================================
@@ -189,7 +189,7 @@ L_C4AE:
 
 L_C4BE:
 	di			;c4be
-	ld a,(hl)		;c4bf
+	ld a,(hl)			;c4bf
 	and d			;c4c0
 	ld b,a			;c4c1
 	ld a,(0ffffh)		;c4c2
@@ -198,7 +198,7 @@ L_C4BE:
 	or b			;c4c7
 	ld (0ffffh),a		;c4c8
 	dec hl			;c4cb
-	ld a,(hl)		;c4cc
+	ld a,(hl)			;c4cc
 	and d			;c4cd
 	ld b,a			;c4ce
 	in a,(0a8h)		;c4cf
@@ -209,8 +209,8 @@ L_C4BE:
 
 ; ----------------------------------------------------------------------
 ; DATOS sin identificar  0xc4d6..0xc4d7  (1 bytes)
-; ----------------------------------------------------------------------
-	defb 000h	; c4d6  .
+DATA_C4D6:
+	defb 000h	; c4d6
 
 ; ======================================================================
 ; CODIGO 0xc4d7..0xc580  (169 bytes)
@@ -239,7 +239,7 @@ CARGA_TURBO:		; Lee un bloque de cinta a (IX), longitud DE
 	out (0a0h),a		;c4e2
 	pop af			;c4e4
 	inc d			;c4e5
-	ex af,af'		;c4e6
+	ex af,af'			;c4e6
 	dec d			;c4e7
 	di			;c4e8
 	ld a,005h		;c4e9
@@ -271,7 +271,7 @@ L_C510:
 	call L_C55D		;c512
 	jr nc,L_C4ED		;c515
 	ld a,b			;c517
-	cp 0d4h			;c518
+	cp 0d4h		;c518
 	jr nc,L_C510		;c51a
 	call L_C55D		;c51c
 	ret nc			;c51f
@@ -279,12 +279,12 @@ L_C510:
 	ld b,0b0h		;c522
 	jr L_C53E		;c524
 L_C526:
-	ex af,af'		;c526
+	ex af,af'			;c526
 	jr nz,L_C52E		;c527
 	ld (ix+000h),l		;c529
 	jr L_C538		;c52c
 L_C52E:
-	rr c			;c52e
+	rr c		;c52e
 	xor l			;c530
 	ret nz			;c531
 	ld a,c			;c532
@@ -293,10 +293,10 @@ L_C52E:
 	inc de			;c535
 	jr L_C53A		;c536
 L_C538:
-	inc ix			;c538
+	inc ix		;c538
 L_C53A:
 	dec de			;c53a
-	ex af,af'		;c53b
+	ex af,af'			;c53b
 	ld b,0b2h		;c53c
 L_C53E:
 	ld l,001h		;c53e
@@ -305,7 +305,7 @@ L_C540:
 	ret nc			;c543
 	ld a,0cbh		;c544
 	cp b			;c546
-	rl l			;c547
+	rl l		;c547
 	ld b,0b0h		;c549
 	jp nc,L_C540		;c54b
 	ld a,h			;c54e
@@ -315,7 +315,7 @@ L_C540:
 	or e			;c552
 	jr nz,L_C526		;c553
 	ld a,h			;c555
-	cp 001h			;c556
+	cp 001h		;c556
 	ret			;c558
 L_C559:
 	call L_C55D		;c559
@@ -339,7 +339,7 @@ L_C563:
 	ld a,c			;c571
 	cpl			;c572
 	ld c,a			;c573
-	ld a,r			;c574
+	ld a,r		;c574
 	and 00fh		;c576
 	out (099h),a		;c578
 	ld a,087h		;c57a
@@ -349,7 +349,6 @@ L_C563:
 
 ; ----------------------------------------------------------------------
 ; DATOS sin identificar  0xc580..0xc58f  (15 bytes)
-; ----------------------------------------------------------------------
 PARA_MOTOR:		; Apaga el motor del cassette y restaura el registro 1 del VDP
 	defb 01eh,013h,03eh,009h,0d3h,0abh,03eh,001h,0d3h,099h,03eh,087h,0d3h,099h,0c9h	; c580  ..>...>...>....
 
@@ -371,18 +370,18 @@ SLOTS_START:		; Punto de entrada: relocaliza todo y arranca la carga
 	ld hl,0dac0h		;c590   ; Copia 100 bytes de 0xDAC0 a 0xDEA8: deja preparada la zona de parcheo por cinta
 	ld de,0dea8h		;c593
 	ld bc,00064h		;c596
-	ldir			;c599
+	ldir		;c599
 	call 00041h		;c59b   ; BIOS DISSCR - Inhibits the screen display | DISSCR: apaga la pantalla durante la carga
 	call BUSCA_RAM		;c59e   ; Localiza la RAM de todas las paginas
 	di			;c5a1
 	ld hl,0c490h		;c5a2   ; Copia el conmutador de slots a 0xE22C
 	ld de,0e22ch		;c5a5
 	ld bc,00047h		;c5a8
-	ldir			;c5ab
+	ldir		;c5ab
 	ld hl,SECUENCIA_CARGA		;c5ad   ; Copia la secuencia de carga a 0xE09C
 	ld de,0e09ch		;c5b0
 	ld bc,00085h		;c5b3
-	ldir			;c5b6
+	ldir		;c5b6
 	jp 0e09ch		;c5b8   ; Y salta a ella: a partir de aqui se ejecuta desde RAM alta
 
 ; ----------------------------------------------------------------------
@@ -413,15 +412,15 @@ SECUENCIA_CARGA:		; Carga los dos bloques turbo, recoloca y arranca el juego
 	ld hl,08a41h		;c5df   ; Recoloca el reproductor de sonido a 0xB000 (2201 bytes)
 	ld de,0b000h		;c5e2
 	ld bc,00899h		;c5e5
-	ldir			;c5e8
+	ldir		;c5e8
 	ld hl,092dah		;c5ea   ; Recoloca el nucleo a 0xBD00 (2112 bytes): ahi va el punto de entrada
 	ld de,0bd00h		;c5ed
 	ld bc,00840h		;c5f0
-	ldir			;c5f3
+	ldir		;c5f3
 	ld hl,09b1ah		;c5f5   ; Recoloca el motor del juego a 0xD000 (2938 bytes)
 	ld de,0d000h		;c5f8
 	ld bc,00b7ah		;c5fb
-	ldir			;c5fe
+	ldir		;c5fe
 	ld hl,0f065h		;c600   ; Reapunta los tres primeros vectores del conmutador a la tabla de 0xF065
 	ld (0e22dh),hl		;c603
 	ld (0e232h),hl		;c606
@@ -433,25 +432,25 @@ SECUENCIA_CARGA:		; Carga los dos bloques turbo, recoloca y arranca el juego
 	ld hl,0e22ch		;c618   ; Copia el conmutador de slots a 0xF000, ya parcheado
 	ld de,0f000h		;c61b
 	ld bc,0006eh		;c61e
-	ldir			;c621
+	ldir		;c621
 	ld hl,0dea8h		;c623   ; Mecanismo de parcheo: si en 0xDEA8 hay tres 0xC9 seguidos...
 	ld b,003h		;c626
 L_C628:
-	ld a,(hl)		;c628
-	cp 0c9h			;c629
+	ld a,(hl)			;c628
+	cp 0c9h		;c629
 	jr nz,L_C63B		;c62b
 	inc hl			;c62d
 	djnz L_C628		;c62e
-	ld b,(hl)		;c630   ; ...lee un contador y aplica esa cantidad de parches (direccion, valor)
+	ld b,(hl)			;c630   ; ...lee un contador y aplica esa cantidad de parches (direccion, valor)
 	inc hl			;c631
 L_C632:
-	ld e,(hl)		;c632
+	ld e,(hl)			;c632
 	inc hl			;c633
-	ld d,(hl)		;c634
+	ld d,(hl)			;c634
 	inc hl			;c635
-	ld a,(hl)		;c636
+	ld a,(hl)			;c636
 	inc hl			;c637
-	ld (de),a		;c638
+	ld (de),a			;c638
 	djnz L_C632		;c639
 L_C63B:
 	ld a,000h		;c63b   ; A = 0: le dice al juego que es un arranque normal, no un fin de partida
@@ -459,5 +458,5 @@ L_C63B:
 
 ; ----------------------------------------------------------------------
 ; DATOS sin identificar  0xc640..0xc641  (1 bytes)
-; ----------------------------------------------------------------------
-	defb 0c9h	; c640  .
+DATA_C640:
+	defb 0c9h	; c640
