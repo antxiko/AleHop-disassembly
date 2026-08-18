@@ -1,6 +1,7 @@
 # Hallazgos
 
 Lo que no cuentan las otras páginas: dos cosas que están en el binario y el juego no usa.
+
 ## Hay sitio para dos niveles que no existen
 
 Los mapas de fondo se buscan con la fórmula `0x3000 + nivel * 0x200`. Hay

@@ -1,6 +1,7 @@
 # Findings
 
 What the other pages don't cover: two things the binary has and the game never uses.
+
 ## There's room for two levels that don't exist
 
 Background maps are located with `0x3000 + level * 0x200`. There's space for

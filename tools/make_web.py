@@ -53,7 +53,7 @@ T = {
         cifras=[("100%", "of the binary accounted for"), ("57", "routines identified"),
                 ("6", "level maps"), ("4,588", "bytes of code"),
                 ("38,057", "bytes of data"), ("0", "bytes unidentified")],
-        nota_num="Only 11% being code doesn't mean anything is missing: this game is "
+        nota_num="Only 10.8% being code doesn't mean anything is missing: this game is "
                  "<b style='color:var(--tinta);font-weight:400'>89% data</b>. The "
                  "graphics, six level strips of 256 columns each and their parallax "
                  "backgrounds.",
@@ -84,7 +84,7 @@ T = {
         cifras=[("100%", "del binario explicado"), ("57", "rutinas identificadas"),
                 ("6", "mapas de nivel"), ("4.588", "bytes de código"),
                 ("38.057", "bytes de datos"), ("0", "bytes sin identificar")],
-        nota_num="Que solo el 11% sea código no significa que falte nada: este juego es "
+        nota_num="Que solo el 10,8% sea código no significa que falte nada: este juego es "
                  "<b style='color:var(--tinta);font-weight:400'>89% datos</b>. Los "
                  "gráficos, seis tiras de nivel de 256 columnas cada una y sus fondos "
                  "de parallax.",
