@@ -57,7 +57,9 @@ Más sobre cómo está montado: [docs/es/EL-JUEGO.md](docs/es/EL-JUEGO.md).
 donde vive el BIOS del MSX, y luego el cargador mueve tres trozos a RAM alta. Los
 35 KB de gráficos y mapas se quedan escondidos debajo de la ROM, y el juego solo
 los destapa un instante cada vez que carga un nivel. Es la decisión que da forma
-a todo lo demás: por eso el desensamblado son cinco listados y no uno.
+a todo lo demás: por eso el bloque del juego va partido en cinco listados y no
+en uno (ocho ficheros `.asm` en total, contando los otros tres módulos de la
+cinta).
 
 **Hay un mensaje que casi nadie leyó.** Al superar el sexto nivel aparece un
 texto que hace scroll, y la pantalla que lo enmarca está vacía: el texto se

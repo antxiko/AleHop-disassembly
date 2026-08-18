@@ -59,7 +59,9 @@ More: [docs/THE-GAME.md](docs/THE-GAME.md).
 MSX BIOS lives, and the loader then moves three chunks up into high RAM. The
 35 KB of graphics and maps stay hidden underneath the ROM, and the game only
 uncovers them for an instant each time it loads a level. That one decision
-shapes everything else — it's why this disassembly is five listings, not one.
+shapes everything else — it's why the game block is split into five
+listings instead of one (eight `.asm` files in all, with the other three
+modules of the tape).
 
 **There's a message almost nobody read.** Clear the sixth level and a text
 scrolls past. The screen framing it is empty: the text is drawn at runtime, one
