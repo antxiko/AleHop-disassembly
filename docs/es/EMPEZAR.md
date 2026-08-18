@@ -75,11 +75,11 @@ Tarda unos siete minutos de tiempo emulado en cargar, igual que en 1988.
 
 ## Modificar el juego
 
-El sitio por donde empezar es `src/*.notes`: los comentarios viven ahí, anclados
-a dirección, y sobreviven a que se vuelva a trazar todo. Los `.asm` se
-regeneran, así que **no hay que editarlos a mano**.
+Los comentarios van en `src/*.notes`, anclados a dirección para que sobrevivan a
+que se vuelva a trazar todo; los `.asm` se generan a partir de ahí, así que un
+comentario escrito en un `.asm` se pierde en el siguiente trazado.
 
-Para tocar el código, edita el `.asm` correspondiente, y luego:
+Para tocar el código en sí, edita el `.asm` y luego:
 
 ```sh
 python3 tools/build_tape.py build build/mi_alehop.tsx

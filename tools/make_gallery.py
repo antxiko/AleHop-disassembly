@@ -6,12 +6,16 @@ hasta el logo de la cabecera, que se recorta de la pantalla de presentacion
 (tabla de nombres de 0x5CC0). Las imagenes van embebidas como data URI para que
 la pagina sea autocontenida.
 """
+import tempfile
 import base64
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from render_maps import render, png, PALETA  # noqa: E402
+
+# El temporal del sistema: en Windows no hay /tmp.
+TMP = tempfile.gettempdir()
 
 ORG = 0x4000
 
@@ -35,11 +39,11 @@ def main(binpath, mapdir, out):
 
     # El logo "TEMPTATIONS" ocupa las filas 5..13 de la pantalla de presentacion.
     w, h, img = recorta(d, 0x5CC0, 6, 5, 21, 9, escala=3)
-    png("/tmp/logo.png", w, h, img)
+    png(f"{TMP}/logo.png", w, h, img)
 
     # Y la pantalla de presentacion entera, con el texto del monje.
     w2, h2, img2 = recorta(d, 0x5CC0, 0, 0, 32, 24, escala=2)
-    png("/tmp/menu.png", w2, h2, img2)
+    png(f"{TMP}/menu.png", w2, h2, img2)
 
     NIVELES = [
         ("Nivel 1", "La necropolis", "Cementerio de columnas rotas y calaveras."),
@@ -175,7 +179,7 @@ footer {{ margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--bo
 
 <div class="envoltorio">
   <header class="principal">
-    <img src="data:image/png;base64,{b64('/tmp/logo.png')}"
+    <img src="data:image/png;base64,{b64(f'{TMP}/logo.png')}"
          alt="Logo de Temptations, recortado de la pantalla de presentacion del juego">
     <p class="entradilla">Las <strong>29 pantallas</strong> del juego de Topo Soft para MSX,
       dibujadas directamente desde el binario de la cinta. Cada una es un bloque de

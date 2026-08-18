@@ -20,8 +20,11 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 
+# El directorio temporal del sistema: en Windows no hay /tmp.
+TMP = tempfile.gettempdir()
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(RAIZ, "tools"))
 
@@ -64,7 +67,7 @@ class TestReproducible(unittest.TestCase):
         hechos = 0
         for asmname, binrel, _org in MODULOS + TROZOS:
             with self.subTest(modulo=asmname):
-                out = f"/tmp/_al_{asmname}.bin"
+                out = os.path.join(TMP, f"_al_{asmname}.bin")
                 r = ensambla(asmname, out)
                 self.assertEqual(r.returncode, 0,
                                  f"pasmo fallo en {asmname}: {r.stderr[:300]}")
@@ -78,7 +81,7 @@ class TestReproducible(unittest.TestCase):
         distintos que, puestos en el orden de la cinta, dan los 42645 bytes."""
         trozos = b""
         for asmname, _bin, _org in TROZOS:
-            out = f"/tmp/_al_{asmname}.bin"
+            out = os.path.join(TMP, f"_al_{asmname}.bin")
             r = ensambla(asmname, out)
             self.assertEqual(r.returncode, 0, r.stderr[:300])
             trozos += open(out, "rb").read()
@@ -138,8 +141,13 @@ class TestCinta(unittest.TestCase):
 
     def test_ida_y_vuelta_del_tsx(self):
         man = os.path.join(RAIZ, "extracted", "manifest.json")
-        originales = [f for f in os.listdir(RAIZ) if f.lower().endswith(".tsx")]
-        out = "/tmp/_al_regen.tsx"
+        # Por el nombre, no "el primer .tsx que haya": en la carpeta puede
+        # haber cintas de otros juegos, y entonces se compararia contra otra.
+        originales = [f for f in os.listdir(RAIZ)
+                      if f.lower().endswith(".tsx") and "alehop" in f.lower()]
+        self.assertEqual(len(originales), 1,
+                         "hace falta la cinta de Alehop en la raiz")
+        out = os.path.join(TMP, "_al_regen.tsx")
         r = subprocess.run(
             [sys.executable, os.path.join(RAIZ, "tools", "tsx_build.py"),
              man, out, os.path.join(RAIZ, "extracted")],

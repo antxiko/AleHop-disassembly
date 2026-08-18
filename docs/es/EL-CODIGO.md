@@ -8,7 +8,7 @@ Los 42645 bytes del bloque del juego se reparten así:
 | Datos identificados | 38057 | 89,2 % |
 | **Sin explicar** | **0** | |
 
-Que solo el 11 % sea código no significa que falte desensamblar: significa que
+Que solo el 10,8 % sea código no significa que falte desensamblar: significa que
 *Ale Hop!* es, sobre todo, gráficos. Un juego de MSX de esta época cabe en muy
 pocas instrucciones; lo que ocupa son los dibujos.
 
@@ -127,6 +127,11 @@ en 0xB486.
 Los tres canales escriben en un búfer de sombra de 11 bytes en 0xB4A0, con el
 mismo orden que los registros del chip, y una sola rutina los vuelca todos de
 golpe al final del frame.
+
+El reproductor no parece código escrito para este juego, sino una biblioteca
+metida dentro. La pista está en el binario: trae **su propio gestor de
+interrupción**, listo para engancharse al sistema, y el juego no lo usa nunca
+porque tiene el suyo.
 
 ## Los gráficos
 

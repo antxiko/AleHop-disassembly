@@ -12,6 +12,7 @@ embebidas como data URI, de modo que cada pagina es un fichero autocontenido.
 
 La inglesa se escribe en docs/index.html y la castellana en docs/es/index.html.
 """
+import tempfile
 import base64
 import os
 import sys
@@ -19,6 +20,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from estilo_web import ESTILO          # noqa: E402
 from render_maps import PALETA, png    # noqa: E402
+
+# El temporal del sistema: en Windows no hay /tmp.
+TMP = tempfile.gettempdir()
 
 REPO = "https://github.com/antxiko/AleHop-disassembly"
 
@@ -274,7 +278,7 @@ def main(binpath, imgdir, out, idioma="en"):
     t = T[idioma]
 
     w, h, im = recorta(d, 6, 2, 20, 6, escala=3)      # el rotulo ALE HOP! con su marco
-    png("/tmp/_al_logo.png", w, h, im)
+    png(f"{TMP}/_al_logo.png", w, h, im)
 
     subs = dict(
         mensaje=f'<figure style="margin:1.25rem 0">'
@@ -315,7 +319,7 @@ def main(binpath, imgdir, out, idioma="en"):
 <style>{ESTILO}</style>
 <div class="w">
 <header class="top">
-  {img("/tmp/_al_logo.png", "Ale Hop! logo")}
+  {img(f"{TMP}/_al_logo.png", "Ale Hop! logo")}
   <p class="claim">{t["claim"]}</p>
   <div class="ficha">{"".join(f"<span>{x}</span>" for x in t["ficha"])}</div>
 </header>

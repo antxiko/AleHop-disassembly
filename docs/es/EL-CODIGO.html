@@ -71,7 +71,7 @@ footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
 <h1>El código por dentro</h1>
 <p>Los 42645 bytes del bloque del juego se reparten así:</p>
 <table><tr><th></th><th>bytes</th><th></th></tr><tr><td>Código trazado</td><td>4588</td><td>10,8 %</td></tr><tr><td>Datos identificados</td><td>38057</td><td>89,2 %</td></tr><tr><td><b>Sin explicar</b></td><td><b>0</b></td><td></td></tr></table>
-<p>Que solo el 11 % sea código no significa que falte desensamblar: significa que <em>Ale Hop!</em> es, sobre todo, gráficos. Un juego de MSX de esta época cabe en muy pocas instrucciones; lo que ocupa son los dibujos.</p>
+<p>Que solo el 10,8 % sea código no significa que falte desensamblar: significa que <em>Ale Hop!</em> es, sobre todo, gráficos. Un juego de MSX de esta época cabe en muy pocas instrucciones; lo que ocupa son los dibujos.</p>
 <h2>Cinco listados, no uno</h2>
 <p>El cargador recoloca tres trozos antes de arrancar el juego, así que las direcciones de la cinta y las de ejecución no coinciden. Para que el listado se lea con las direcciones <b>de verdad</b> y aun así reensamble al binario original, el juego se parte en cinco módulos:</p>
 <table><tr><th>listado</th><th>se ejecuta en</th><th>en la cinta</th><th>bytes</th></tr><tr><td><code>alehop_game_datos.asm</code></td><td>0x0000</td><td>0x00000</td><td>35393</td></tr><tr><td><code>alehop_game_sonido.asm</code></td><td>0xB000</td><td>0x08A41</td><td>2201</td></tr><tr><td><code>alehop_game_nucleo.asm</code></td><td>0xBD00</td><td>0x092DA</td><td>2112</td></tr><tr><td><code>alehop_game_extra.asm</code></td><td>0xD000</td><td>0x09B1A</td><td>2938</td></tr><tr><td><code>alehop_game_cola.asm</code></td><td>0xA694</td><td>0x0A694</td><td>1</td></tr></table>
@@ -125,6 +125,7 @@ ret</code></pre>
 <p>Cada uno de los tres canales del PSG tiene un bloque de estado de <b>46 bytes</b> (el propio código lo dice: <code>ld de,0x002E</code>), con el puntero a su melodía por duplicado —uno avanza y el otro sirve para repetir—, la duración pendiente, el volumen, el periodo y unos ajustes que se suman cada frame y dan el vibrato.</p>
 <p>La melodía es un flujo de bytes: por debajo de 0x80 son notas, y de 0x80 para arriba son comandos que se despachan por una tabla de saltos de <b>12 entradas</b> en 0xB486.</p>
 <p>Los tres canales escriben en un búfer de sombra de 11 bytes en 0xB4A0, con el mismo orden que los registros del chip, y una sola rutina los vuelca todos de golpe al final del frame.</p>
+<p>El reproductor no parece código escrito para este juego, sino una biblioteca metida dentro. La pista está en el binario: trae <b>su propio gestor de interrupción</b>, listo para engancharse al sistema, y el juego no lo usa nunca porque tiene el suyo.</p>
 <h2>Los gráficos</h2>
 <p>Van comprimidos con un <b>RLE de tokens de 16 bits</b>:</p>
 <pre><code>0xFFFF        fin del bloque

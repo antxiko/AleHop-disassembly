@@ -8,17 +8,11 @@ They were hunted down one at a time: for each address, its pointer (the two
 bytes, little-endian) was searched across the **whole** binary — all three code
 regions, the engine's tables, and the 35 KB of page-0 data — and it doesn't
 appear. The search was done over the real disassembly, not by scanning bytes: a
-naive scan mistakes operands for opcodes and produces false positives. The first
-four candidates found that way collapsed on inspection.
+naive scan mistakes operands for opcodes and produces false positives.
 
-They're deliberately marked as data in the listing. **Something disassembling
-cleanly doesn't prove it runs**, and taking that for granted is the easiest way
-for a disassembly to end up lying: the bytes come out identical when reassembled
-— they haven't changed, only their interpretation has — so a reproducibility
-check notices nothing.
-
-They're still worth something, though: they say things about the game that the
-live code doesn't.
+They're marked as data in the listing on purpose. Something disassembling
+cleanly doesn't prove it runs, and reassembly can't tell: the bytes are
+identical either way, only their interpretation changes.
 
 ---
 

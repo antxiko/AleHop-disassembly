@@ -16,6 +16,7 @@ Particularidad de Ale Hop!: el bloque del juego no sale de un .asm sino de
 CINCO, cada uno ensamblado con el org de donde se ejecuta y concatenados en el
 orden en que viajan por la cinta.
 """
+import tempfile
 import functools
 import json
 import operator
@@ -23,6 +24,9 @@ import os
 import shutil
 import subprocess
 import sys
+
+# El temporal del sistema: en Windows no hay /tmp.
+TMP = tempfile.gettempdir()
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -39,7 +43,7 @@ MODULOS = [
 
 
 def ensambla(asm):
-    out = f"/tmp/_bt_{os.path.basename(asm)}.bin"
+    out = f"{TMP}/_bt_{os.path.basename(asm)}.bin"
     r = subprocess.run(["pasmo", "--bin", asm, out], capture_output=True, text=True)
     if r.returncode != 0:
         print(f"FALLO al ensamblar {asm}:\n{r.stderr[:600]}")

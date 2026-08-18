@@ -92,8 +92,8 @@ footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
   openmsx -machine Philips_VG_8020-20 -script tools/omsx_juega.tcl</code></pre>
 <p>Tarda unos siete minutos de tiempo emulado en cargar, igual que en 1988.</p>
 <h2>Modificar el juego</h2>
-<p>El sitio por donde empezar es <code>src/*.notes</code>: los comentarios viven ahí, anclados a dirección, y sobreviven a que se vuelva a trazar todo. Los <code>.asm</code> se regeneran, así que <b>no hay que editarlos a mano</b>.</p>
-<p>Para tocar el código, edita el <code>.asm</code> correspondiente, y luego:</p>
+<p>Los comentarios van en <code>src/*.notes</code>, anclados a dirección para que sobrevivan a que se vuelva a trazar todo; los <code>.asm</code> se generan a partir de ahí, así que un comentario escrito en un <code>.asm</code> se pierde en el siguiente trazado.</p>
+<p>Para tocar el código en sí, edita el <code>.asm</code> y luego:</p>
 <pre><code>python3 tools/build_tape.py build build/mi_alehop.tsx</code></pre>
 <p>Eso ensambla, reconstruye los bloques con sus cabeceras y checksums, y produce una cinta cargable. Mientras <code>make</code> siga en verde antes de tocar nada, cualquier cambio de comportamiento se puede atribuir a lo que hayas cambiado y no a un error de lectura del binario.</p>
 <footer><p><em>Ale Hop!</em> lo publico Topo Soft en 1988; segun sus propios creditos, el programa es de Alberto L. Navarro y los graficos de LuigiLopez. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion.</p></footer></div>

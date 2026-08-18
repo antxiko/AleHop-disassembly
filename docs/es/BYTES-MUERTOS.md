@@ -8,17 +8,11 @@ Se han buscado uno a uno: para cada dirección se ha rastreado su puntero
 (los dos bytes en little-endian) por **todo** el binario —las tres zonas de
 código, las tablas del motor y los 35 KB de datos de la página 0— y no aparece.
 Y el rastreo se hizo sobre el desensamblado real, no escaneando bytes: un
-escaneo ingenuo confunde operandos con opcodes y da falsos positivos. Los cuatro
-primeros candidatos que aparecieron así se cayeron al comprobarlos.
+escaneo ingenuo confunde operandos con opcodes y da falsos positivos.
 
-Están marcados como datos en el listado a propósito. **Que un trozo desensamble
-bien no prueba que se ejecute**, y dar eso por bueno es la forma más fácil de
-que un desensamblado acabe mintiendo: los bytes salen idénticos al reensamblar
-—no han cambiado, solo su interpretación— así que la comprobación de
-reproducibilidad no se entera de nada.
-
-Aun así, valen para algo: cuentan cosas del juego que no se ven en el código
-vivo.
+Están marcados como datos en el listado a propósito. Que un trozo desensamble
+bien no prueba que se ejecute, y el reensamblado no lo caza: los bytes salen
+idénticos en los dos casos, solo cambia su interpretación.
 
 ---
 

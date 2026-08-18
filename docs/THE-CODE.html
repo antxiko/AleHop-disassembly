@@ -71,7 +71,7 @@ footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
 <h1>Inside the code</h1>
 <p>The 42645 bytes of the game block break down like this:</p>
 <table><tr><th></th><th>bytes</th><th></th></tr><tr><td>Traced code</td><td>4588</td><td>10.8 %</td></tr><tr><td>Identified data</td><td>38057</td><td>89.2 %</td></tr><tr><td><b>Unexplained</b></td><td><b>0</b></td><td></td></tr></table>
-<p>Only 11 % being code doesn&#x27;t mean there&#x27;s disassembly left to do: it means <em>Ale Hop!</em> is mostly graphics. An MSX game of this era fits in very few instructions; what takes up room is the artwork.</p>
+<p>Only 10.8 % being code doesn&#x27;t mean there&#x27;s disassembly left to do: it means <em>Ale Hop!</em> is mostly graphics. An MSX game of this era fits in very few instructions; what takes up room is the artwork.</p>
 <h2>Five listings, not one</h2>
 <p>The loader relocates three chunks before starting the game, so tape addresses and runtime addresses don&#x27;t line up. To have the listing read with the <b>real</b> addresses and still reassemble to the original binary, the game is split into five modules:</p>
 <table><tr><th>listing</th><th>runs at</th><th>on the tape at</th><th>bytes</th></tr><tr><td><code>alehop_game_datos.asm</code></td><td>0x0000</td><td>0x00000</td><td>35393</td></tr><tr><td><code>alehop_game_sonido.asm</code></td><td>0xB000</td><td>0x08A41</td><td>2201</td></tr><tr><td><code>alehop_game_nucleo.asm</code></td><td>0xBD00</td><td>0x092DA</td><td>2112</td></tr><tr><td><code>alehop_game_extra.asm</code></td><td>0xD000</td><td>0x09B1A</td><td>2938</td></tr><tr><td><code>alehop_game_cola.asm</code></td><td>0xA694</td><td>0x0A694</td><td>1</td></tr></table>

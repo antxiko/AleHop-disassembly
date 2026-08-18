@@ -8,7 +8,7 @@ The 42645 bytes of the game block break down like this:
 | Identified data | 38057 | 89.2 % |
 | **Unexplained** | **0** | |
 
-Only 11 % being code doesn't mean there's disassembly left to do: it means
+Only 10.8 % being code doesn't mean there's disassembly left to do: it means
 *Ale Hop!* is mostly graphics. An MSX game of this era fits in very few
 instructions; what takes up room is the artwork.
 

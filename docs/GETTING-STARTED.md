@@ -76,11 +76,11 @@ Loading takes about seven minutes of emulated time, same as it did in 1988.
 
 ## Modifying the game
 
-Start in `src/*.notes`: that's where the comments live, anchored to addresses so
-they survive a full re-trace. The `.asm` files are generated, so **don't edit
-them by hand**.
+Comments go in `src/*.notes`, anchored to addresses so they survive a full
+re-trace; the `.asm` files are generated from them, so a comment written into
+an `.asm` is lost on the next trace.
 
-To change the code, edit the relevant `.asm` and then:
+To change the code itself, edit the `.asm` and then:
 
 ```sh
 python3 tools/build_tape.py build build/my_alehop.tsx
