@@ -118,7 +118,12 @@ se usa.
 Cada uno de los tres canales del PSG tiene un bloque de estado de **46 bytes**
 (el propio código lo dice: `ld de,0x002E`), con el puntero a su melodía por
 duplicado —uno avanza y el otro sirve para repetir—, la duración pendiente, el
-volumen, el periodo y unos ajustes que se suman cada frame y dan el vibrato.
+volumen, el periodo y unos ajustes que se suman cada frame. Esos ajustes son
+dos envolventes por software: una de volumen con dos fases y otra de periodo
+con tres, cada una con sus pasos, su incremento con signo y su espera. No son
+vibrato: se recorren una sola vez, y solo volverian a empezar si el comando
+0x8A encendiera sus bits, algo que en la musica de la portada no pasa —el
+unico 0x8A de las tres voces lleva un 0—.
 
 La melodía es un flujo de bytes: por debajo de 0x80 son notas, y de 0x80 para
 arriba son comandos que se despachan por una tabla de saltos de **12 entradas**

@@ -118,7 +118,12 @@ never runs.
 Each of the PSG's three channels gets a **46-byte** state block — the code says
 so itself: `ld de,0x002E` — holding its melody pointer twice over (one advances,
 the other is there to loop), the remaining note duration, volume, period, and
-offsets that get added every frame to produce vibrato.
+offsets that get added every frame. Those offsets are two software envelopes:
+one for volume with two phases and one for period with three, each with its own
+step counts, signed increment and delay. They are not vibrato: they run once
+through, and would only start over if command 0x8A turned their bits on, which
+never happens in the title music — the only 0x8A across the three voices
+carries a 0.
 
 A melody is a byte stream: values under 0x80 are notes, 0x80 and above are
 commands dispatched through a **12-entry** jump table at 0xB486.

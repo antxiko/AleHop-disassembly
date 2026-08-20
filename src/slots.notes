@@ -115,3 +115,123 @@ C 0xC623 Mecanismo de parcheo: si en 0xDEA8 hay tres 0xC9 seguidos...
 C 0xC630 ...lee un contador y aplica esa cantidad de parches (direccion, valor)
 C 0xC63B A = 0: le dice al juego que es un arranque normal, no un fin de partida
 C 0xC63D Arranca el juego
+
+# ----------------------------------------------------------------------
+# Segunda pasada: el buscador, el conmutador y el cargador, linea a linea.
+# ----------------------------------------------------------------------
+
+C 0xC395 0xE290/0xE291: los slots tal y como estan al entrar, con la ROM abajo
+C 0xC39A 0xE292/0xE293: los slots una vez encontrada RAM en las tres paginas
+C 0xC39D El puerto 0xA8: los cuatro slots primarios, dos bits por pagina
+C 0xC3A1 El registro de subslots, que se lee complementado
+C 0xC3A5 Los dos bytes, uno detras de otro
+C 0xC3AB Se queda con el primario y la marca de expandido
+C 0xC3C4 Aqui no hay RAM: al siguiente
+C 0xC3C6 Sube el subslot (bits 2 y 3)
+C 0xC3CA Agotados los cuatro, sube el primario
+C 0xC3CE Se acaban los dieciseis intentos -cuatro primarios por cuatro subslots- sin encontrar RAM
+C 0xC3CF Hay RAM: sale dejando esta pagina conmutada a este slot
+
+L 0xC418 ENASLT_RAM       Copia de ENASLT que corre en 0x9C40, para cuando la ROM ya no esta
+C 0xC418 Las direcciones de dentro ya vienen recalculadas para 0x9C40
+C 0xC41E Deja puesto el slot primario en la pagina y sale
+B 0xC418 Comprobado byte a byte contra la BIOS: los 120 bytes de
+B 0xC418 0xC418 a 0xC48F son ENASLT ENTERA, la de 0x025E de la ROM,
+B 0xC418 copiada con dos unicos cambios. El primero, las cinco
+B 0xC418 direcciones de dentro, recalculadas para correr en 0x9C40:
+B 0xC418 0x027E->0x9C60, 0x026B->0x9C4D, 0x02A3->0x9C84,
+B 0xC418 0x0288->0x9C69 y 0x02BB->0x9C9C. El segundo, que le han
+B 0xC418 quitado el `di` (0xF3) que la BIOS tiene en 0x027E: de ahi
+B 0xC418 en adelante todo va corrido un byte, y por eso los tres
+B 0xC418 ultimos destinos no caen donde caerian con un desfase
+B 0xC418 limpio. Ese trozo es identico en las doce BIOS MSX1
+B 0xC418 comparadas, asi que no dice de que maquina se copio.
+
+D 0xC425 0xC490 enaslt_resto  El resto de ENASLT: las dos subrutinas internas que la BIOS tiene en 0x026B y 0x027E -la que anota el subslot en SLTTBL (0xFCC5) y la que arma las mascaras del puerto 0xA8-. Sale como datos porque el trazador entra por 0xC418 y los `call` de dentro apuntan a 0x9C40, no aqui; el codigo esta ahi entero
+
+B 0xC490 Los seis puntos de entrada, con las direcciones que tienen
+B 0xC490 cuando el codigo corre en 0xE22C y en la copia de 0xF000:
+B 0xC490   0xC490  0xE22C  0xF000  pagina 0, configuracion del BASIC
+B 0xC490   0xC495  0xE231  0xF005  pagina 1, configuracion del BASIC
+B 0xC490   0xC49A  0xE236  0xF00A  pagina 2, configuracion del BASIC
+B 0xC490   0xC49F  0xE23B  0xF00F  pagina 0, todo RAM
+B 0xC490   0xC4A4  0xE240  0xF014  pagina 1, todo RAM
+B 0xC490   0xC4A9  0xE245  0xF019  pagina 2, todo RAM
+B 0xC490 Cada entrada carga en HL la configuracion (0xE291 o 0xE293)
+B 0xC490 y salta a la pareja de mascaras de su pagina: 0x03/0xFC la
+B 0xC490 pagina 0, 0x0C/0xF3 la 1 y 0x30/0xCF la 2.
+C 0xC490 Pagina 0 a la configuracion del BASIC
+
+L 0xC4BE CONMUTA_PAGINA   Mete en la pagina que digan D y E la configuracion de slots a la que apunte HL
+C 0xC4BE Con las interrupciones paradas
+C 0xC4BF El byte de subslots de la configuracion elegida
+C 0xC4C0 D deja solo los dos bits de la pagina que se conmuta
+C 0xC4C2 El registro de subslots se lee complementado
+C 0xC4C6 E se queda con las otras tres paginas como estaban
+C 0xC4C8 Y ya se puede escribir el subslot
+C 0xC4CB Un byte atras: el del puerto 0xA8
+C 0xC4CF El mismo apano con los slots primarios
+C 0xC4D3 Pagina conmutada
+
+B 0xC4D7 Las cuentas del cargador: L_C563 mide con B lo que tarda en
+B 0xC4D7 llegar el flanco, contando hacia arriba desde el preajuste
+B 0xC4D7 que le deje quien llama, y se rinde si B da la vuelta.
+B 0xC4D7 Los numeros que salen: 0x9C con umbral 0xC6 para los pulsos
+B 0xC4D7 de la cabecera, 0xC9 con umbral 0xD4 para el flanco que la
+B 0xC4D7 cierra, y 0xB0 (0xB2 en el primer bit de cada byte) con
+B 0xC4D7 umbral 0xCB para los bits: mas largo del umbral es un 1.
+B 0xC4D7 El byte de sincronismo no se guarda ni cuenta para DE, y el
+B 0xC4D7 de control se lee pero tampoco se guarda: solo entra en el
+B 0xC4D7 XOR. Se sale con acarreo si ese XOR da cero, pero ninguno de
+B 0xC4D7 los dos sitios que llaman al cargador mira el acarreo.
+C 0xC4E0 Registro 14 del PSG, que es donde se lee la entrada de cinta
+C 0xC4E5 Deja en el otro juego de banderas el estado "aun sin sincronizar"
+C 0xC4E9 C lleva el nivel que se espera de la cinta
+C 0xC4ED Espera a que la cinta de senal
+C 0xC4F5 Retardo largo, 0x415 vueltas de un bucle de 256, para que el motor coja velocidad
+C 0xC4FC Otro pulso, ya con el motor estable
+C 0xC501 La cabecera son 256 pulsos largos seguidos
+C 0xC508 Si el pulso no pasa de 0xC6 no vale y hay que empezar otra vez
+C 0xC50D H cuenta los pulsos buenos: a las 256 vueltas, cabecera aceptada
+C 0xC510 Ahora espera el flanco corto que cierra la cabecera
+C 0xC517 Mientras siga siendo largo, a esperar
+C 0xC51C El otro medio pulso del sincronismo
+C 0xC520 H llevara el XOR de todo lo que se lea
+C 0xC522 Preajuste del contador para el primer bit
+C 0xC526 Recupera las banderas de estado, que van en el otro juego de AF
+C 0xC527 Aun sin sincronizar: este byte no se guarda
+C 0xC529 El byte, a su sitio
+C 0xC52E Aparca el acarreo en C mientras se hace la comprobacion
+C 0xC530 A vale 0, asi que esto comprueba que el byte de sincronismo es 0x00; y de paso deja puesto el Z que hara que a partir de ahora los bytes si se guarden
+C 0xC531 Si no era 0x00, se abandona la carga
+C 0xC532 Devuelve el acarreo a su sitio
+C 0xC535 El byte de sincronismo no cuenta para la longitud
+C 0xC538 Un byte mas en el destino
+C 0xC53A Uno menos por leer
+C 0xC53C Preajuste para el primer bit del byte siguiente
+C 0xC53E El 1 de guarda: cuando salga por la izquierda es que hay ocho bits
+C 0xC540 Mide el pulso del bit
+C 0xC544 Mas largo que 0xCB es un 1; mas corto, un 0
+C 0xC547 El bit, a L
+C 0xC549 Preajuste para el bit siguiente
+C 0xC54B Hasta que salga el 1 de guarda
+C 0xC54E H acumula el XOR de todos los bytes
+C 0xC551 Mientras queden bytes, a por el siguiente
+C 0xC555 Y al acabar, el XOR de todo el bloque tiene que dar cero: se sale con acarreo si cuadra
+C 0xC559 Dos flancos seguidos, o sea un pulso entero
+C 0xC55D Un retardo corto antes de ponerse a mirar la entrada
+C 0xC563 B va contando lo que tarda en llegar el flanco
+C 0xC565 Si B da la vuelta se acabo el tiempo: sale sin acarreo
+C 0xC568 Bit 7 del puerto 0xA2: la entrada de cinta
+C 0xC56B Mientras el nivel no cambie, a seguir contando
+C 0xC571 Cambiado, se invierte el nivel que se espera la proxima vez
+C 0xC574 El registro R, que va cambiando solo, de color...
+C 0xC578 ...en el registro 7 del VDP: son las rayas de la carga
+C 0xC57E Acarreo: flanco encontrado, y en B lo que tardo
+
+C 0xC5C5 A = 0 y acarreo puesto: el cargador cuenta con que A valga cero
+C 0xC61E 110 bytes, mas que los 71 del conmutador: asi se lleva de paso las dos configuraciones de 0xE290-0xE293, que en la copia caen en 0xF064-0xF067, que es justo adonde apuntan los punteros recien parcheados
+C 0xC628 Los tres 0xC9 de la marca
+C 0xC632 Cada parche son tres bytes: direccion y valor
+C 0xC638 Lo escribe donde diga
+C 0xC639 Y al siguiente

@@ -57,23 +57,23 @@ BUSCA_RAM:		; Localiza RAM en todas las paginas y anota los slots
 	ei			;c393
 	ret			;c394
 GUARDA_SLOTS_A:		; Anota en 0xE290 el estado actual de slots
-	ld hl,0e290h		;c395
+	ld hl,0e290h		;c395   ; 0xE290/0xE291: los slots tal y como estan al entrar, con la ROM abajo
 	jr L_C39D		;c398
 GUARDA_SLOTS_B:		; Anota en 0xE292 el estado actual de slots
-	ld hl,0e292h		;c39a
+	ld hl,0e292h		;c39a   ; 0xE292/0xE293: los slots una vez encontrada RAM en las tres paginas
 L_C39D:
-	in a,(0a8h)		;c39d
+	in a,(0a8h)		;c39d   ; El puerto 0xA8: los cuatro slots primarios, dos bits por pagina
 	ld (hl),a			;c39f
 	inc hl			;c3a0
-	ld a,(0ffffh)		;c3a1
+	ld a,(0ffffh)		;c3a1   ; El registro de subslots, que se lee complementado
 	cpl			;c3a4
-	ld (hl),a			;c3a5
+	ld (hl),a			;c3a5   ; Los dos bytes, uno detras de otro
 	ret			;c3a6
 SONDEA_PAGINA:		; Prueba todos los slots de la pagina HL y se queda con el que tenga RAM
 	ld a,080h		;c3a7   ; 0x80 = marca de slot expandido
 	ld c,004h		;c3a9   ; 4 slots primarios
 L_C3AB:
-	and 083h		;c3ab
+	and 083h		;c3ab   ; Se queda con el primario y la marca de expandido
 	ld b,004h		;c3ad   ; 4 slots secundarios por cada primario
 L_C3AF:
 	push af			;c3af
@@ -90,16 +90,16 @@ L_C3AF:
 	cp 0fah		;c3c0
 	jr z,L_C3CF		;c3c2
 L_C3C4:
-	pop bc			;c3c4
+	pop bc			;c3c4   ; Aqui no hay RAM: al siguiente
 	pop af			;c3c5
-	add a,004h		;c3c6
+	add a,004h		;c3c6   ; Sube el subslot (bits 2 y 3)
 	djnz L_C3AF		;c3c8
-	inc a			;c3ca
+	inc a			;c3ca   ; Agotados los cuatro, sube el primario
 	dec c			;c3cb
 	jr nz,L_C3AB		;c3cc
-	ret			;c3ce
+	ret			;c3ce   ; Se acaban los dieciseis intentos -cuatro primarios por cuatro subslots- sin encontrar RAM
 L_C3CF:
-	pop bc			;c3cf
+	pop bc			;c3cf   ; Hay RAM: sale dejando esta pagina conmutada a este slot
 	pop af			;c3d0
 	ret			;c3d1
 
@@ -117,18 +117,37 @@ DATA_C3D2:
 ; ======================================================================
 
 
-L_C418:
-	call 09c60h		;c418
+
+; ----------------------------------------------------------------------
+; Comprobado byte a byte contra la BIOS: los 120 bytes de
+; 0xC418 a 0xC48F son ENASLT ENTERA, la de 0x025E de la ROM,
+; copiada con dos unicos cambios. El primero, las cinco
+; direcciones de dentro, recalculadas para correr en 0x9C40:
+; 0x027E->0x9C60, 0x026B->0x9C4D, 0x02A3->0x9C84,
+; 0x0288->0x9C69 y 0x02BB->0x9C9C. El segundo, que le han
+; quitado el `di` (0xF3) que la BIOS tiene en 0x027E: de ahi
+; en adelante todo va corrido un byte, y por eso los tres
+; ultimos destinos no caen donde caerian con un desfase
+; limpio. Ese trozo es identico en las doce BIOS MSX1
+; comparadas, asi que no dice de que maquina se copio.
+; ----------------------------------------------------------------------
+ENASLT_RAM:		; Copia de ENASLT que corre en 0x9C40, para cuando la ROM ya no esta
+	call 09c60h		;c418   ; Las direcciones de dentro ya vienen recalculadas para 0x9C40
 	jp m,09c4dh		;c41b
-	in a,(0a8h)		;c41e
+	in a,(0a8h)		;c41e   ; Deja puesto el slot primario en la pagina y sale
 	and c			;c420
 	or b			;c421
 	out (0a8h),a		;c422
 	ret			;c424
 
 ; ----------------------------------------------------------------------
-; DATOS sin identificar  0xc425..0xc490  (107 bytes)
-DATA_C425:
+; DATOS enaslt_resto: El resto de ENASLT: las dos subrutinas internas que la
+;   BIOS tiene en 0x026B y 0x027E -la que anota el subslot en SLTTBL (0xFCC5)
+;   y la que arma las mascaras del puerto 0xA8-. Sale como datos porque el
+;   trazador entra por 0xC418 y los `call` de dentro apuntan a 0x9C40, no
+;   aqui; el codigo esta ahi entero
+;   0xc425..0xc490  (107 bytes)
+DATA_enaslt_resto:
 	defb 0e5h,0cdh,084h,09ch,04fh,006h,000h,07dh,0a4h,0b2h,021h,0c5h,0fch,009h,077h,0e1h	; c425  ....O..}..!...w.
 	defb 079h,018h,0e0h,0f5h,07ch,007h,007h,0e6h,003h,05fh,03eh,0c0h,007h,007h,01dh,0f2h	; c435  y...|...._>.....
 	defb 069h,09ch,05fh,02fh,04fh,0f1h,0f5h,0e6h,003h,03ch,047h,03eh,0abh,0c6h,055h,010h	; c445  i._/O....<G>..U.
@@ -156,9 +175,20 @@ DATA_C425:
 ; Antes de arrancar el juego, la secuencia de carga los copia a
 ; 0xF000 y les reescribe los punteros a la tabla: por eso el
 ; juego llama luego a 0xF000, 0xF014 y 0xF019.
+; Los seis puntos de entrada, con las direcciones que tienen
+; cuando el codigo corre en 0xE22C y en la copia de 0xF000:
+; 0xC490  0xE22C  0xF000  pagina 0, configuracion del BASIC
+; 0xC495  0xE231  0xF005  pagina 1, configuracion del BASIC
+; 0xC49A  0xE236  0xF00A  pagina 2, configuracion del BASIC
+; 0xC49F  0xE23B  0xF00F  pagina 0, todo RAM
+; 0xC4A4  0xE240  0xF014  pagina 1, todo RAM
+; 0xC4A9  0xE245  0xF019  pagina 2, todo RAM
+; Cada entrada carga en HL la configuracion (0xE291 o 0xE293)
+; y salta a la pareja de mascaras de su pagina: 0x03/0xFC la
+; pagina 0, 0x0C/0xF3 la 1 y 0x30/0xCF la 2.
 ; ----------------------------------------------------------------------
 L_C490:
-	ld hl,0e291h		;c490
+	ld hl,0e291h		;c490   ; Pagina 0 a la configuracion del BASIC
 	jr $+27		;c493
 
 ; ----------------------------------------------------------------------
@@ -187,24 +217,24 @@ DATA_C4B4:
 ; ======================================================================
 
 
-L_C4BE:
-	di			;c4be
-	ld a,(hl)			;c4bf
-	and d			;c4c0
+CONMUTA_PAGINA:		; Mete en la pagina que digan D y E la configuracion de slots a la que apunte HL
+	di			;c4be   ; Con las interrupciones paradas
+	ld a,(hl)			;c4bf   ; El byte de subslots de la configuracion elegida
+	and d			;c4c0   ; D deja solo los dos bits de la pagina que se conmuta
 	ld b,a			;c4c1
-	ld a,(0ffffh)		;c4c2
+	ld a,(0ffffh)		;c4c2   ; El registro de subslots se lee complementado
 	cpl			;c4c5
-	and e			;c4c6
+	and e			;c4c6   ; E se queda con las otras tres paginas como estaban
 	or b			;c4c7
-	ld (0ffffh),a		;c4c8
-	dec hl			;c4cb
+	ld (0ffffh),a		;c4c8   ; Y ya se puede escribir el subslot
+	dec hl			;c4cb   ; Un byte atras: el del puerto 0xA8
 	ld a,(hl)			;c4cc
 	and d			;c4cd
 	ld b,a			;c4ce
-	in a,(0a8h)		;c4cf
+	in a,(0a8h)		;c4cf   ; El mismo apano con los slots primarios
 	and e			;c4d1
 	or b			;c4d2
-	out (0a8h),a		;c4d3
+	out (0a8h),a		;c4d3   ; Pagina conmutada
 	ret			;c4d5
 
 ; ----------------------------------------------------------------------
@@ -228,6 +258,17 @@ DATA_C4D6:
 ; Formato del bloque, verificado comparando con la RAM que vuelca
 ; openMSX: un byte 0x00 de sincronismo, los datos, y un byte de
 ; checksum tal que el XOR de todo da cero.
+; Las cuentas del cargador: L_C563 mide con B lo que tarda en
+; llegar el flanco, contando hacia arriba desde el preajuste
+; que le deje quien llama, y se rinde si B da la vuelta.
+; Los numeros que salen: 0x9C con umbral 0xC6 para los pulsos
+; de la cabecera, 0xC9 con umbral 0xD4 para el flanco que la
+; cierra, y 0xB0 (0xB2 en el primer bit de cada byte) con
+; umbral 0xCB para los bits: mas largo del umbral es un 1.
+; El byte de sincronismo no se guarda ni cuenta para DE, y el
+; de control se lee pero tampoco se guarda: solo entra en el
+; XOR. Se sale con acarreo si ese XOR da cero, pero ninguno de
+; los dos sitios que llaman al cargador mira el acarreo.
 ; ----------------------------------------------------------------------
 CARGA_TURBO:		; Lee un bloque de cinta a (IX), longitud DE
 	ld hl,0c580h		;c4d7   ; Mete 0xC580 en la pila: al hacer RET se ira a apagar el motor
@@ -235,116 +276,116 @@ CARGA_TURBO:		; Lee un bloque de cinta a (IX), longitud DE
 	push af			;c4db
 	ld a,008h		;c4dc   ; Escribe en el PPI para arrancar el motor del cassette
 	out (0abh),a		;c4de
-	ld a,00eh		;c4e0
+	ld a,00eh		;c4e0   ; Registro 14 del PSG, que es donde se lee la entrada de cinta
 	out (0a0h),a		;c4e2
 	pop af			;c4e4
-	inc d			;c4e5
+	inc d			;c4e5   ; Deja en el otro juego de banderas el estado "aun sin sincronizar"
 	ex af,af'			;c4e6
 	dec d			;c4e7
 	di			;c4e8
-	ld a,005h		;c4e9
+	ld a,005h		;c4e9   ; C lleva el nivel que se espera de la cinta
 	ld c,a			;c4eb
 	cp a			;c4ec
 L_C4ED:
-	call L_C55D		;c4ed
+	call L_C55D		;c4ed   ; Espera a que la cinta de senal
 	jr nc,L_C4ED		;c4f0
 	ld hl,00415h		;c4f2
 L_C4F5:
-	djnz L_C4F5		;c4f5
+	djnz L_C4F5		;c4f5   ; Retardo largo, 0x415 vueltas de un bucle de 256, para que el motor coja velocidad
 	dec hl			;c4f7
 	ld a,h			;c4f8
 	or l			;c4f9
 	jr nz,L_C4F5		;c4fa
-	call L_C559		;c4fc
+	call L_C559		;c4fc   ; Otro pulso, ya con el motor estable
 	jr nc,L_C4ED		;c4ff
 L_C501:
-	ld b,09ch		;c501
+	ld b,09ch		;c501   ; La cabecera son 256 pulsos largos seguidos
 	call L_C559		;c503
 	jr nc,L_C4ED		;c506
-	ld a,0c6h		;c508
+	ld a,0c6h		;c508   ; Si el pulso no pasa de 0xC6 no vale y hay que empezar otra vez
 	cp b			;c50a
 	jr nc,L_C4ED		;c50b
-	inc h			;c50d
+	inc h			;c50d   ; H cuenta los pulsos buenos: a las 256 vueltas, cabecera aceptada
 	jr nz,L_C501		;c50e
 L_C510:
-	ld b,0c9h		;c510
+	ld b,0c9h		;c510   ; Ahora espera el flanco corto que cierra la cabecera
 	call L_C55D		;c512
 	jr nc,L_C4ED		;c515
-	ld a,b			;c517
+	ld a,b			;c517   ; Mientras siga siendo largo, a esperar
 	cp 0d4h		;c518
 	jr nc,L_C510		;c51a
-	call L_C55D		;c51c
+	call L_C55D		;c51c   ; El otro medio pulso del sincronismo
 	ret nc			;c51f
-	ld h,000h		;c520
-	ld b,0b0h		;c522
+	ld h,000h		;c520   ; H llevara el XOR de todo lo que se lea
+	ld b,0b0h		;c522   ; Preajuste del contador para el primer bit
 	jr L_C53E		;c524
 L_C526:
-	ex af,af'			;c526
-	jr nz,L_C52E		;c527
-	ld (ix+000h),l		;c529
+	ex af,af'			;c526   ; Recupera las banderas de estado, que van en el otro juego de AF
+	jr nz,L_C52E		;c527   ; Aun sin sincronizar: este byte no se guarda
+	ld (ix+000h),l		;c529   ; El byte, a su sitio
 	jr L_C538		;c52c
 L_C52E:
-	rr c		;c52e
-	xor l			;c530
-	ret nz			;c531
-	ld a,c			;c532
+	rr c		;c52e   ; Aparca el acarreo en C mientras se hace la comprobacion
+	xor l			;c530   ; A vale 0, asi que esto comprueba que el byte de sincronismo es 0x00; y de paso deja puesto el Z que hara que a partir de ahora los bytes si se guarden
+	ret nz			;c531   ; Si no era 0x00, se abandona la carga
+	ld a,c			;c532   ; Devuelve el acarreo a su sitio
 	rla			;c533
 	ld c,a			;c534
-	inc de			;c535
+	inc de			;c535   ; El byte de sincronismo no cuenta para la longitud
 	jr L_C53A		;c536
 L_C538:
-	inc ix		;c538
+	inc ix		;c538   ; Un byte mas en el destino
 L_C53A:
-	dec de			;c53a
+	dec de			;c53a   ; Uno menos por leer
 	ex af,af'			;c53b
-	ld b,0b2h		;c53c
+	ld b,0b2h		;c53c   ; Preajuste para el primer bit del byte siguiente
 L_C53E:
-	ld l,001h		;c53e
+	ld l,001h		;c53e   ; El 1 de guarda: cuando salga por la izquierda es que hay ocho bits
 L_C540:
-	call L_C559		;c540
+	call L_C559		;c540   ; Mide el pulso del bit
 	ret nc			;c543
-	ld a,0cbh		;c544
+	ld a,0cbh		;c544   ; Mas largo que 0xCB es un 1; mas corto, un 0
 	cp b			;c546
-	rl l		;c547
-	ld b,0b0h		;c549
-	jp nc,L_C540		;c54b
-	ld a,h			;c54e
+	rl l		;c547   ; El bit, a L
+	ld b,0b0h		;c549   ; Preajuste para el bit siguiente
+	jp nc,L_C540		;c54b   ; Hasta que salga el 1 de guarda
+	ld a,h			;c54e   ; H acumula el XOR de todos los bytes
 	xor l			;c54f
 	ld h,a			;c550
-	ld a,d			;c551
+	ld a,d			;c551   ; Mientras queden bytes, a por el siguiente
 	or e			;c552
 	jr nz,L_C526		;c553
-	ld a,h			;c555
+	ld a,h			;c555   ; Y al acabar, el XOR de todo el bloque tiene que dar cero: se sale con acarreo si cuadra
 	cp 001h		;c556
 	ret			;c558
 L_C559:
-	call L_C55D		;c559
+	call L_C55D		;c559   ; Dos flancos seguidos, o sea un pulso entero
 	ret nc			;c55c
 L_C55D:
-	ld a,016h		;c55d
+	ld a,016h		;c55d   ; Un retardo corto antes de ponerse a mirar la entrada
 L_C55F:
 	dec a			;c55f
 	jr nz,L_C55F		;c560
 	and a			;c562
 L_C563:
-	inc b			;c563
+	inc b			;c563   ; B va contando lo que tarda en llegar el flanco
 	nop			;c564
-	ret z			;c565
+	ret z			;c565   ; Si B da la vuelta se acabo el tiempo: sale sin acarreo
 	ld a,000h		;c566
-	in a,(0a2h)		;c568
+	in a,(0a2h)		;c568   ; Bit 7 del puerto 0xA2: la entrada de cinta
 	cpl			;c56a
-	xor c			;c56b
+	xor c			;c56b   ; Mientras el nivel no cambie, a seguir contando
 	and 080h		;c56c
 	jp z,L_C563		;c56e
-	ld a,c			;c571
+	ld a,c			;c571   ; Cambiado, se invierte el nivel que se espera la proxima vez
 	cpl			;c572
 	ld c,a			;c573
-	ld a,r		;c574
+	ld a,r		;c574   ; El registro R, que va cambiando solo, de color...
 	and 00fh		;c576
-	out (099h),a		;c578
+	out (099h),a		;c578   ; ...en el registro 7 del VDP: son las rayas de la carga
 	ld a,087h		;c57a
 	out (099h),a		;c57c
-	scf			;c57e
+	scf			;c57e   ; Acarreo: flanco encontrado, y en B lo que tardo
 	ret			;c57f
 
 ; ----------------------------------------------------------------------
@@ -398,7 +439,7 @@ SECUENCIA_CARGA:		; Carga los dos bloques turbo, recoloca y arranca el juego
 	call 0e245h		;c5bb   ; Conmuta una pagina a RAM antes de cargar la portada
 	ld ix,088b8h		;c5be   ; Destino del bloque 1: la pantalla de portada
 	ld de,03064h		;c5c2   ; 12388 bytes
-	xor a			;c5c5
+	xor a			;c5c5   ; A = 0 y acarreo puesto: el cargador cuenta con que A valga cero
 	scf			;c5c6
 	call CARGA_TURBO		;c5c7
 	call 088b8h		;c5ca   ; Ejecuta la portada, que la vuelca a la VRAM y vuelve
@@ -431,12 +472,12 @@ SECUENCIA_CARGA:		; Carga los dos bloques turbo, recoloca y arranca el juego
 	ld (0e246h),hl		;c615
 	ld hl,0e22ch		;c618   ; Copia el conmutador de slots a 0xF000, ya parcheado
 	ld de,0f000h		;c61b
-	ld bc,0006eh		;c61e
+	ld bc,0006eh		;c61e   ; 110 bytes, mas que los 71 del conmutador: asi se lleva de paso las dos configuraciones de 0xE290-0xE293, que en la copia caen en 0xF064-0xF067, que es justo adonde apuntan los punteros recien parcheados
 	ldir		;c621
 	ld hl,0dea8h		;c623   ; Mecanismo de parcheo: si en 0xDEA8 hay tres 0xC9 seguidos...
 	ld b,003h		;c626
 L_C628:
-	ld a,(hl)			;c628
+	ld a,(hl)			;c628   ; Los tres 0xC9 de la marca
 	cp 0c9h		;c629
 	jr nz,L_C63B		;c62b
 	inc hl			;c62d
@@ -444,14 +485,14 @@ L_C628:
 	ld b,(hl)			;c630   ; ...lee un contador y aplica esa cantidad de parches (direccion, valor)
 	inc hl			;c631
 L_C632:
-	ld e,(hl)			;c632
+	ld e,(hl)			;c632   ; Cada parche son tres bytes: direccion y valor
 	inc hl			;c633
 	ld d,(hl)			;c634
 	inc hl			;c635
 	ld a,(hl)			;c636
 	inc hl			;c637
-	ld (de),a			;c638
-	djnz L_C632		;c639
+	ld (de),a			;c638   ; Lo escribe donde diga
+	djnz L_C632		;c639   ; Y al siguiente
 L_C63B:
 	ld a,000h		;c63b   ; A = 0: le dice al juego que es un arranque normal, no un fin de partida
 	jp 0c000h		;c63d   ; Arranca el juego

@@ -42,6 +42,32 @@ L 0xB374 MULTIPLICA       HL = A * DE. Se usa para saltar al bloque del canal (A
 L 0xB3A4 INDEXA_TABLA     HL = palabra que hay en (HL + A*2). Sirve para las dos tablas
 L 0xB3B1 VUELCA_PSG       Manda los 11 registros del PSG de una tacada desde el buffer 0xB4A0
 
+L 0xB063 LEE_MELODIA      Lee el siguiente byte del flujo del canal: nota o comando
+L 0xB072 PONE_NOTA        Nota: le busca el periodo en la tabla y lo deja en el bloque del canal
+L 0xB07F ARRANCA_NOTA     Abre el canal en el mezclador y rearranca las dos envolventes
+L 0xB097 CUENTA_DURACION  Guarda el puntero ya avanzado y carga la duracion de la nota
+L 0xB0A9 CORRE_CANAL      Descuenta un frame a la nota y hace correr las envolventes del canal
+L 0xB0BE ENV_VOL          Envolvente de volumen: dos fases, cada una con su espera, sus pasos y su incremento
+L 0xB0FF ENV_PER          Envolvente de periodo: lo mismo con tres fases, y el incremento con signo
+L 0xB162 CIERRA_CANAL     Vuelca volumen y periodo del canal al buffer del PSG y pasa al siguiente
+L 0xB194 ENV_RUIDO        Envolvente global del ruido: dos fases, sobre el bloque de 0xB535
+L 0xB1DE ARRANCA_ENV_VOL  Copia del instrumento las esperas y los pasos de la envolvente de volumen
+L 0xB1F6 ARRANCA_ENV_PER  Lo mismo para la envolvente de periodo, que lleva tres fases
+L 0xB20E ARRANCA_ENV_RUI  Lo mismo para la envolvente global del ruido
+L 0xB22A CMD_VOLUMEN      Comando 0x80: volumen base del canal
+L 0xB233 CMD_DURACION     Comando 0x83: duracion de las notas siguientes
+L 0xB248 CMD_MEZCLADOR    Comando 0x81: que abre el canal, tono y/o ruido
+L 0xB253 CMD_FIN          Comando 0x8B: fin de la melodia, el canal queda parado
+L 0xB262 CMD_TEMPO        Comando 0x85: fija la unidad de duracion a partir del tempo
+L 0xB27C CMD_RUIDO        Comando 0x88: periodo del generador de ruido
+L 0xB290 CMD_SILENCIO     Comando 0x84: silencio de una duracion
+L 0xB294 CMD_REPITE       Comando 0x82: vuelve al principio de la melodia
+L 0xB2A3 CMD_DURACION_SUM Comando 0x86: duracion como suma de varios valores
+L 0xB2C6 CMD_REPITE_ENV   Comando 0x8A: enciende los bits de repeticion de las envolventes
+L 0xB2DA CMD_INSTRUMENTO  Comando 0x87: carga uno de los cinco instrumentos de 0xB542
+L 0xB323 CMD_ENV_RUIDO    Comando 0x89: carga la envolvente global del ruido de 0xB58D
+L 0xB38A DIVIDE_16        BC = BC / DE por restas y desplazamientos; el resto queda en HL
+
 C 0xB018 46 bytes por canal: es el tamano del bloque de estado
 C 0xB01E Los tres bloques empiezan en 0xB4AB
 C 0xB024 Borra el bloque entero antes de empezar la melodia
@@ -67,19 +93,207 @@ C 0xB072 Tabla de periodos de las notas
 C 0xB3BA Puerto de direccion del PSG
 C 0xB3BD Puerto de dato del PSG
 
+C 0xB015 Entra con A = canal (0, 1 o 2) y DE = melodia
+C 0xB01B HL = canal * 46
+C 0xB021 HL ya apunta al bloque de este canal
+C 0xB026 Deja a cero duracion, envolventes y ajustes
+C 0xB030 +2/+3 es el puntero que avanza; +0/+1 se queda para el comando 0x82
+C 0xB034 La interrupcion vuelve a estar donde estaba
+
+C 0xB048 Deja el numero de canal donde lo lee PSG_ESCRIBE
+C 0xB055 A = 0: cierra tono y ruido del canal antes de leer nota nueva
+
+C 0xB069 Quitado el 0x80 queda el numero de comando, de 0 a 11
+
+C 0xB078 El periodo de la nota, a +0x0A/+0x0B del bloque
+C 0xB07E Deja el puntero detras del byte de la nota
+
+C 0xB07F Reabre el canal con lo que dijera el ultimo comando 0x81
+C 0xB085 Arranca la envolvente de volumen del instrumento
+C 0xB088 Y borra el ajuste de volumen que llevara acumulado
+C 0xB08C Lo mismo con la envolvente de periodo
+C 0xB08F El ajuste de periodo son 16 bits
+
+C 0xB097 Guarda el puntero ya avanzado
+C 0xB09D La duracion que dejo el ultimo 0x83 o 0x86
+C 0xB0A3 Y empieza a contarla
+
+C 0xB0A9 Un frame menos de la nota en curso
+C 0xB0B6 IY recorre el bloque del canal, una fase por vuelta
+C 0xB0BA Dos fases tiene la envolvente de volumen
+
+C 0xB0BE +0x0C/+0x0D: frames que faltan para el siguiente paso
+C 0xB0C4 Sigue esperando: el volumen no se toca
+C 0xB0C8 C cuenta las fases que siguen vivas
+
+C 0xB0CB +0x0E/+0x0F: pasos que le quedan a la fase
+C 0xB0D5 Ajuste de volumen mas el incremento de la fase (+0x1B/+0x1C)
+C 0xB0DE Recarga la espera desde +0x20/+0x21
+C 0xB0E7 Fase agotada: se prueba con la siguiente
+
+C 0xB0EC Si ninguna fase hizo nada, la envolvente se acabo
+C 0xB0F0 Bit 0 de +0x2D: repetirla desde el principio
+C 0xB0FB Y tres fases tiene la de periodo
+
+C 0xB0FF +0x10..+0x12: espera de cada fase del periodo
+C 0xB105 Sigue esperando
+C 0xB109 Fase viva
+
+C 0xB10C +0x13..+0x15: pasos que le quedan a la fase
+C 0xB116 El incremento (+0x1D..+0x1F) viene con signo
+C 0xB11A De 0x80 arriba es negativo y hay que restar
+C 0xB120 Complemento a dos: el valor absoluto del paso
+C 0xB123 Resta el paso al ajuste de periodo, 16 bits
+C 0xB12F El periodo del PSG son 12 bits, y el ajuste se recorta igual
+C 0xB136 Paso positivo: se suma
+C 0xB144 Recortado a 12 bits, como en la rama de la resta
+C 0xB149 Recarga la espera desde +0x22..+0x24
+C 0xB152 Fase agotada: la siguiente
+C 0xB157 Ninguna fase movio el periodo
+C 0xB15B Bit 1 de +0x2D: repetir la envolvente de periodo
+
+C 0xB194 Bloque global: +0/+1 esperas, +2/+3 pasos, +6/+7 incrementos, +8/+9 recargas
+C 0xB19A Sigue esperando
+C 0xB19E C cuenta las fases vivas
+C 0xB1A1 Pasos que le quedan a la fase
+C 0xB1AB El ajuste del periodo de ruido, mas el incremento
+C 0xB1B4 Recarga la espera de la fase
+C 0xB1BD A la siguiente fase
+C 0xB1C2 Si ninguna hizo nada, la envolvente esta agotada
+C 0xB1C9 Bit 2 del byte global 0xB53F: repetirla
+
+C 0xB1CE Periodo del ruido: el del comando 0x88 mas el de la envolvente
+C 0xB1D6 Registro 6 del PSG, en el buffer
+C 0xB1D9 Y ahora si, los once registros de golpe
+
+C 0xB1E2 Espera inicial de la fase (+0x20/+0x21 -> +0x0C/+0x0D)
+C 0xB1E8 Y cuantos pasos dara (+0x16/+0x17 -> +0x0E/+0x0F)
+C 0xB1EE Las dos fases van seguidas en memoria
+
+C 0xB1FA Espera inicial (+0x22..+0x24 -> +0x10..+0x12)
+C 0xB200 Pasos de la fase (+0x18..+0x1A -> +0x13..+0x15)
+C 0xB206 Las tres fases, seguidas
+
+C 0xB216 Espera inicial (+8/+9 -> +0/+1)
+C 0xB21C Y sus pasos (+4/+5 -> +2/+3)
+C 0xB222 Las dos fases, seguidas
+
+C 0xB22A El byte siguiente es el volumen, de 0 a 15
+C 0xB22C A +9 del bloque; el que suena es este mas el ajuste de la envolvente
+C 0xB230 Y a seguir leyendo la melodia
+
+C 0xB233 El byte siguiente son unidades de duracion
+C 0xB235 La unidad, en frames, la fijo el comando 0x85
+C 0xB23B Duracion = unidades * unidad
+C 0xB23E Queda en +6/+7, de donde la cogen las notas que vengan
+
+C 0xB248 El byte siguiente dice que abre en el mezclador
+C 0xB24A Solo valen dos bits: 1 el tono y 8 el ruido
+C 0xB24C Se guarda en +8 y lo aplica ARRANCA_NOTA
+
+C 0xB253 Borra los 46 bytes del bloque
+C 0xB25F Con el puntero de lectura a cero el canal queda parado para siempre
+
+C 0xB263 El byte siguiente es el tempo
+C 0xB265 Por dieciseis: HL = tempo * 16, que luego pasa a DE
+C 0xB26B 3000 son los frames que dura un minuto a 50 Hz
+C 0xB270 Unidad de duracion = 3000 / (tempo * 16), division entera
+C 0xB274 Y ahi se queda, para los comandos 0x83 y 0x86
+
+C 0xB27F Del byte se queda con 5 bits, que es lo que usa el registro 6
+C 0xB284 Rearranca la envolvente del ruido
+C 0xB289 Con el bit 7 puesto solo cambia el ruido y sigue leyendo
+C 0xB28D Sin el bit 7, ademas suena: abre el canal y cuenta la duracion
+
+C 0xB290 El canal ya se cerro al leer, asi que solo hay que esperar la duracion
+
+C 0xB294 +0/+1 es el puntero al principio, que no se toca nunca
+C 0xB29A Se lo copia al puntero de lectura y vuelve a empezar
+
+C 0xB2A3 El primer byte dice cuantos valores vienen
+C 0xB2A6 DE va acumulando la suma
+C 0xB2AC Cada valor, por la unidad de duracion
+C 0xB2B6 Se suma a lo que ya habia
+C 0xB2BA Hasta agotar la cuenta
+C 0xB2BD El total queda como duracion de las notas
+
+C 0xB2C7 El byte siguiente son las banderas
+C 0xB2C9 Bits 0 y 1: repetir la envolvente de volumen y la de periodo
+C 0xB2CF Bit 2: repetir la del ruido, que es global
+
+C 0xB2DB Al cambiar de instrumento se apagan las dos repeticiones
+C 0xB2E4 Cada instrumento son 15 bytes
+C 0xB2E7 HL = indice * 15
+C 0xB2EA La tabla de instrumentos
+C 0xB2F2 Los 15 bytes van a +0x16..+0x24 del bloque del canal
+C 0xB300 Contadores de la envolvente de volumen a cero
+C 0xB308 Y los de la de periodo
+C 0xB314 Los ajustes que se suman al volumen y al periodo, tambien
+
+C 0xB324 Al cargarla se apaga su bit de repeticion
+C 0xB32D Seis bytes por juego
+C 0xB333 La tabla, que solo tiene el juego 0
+C 0xB337 El bloque global del ruido
+C 0xB33B Las dos esperas a cero: el primer paso va en el frame siguiente
+C 0xB345 Los seis bytes, a +4..+9 del bloque global
+C 0xB34F Y el ajuste del periodo de ruido, a cero
+
+C 0xB358 Se invierte porque en el registro 7 un 0 es "abierto"
+C 0xB35A 0x09: bit 0 el tono y bit 3 el ruido, los del canal 0
+C 0xB35C El canal que se esta atendiendo
+C 0xB35F Corre las dos mascaras tantos bits como diga el canal
+C 0xB363 Al rotar E entran unos: los demas canales no se tocan
+C 0xB36A El mezclador que hay en el buffer
+C 0xB36D Cierra tono y ruido del canal, y abre solo lo que pidieran
+
+C 0xB377 Multiplicar por cero se despacha aqui
+C 0xB37D Suma y desplaza: ocho vueltas, un bit de A por vuelta
+
+C 0xB38F Dieciseis vueltas, un bit de cociente por vuelta
+C 0xB394 Mete el siguiente bit del dividendo y prueba a restar el divisor
+C 0xB39A No cabia: se deshace la resta
+C 0xB39E El ultimo bit del cociente
+
+C 0xB3A5 Por dos, que las entradas son palabras
+C 0xB3A6 Suma a HL sin tocar H salvo que haya acarreo
+C 0xB3AB La palabra de la tabla, byte bajo primero
+C 0xB3AD Y el alto
+
+C 0xB3B4 Empieza por el registro 0
+C 0xB3B6 Once registros, del 0 al 10; los de la envolvente del chip (11 a 13) no se tocan
+
 B 0xB3C6 ############################################################
 B 0xB3C6 DATOS DEL SONIDO
 B 0xB3C6 ############################################################
-D 0xB3C6 0xB486 tabla_notas      Periodos de las notas, indexada por el byte de melodia
+D 0xB3C6 0xB486 tabla_notas      Periodos de las notas, indexada por el byte de melodia (0 a 95). Son 96 entradas: ocho octavas de doce semitonos. Cada entrada es el periodo de tono del PSG, y la de doce mas alla vale justo la mitad. La primera, 0x0D5D, da 65,4 Hz con el reloj del PSG del MSX (3,58 MHz / 16 / periodo), o sea el do de la segunda octava; la ultima, 0x000E, se sale de lo audible
 F 0xB3C6 w8
+B 0xB486 ------------------------------------------------------------
+B 0xB486 LOS DOCE COMANDOS DE LA MELODIA
+B 0xB486 El byte de melodia menos 0x80 indexa esta tabla. Entre
+B 0xB486 parentesis, los bytes que se lleva cada comando detras:
+B 0xB486   0x80 (1) volumen base del canal, 0 a 15
+B 0xB486   0x81 (1) mezclador: bit 0 tono, bit 3 ruido
+B 0xB486   0x82 (0) vuelve al principio de la melodia
+B 0xB486   0x83 (1) duracion = valor * unidad de duracion
+B 0xB486   0x84 (0) silencio de una duracion
+B 0xB486   0x85 (1) tempo: unidad = 3000 / (valor * 16) frames
+B 0xB486   0x86 (1+n) duracion = suma de n valores
+B 0xB486   0x87 (1) instrumento, de los cinco de 0xB542
+B 0xB486   0x88 (1) periodo del ruido; con el bit 7 puesto no suena
+B 0xB486   0x89 (1) envolvente del ruido, de la tabla de 0xB58D
+B 0xB486   0x8A (1) bits de repeticion de las envolventes
+B 0xB486   0x8B (0) fin de la melodia
+B 0xB486 ------------------------------------------------------------
 D 0xB486 0xB49E tabla_comandos   12 punteros a los manejadores de comando. La entrada 13 apuntaria a 0x0102, o sea que la tabla se acaba justo ahi
 F 0xB486 w1
-D 0xB49E 0xB4A0 var_B49E         Dos variables sueltas del reproductor: 0xB49E (canal en curso) y 0xB49F (palabra de trabajo)
+D 0xB49E 0xB4A0 var_B49E         Dos variables del reproductor: 0xB49E el canal que se esta atendiendo (0, 1 o 2), que es lo que mira PSG_ESCRIBE para saber que bits del mezclador tocar, y 0xB49F la unidad de duracion en frames, que deja el comando 0x85 y usan el 0x83 y el 0x86
 D 0xB4A0 0xB4AB buffer_psg       Sombra de los 11 registros del PSG, en el orden del chip: 0xB4A0-0xB4A5 los periodos de tono de los tres canales (registros 0-5), 0xB4A6 el periodo del ruido (registro 6, lo escribe 0xB1D6), 0xB4A7 el mezclador (registro 7, lo lleva 0xB36A) y 0xB4A8-0xB4AA los volumenes (registros 8-10). VUELCA_PSG los manda los once de golpe cada frame
-D 0xB4AB 0xB535 estado_canales   Los TRES bloques de estado, 46 bytes cada uno (0x2E, tamano dicho por el propio codigo en 0xB018 y 0xB024). Canal 0 en 0xB4AB, canal 1 en 0xB4D9, canal 2 en 0xB507. Dentro de cada bloque, deducido de como lo indexa IX: +0/+1 puntero al principio de la melodia (para repetirla), +2/+3 puntero de lectura, +4/+5 duracion que le queda a la nota, +9 volumen, +0x0A/+0x0B periodo del tono, y +0x2A/+0x2B/+0x2C los ajustes que se suman al volumen y al periodo (lo que da el vibrato y la envolvente)
-D 0xB535 0xB542 estado_global    Bloque de 10 bytes al que apunta IY, mas las variables 0xB53F, 0xB540 y 0xB541
-D 0xB542 0xB58D tabla_B542       Tabla de 75 bytes que se carga con `ld de,0xB542` desde 0xB2EA (manejador del comando 0x86)
-D 0xB58D 0xB593 tabla_B58D       Tabla de 6 bytes, se carga desde 0xB333 (manejador del comando 0x89)
+D 0xB4AB 0xB535 estado_canales   Los TRES bloques de estado, 46 bytes cada uno (0x2E, tamano dicho por el propio codigo en 0xB018 y 0xB024). Canal 0 en 0xB4AB, canal 1 en 0xB4D9, canal 2 en 0xB507. Dentro de cada bloque, deducido de como lo indexa IX: +0/+1 puntero al principio de la melodia (para repetirla), +2/+3 puntero de lectura, +4/+5 duracion que le queda a la nota, +9 volumen, +0x0A/+0x0B periodo del tono, +0x0C/+0x0D y +0x0E/+0x0F los contadores de las dos fases de la envolvente de volumen, +0x10..+0x12 y +0x13..+0x15 los de las tres de la envolvente de periodo, +0x16..+0x24 los 15 bytes del instrumento tal cual los copia el comando 0x87, +0x2A el ajuste de volumen, +0x2B/+0x2C el de periodo (12 bits) y +0x2D las banderas de repeticion (bit 0 el volumen, bit 1 el periodo)
+D 0xB535 0xB542 estado_global    La envolvente global del ruido, la unica que no es por canal. IY apunta a 0xB535: +0/+1 lo que falta para el siguiente paso de cada una de las dos fases, +2/+3 los pasos que le quedan, +4/+5 y +6/+7 y +8/+9 los seis bytes que copia el comando 0x89 (pasos, incrementos y esperas). Detras, tres variables sueltas: 0xB53F banderas (bit 2, repetir esta envolvente), 0xB540 el periodo de ruido que puso el comando 0x88 y 0xB541 lo que le va sumando la envolvente
+D 0xB542 0xB58D instrumentos     CINCO instrumentos de 15 bytes, que el comando 0x87 copia enteros a +0x16 del bloque del canal. Cada fila, en orden: 2 bytes de pasos de la envolvente de volumen (una cifra por fase), 3 de pasos de la de periodo, 2 incrementos de volumen, 3 incrementos de periodo (con signo), 2 esperas de volumen y 3 esperas de periodo. Una espera de N quiere decir un paso cada N+1 frames. El instrumento 0 sube el volumen un punto y luego lo baja trece veces de uno en uno; el 2 pega un golpe de doce y decae, que es lo que usa la percusion
+F 0xB542 15
+D 0xB58D 0xB593 env_ruido        UN solo juego de 6 bytes para la envolvente del ruido, el que carga el comando 0x89: pasos de las dos fases (1 y 10), incrementos (+10 y -3) y esperas (1 y 3). El comando lo indexa multiplicando por 6, o sea que aqui cabrian mas, pero solo hay uno
+F 0xB58D 6
 
 B 0xB593 ############################################################
 B 0xB593 LAS TRES MELODIAS DE LA PANTALLA DE TITULO
@@ -90,8 +304,22 @@ B 0xB593    ld de,0xB593 / xor a / call 0xB015
 B 0xB593    ld de,0xB640 / inc a / call 0xB015
 B 0xB593    ld de,0xB877 / inc a / jp   0xB015
 B 0xB593 O sea que son las voces de una misma pieza, una por canal del
-B 0xB593 PSG. Que la tercera sea tan corta encaja con que lleve el bajo
-B 0xB593 o la percusion.
+B 0xB593 PSG. Leidos los tres flujos con las reglas del reproductor,
+B 0xB593 los tres se recorren enteros y los tres acaban en 0x82, que
+B 0xB593 es volver al principio: la musica de la portada no termina.
+B 0xB593 El canal 0 lleva 160 notas, el 1 son 310 y el 2 solo 5.
+B 0xB593 La tercera voz es la PERCUSION: cinco notas que se limitan a
+B 0xB593 alternar el mezclador entre tono y ruido (comando 0x81 con 1
+B 0xB593 y con 8) con el instrumento 2, que es un golpe de volumen 12
+B 0xB593 que decae. Es la unica que carga la envolvente del ruido
+B 0xB593 (comando 0x89), pero NO es la unica que lo abre: el canal 1
+B 0xB593 tambien, con un 0x81 de valor 9 en 0xB7F0 -tono y ruido a la
+B 0xB593 vez- y ese mismo instrumento 2 detras, hasta que vuelve a
+B 0xB593 tono solo en 0xB80B.
+B 0xB593 El tempo lo pone el canal 0, que es el primero en atenderse:
+B 0xB593 0x85 con 100, que da unidad de duracion = 1 frame.
+B 0xB593 Los bits de repeticion de las envolventes no llegan a usarse:
+B 0xB593 el unico comando 0x8A de las tres voces lleva un 0.
 D 0xB593 0xB640 melodia_canal_0  Voz del canal 0, 173 bytes
 D 0xB640 0xB877 melodia_canal_1  Voz del canal 1, 567 bytes
-D 0xB877 0xB899 melodia_canal_2  Voz del canal 2, 34 bytes
+D 0xB877 0xB899 melodia_canal_2  Voz del canal 2, 34 bytes. El flujo se acaba en 0xB893, con el 0x82 que vuelve al principio; los cinco bytes de 0xB894 a 0xB898 (C9 00 00 00 00) son la cola del bloque y no los lee nadie
