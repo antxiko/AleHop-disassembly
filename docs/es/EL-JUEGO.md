@@ -22,21 +22,22 @@ permite tener 768 dibujos distintos en pantalla en vez de 256.
 
 | filas | qué va ahí | de dónde sale |
 |---|---|---|
-| 0-7 | El fondo, con parallax | mapa de 64x8 en `0x3000 + nivel*0x200` |
+| 0-7 | El fondo, que se repite cuatro veces | mapa de 64x8 en `0x3000 + nivel*0x200` |
 | 8-15 | La pista jugable | mapa de 256x8 en `nivel*0x800` |
 | 16-23 | El marcador | mapa fijo de 32x8 en `0x4500` |
 
-## El parallax, en una instrucción
+## El fondo no lleva parallax, aunque lo parezca
 
-El fondo se mueve más despacio que la pista, y el truco cabe en una línea. Las
-dos rutinas de volcado leen la misma variable —la columna de cámara, en
-0xDB54— pero:
+Las dos rutinas de volcado leen la misma variable —la columna de cámara, en
+0xDB54— pero la de la pista usa el byte entero, con su mapa de **256**
+columnas, y la del fondo hace `and 0x3F` sobre ella, con un mapa de **64**.
 
-- la de la pista usa el byte entero, y su mapa tiene **256** columnas;
-- la del fondo hace `and 0x3F` sobre ella, y su mapa tiene **64**.
-
-Resultado: el fondo recorre su mapa cuatro veces más despacio. Efecto de
-profundidad conseguido sin gastar ni un ciclo de más.
+Es tentador leer ahí un parallax, y así estuvo contado en esta página. Pero
+**una máscara no frena nada**: la columna sube de uno en uno para los dos, así
+que el fondo avanza al mismo ritmo que la pista. Lo que hace el `and 0x3F` es
+darle la vuelta al llegar a 64, o sea que el mismo fondo se repite **cuatro
+veces por nivel**. Para ir cuatro veces más despacio haría falta un
+desplazamiento —`rrca` dos veces—, no un `and`.
 
 ## Los seis niveles
 

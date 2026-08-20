@@ -29,80 +29,80 @@ L_D000:
 	jp EMPIEZA_PARTIDA		;d000
 FRAME:		; Una vuelta de juego: HALT y despacho por la mascara 0xDB69
 	ld ix,0db69h		;d003   ; IX apunta a la mascara de tareas: los 11 `bit n,(ix+d)` de abajo la leen
-	halt			;d007
-	bit 7,(ix+000h)		;d008
+	halt			;d007   ; HALT: una vuelta de juego por interrupcion de video
+	bit 7,(ix+000h)		;d008   ; Bit 7 de 0xDB69: volcar el mapa
 	call nz,VUELCA_MAPA		;d00c
-	bit 6,(ix+000h)		;d00f
+	bit 6,(ix+000h)		;d00f   ; Bit 6: volcar el fondo
 	call nz,VUELCA_FONDO		;d013
-	bit 5,(ix+000h)		;d016
+	bit 5,(ix+000h)		;d016   ; Bit 5: animar las casillas
 	call nz,ANIMA_CASILLAS		;d01a
-	bit 4,(ix+000h)		;d01d
+	bit 4,(ix+000h)		;d01d   ; Bit 4: izquierda y derecha
 	call nz,APLICA_VELOCIDAD		;d021
-	bit 3,(ix+000h)		;d024
+	bit 3,(ix+000h)		;d024   ; Bit 3: adelantar la camara
 	call nz,AVANZA_CAMARA		;d028
-	bit 2,(ix+000h)		;d02b
+	bit 2,(ix+000h)		;d02b   ; Bit 2: arriba y abajo
 	call nz,APLICA_ALTURA		;d02f
-	bit 1,(ix+000h)		;d032
+	bit 1,(ix+000h)		;d032   ; Bit 1: elegir fotograma
 	call nz,PATRON_SEGUN_FRAME		;d036
-	bit 0,(ix+000h)		;d039
+	bit 0,(ix+000h)		;d039   ; Bit 0: pintar al jugador
 	call nz,PINTA_JUGADOR		;d03d
-	bit 7,(ix+001h)		;d040
+	bit 7,(ix+001h)		;d040   ; Bit 7 de 0xDB6A: mirar que casilla se pisa
 	call nz,COLISION		;d044
-	bit 6,(ix+001h)		;d047
+	bit 6,(ix+001h)		;d047   ; Bit 6: leer el disparo
 	call nz,SALTO		;d04b
-	bit 5,(ix+001h)		;d04e
+	bit 5,(ix+001h)		;d04e   ; Bit 5: descontar el tiempo
 	call nz,CUENTA_ATRAS		;d052
-	ld a,(0db54h)		;d055
-	cp 0e0h		;d058
-	jp nc,L_D761		;d05a
+	ld a,(0db54h)		;d055   ; 0xDB54 es la columna de camara, de 0 a 255
+	cp 0e0h		;d058   ; A partir de la columna 224 ya no queda mapa por delante: nivel superado
+	jp nc,FIN_DE_NIVEL		;d05a
 	ret			;d05d
 SALTO:		; Disparo: dispara el salto y lleva su fisica
-	call L_D259		;d05e
+	call LEE_DISPARO		;d05e   ; Solo con el flanco: tener el boton apretado no encadena saltos
 	ret z			;d061
-	call CLASE_DE_CASILLA		;d062
+	call CLASE_DE_CASILLA		;d062   ; Sobre casilla de clase 0 no se salta: es un obstaculo
 	and a			;d065
 	ret z			;d066
-	ld hl,0dae1h		;d067
-	call L_D986		;d06a
-	ld bc,04000h		;d06d
-	call L_DA7B		;d070
-	ld a,003h		;d073
+	ld hl,0dae1h		;d067   ; Canal A con envolvente de caida (registros 7, 1, 8, 13, 12 y 0)
+	call CARGA_PSG		;d06a
+	ld bc,04000h		;d06d   ; Periodo de tono de partida del salto
+	call PONE_TONO_A		;d070
+	ld a,003h		;d073   ; Efecto 3: el tono va siguiendo a la altura
 	ld (0db6dh),a		;d075
-	call L_D096		;d078
-	ld a,0edh		;d07b
-	call L_DA85		;d07d
-	ld a,024h		;d080
+	call POSTURA_DE_IMPULSO		;d078
+	ld a,0edh		;d07b   ; 0xDB6B = 0xED, o sea -19: el impulso inicial hacia arriba
+	call LANZA_SALTO		;d07d
+	ld a,024h		;d080   ; Fotograma del salto
 	ld (0db67h),a		;d082
-	ld hl,020e9h		;d085
+	ld hl,020e9h		;d085   ; Mascara 0x20E9: en el aire no hay mando, ni colision, ni disparo
 	ld (0db69h),hl		;d088
-L_D08B:
-	call L_D471		;d08b
-	jp z,L_DA74		;d08e
+BUCLE_EN_EL_AIRE:		; Mientras dura el salto: fisica, un frame, y vuelta
+	call FISICA_SALTO		;d08b   ; Se sale cuando el desplazamiento vertical vuelve a cero, o sea al aterrizar
+	jp z,APAGA_SONIDO		;d08e
 	call FRAME		;d091
-	jr L_D08B		;d094
-L_D096:
-	ld a,00ch		;d096
+	jr BUCLE_EN_EL_AIRE		;d094
+POSTURA_DE_IMPULSO:		; Fotograma de agacharse y cuatro frames de espera antes de despegar
+	ld a,00ch		;d096   ; Fotograma de agacharse
 	ld (0db67h),a		;d098
 	call PINTA_JUGADOR		;d09b
 	ld b,004h		;d09e
-	call L_D954		;d0a0
+	call ESPERA_B_FRAMES		;d0a0
 	ret			;d0a3
-VUELCA_FONDO:		; Manda el fondo a VRAM 0x1800. El `and 0x3F` de la camara es lo que hace el parallax
-	ld hl,0db7ah		;d0a4
-	ld a,(0db54h)		;d0a7
+VUELCA_FONDO:		; Manda el fondo a VRAM 0x1800. El `and 0x3F` de la camara NO frena el fondo: la columna sube igual que la de la pista y la mascara solo hace que el mapa de 64 columnas se repita cuatro veces por nivel
+	ld hl,0db7ah		;d0a4   ; 0xDB7A es el fondo: 8 filas de 64 columnas
+	ld a,(0db54h)		;d0a7   ; La columna de camara, tomada modulo 64: el fondo se repite cuatro veces por nivel
 	and 03fh		;d0aa
 	push af			;d0ac
 	call HL_MAS_A		;d0ad
 	ld (0db61h),hl		;d0b0
-	ld de,01800h		;d0b3
+	ld de,01800h		;d0b3   ; Destino: filas 0 a 7 de la tabla de nombres
 	ld (0db63h),de		;d0b6
 	ld b,008h		;d0ba
 L_D0BC:
-	push bc			;d0bc
-	ld bc,00020h		;d0bd
+	push bc			;d0bc   ; Ocho filas
+	ld bc,00020h		;d0bd   ; Una fila de pantalla son 32 casillas
 	ld a,(0db54h)		;d0c0
 	and 03fh		;d0c3
-	cp 021h		;d0c5
+	cp 021h		;d0c5   ; Si la ventana se sale de las 64 columnas del fondo, solo se copia hasta el final de la fila
 	jr c,L_D0D0		;d0c7
 	and 01fh		;d0c9
 	sub 020h		;d0cb
@@ -112,14 +112,14 @@ L_D0D0:
 	call COPIA_FILA		;d0d0
 	pop bc			;d0d3
 	djnz L_D0BC		;d0d4
-	pop af			;d0d6
+	pop af			;d0d6   ; Y si se ha salido, el resto de cada fila se trae del principio del fondo
 	cp 021h		;d0d7
 	ret c			;d0d9
 	and 01fh		;d0da
 	sub 020h		;d0dc
 	neg		;d0de
 	ld c,a			;d0e0
-	ld hl,01800h		;d0e1
+	ld hl,01800h		;d0e1   ; Donde se corto la primera mitad
 	call HL_MAS_A		;d0e4
 	ld de,0db7ah		;d0e7
 	ex de,hl			;d0ea
@@ -128,24 +128,24 @@ L_D0D0:
 	sub 020h		;d0f2
 	neg		;d0f4
 	ld c,a			;d0f6
-	ld (0db65h),bc		;d0f7
+	ld (0db65h),bc		;d0f7   ; Longitud de la segunda mitad, la que completa las 32 casillas
 	ld b,008h		;d0fb
 L_D0FD:
 	push bc			;d0fd
-	ld bc,(0db65h)		;d0fe
+	ld bc,(0db65h)		;d0fe   ; La longitud del trozo que falta, la calculada arriba
 	call COPIA_FILA		;d102
 	pop bc			;d105
 	djnz L_D0FD		;d106
 	ret			;d108
 COPIA_FILA:		; Copia una fila a VRAM: origen +0x40 (64 columnas), destino +0x20 (32)
-	call 0005ch		;d109   ; BIOS LDIRVM - Block transfers to VRAM from memory
-	ld de,00040h		;d10c
+	call 0005ch		;d109   ; BIOS LDIRVM - Block transfers to VRAM from memory | Copia BC casillas de memoria a VRAM
+	ld de,00040h		;d10c   ; El fondo tiene 64 columnas por fila y la pantalla 32: de ahi los dos incrementos distintos
 	ld hl,(0db61h)		;d10f
 	add hl,de			;d112
 	ld (0db61h),hl		;d113
 	push hl			;d116
 	ld hl,(0db63h)		;d117
-	sra e		;d11a
+	sra e		;d11a   ; 0x40 entre 2 = 0x20
 	add hl,de			;d11c
 	ld (0db63h),hl		;d11d
 	ex de,hl			;d120
@@ -154,23 +154,23 @@ COPIA_FILA:		; Copia una fila a VRAM: origen +0x40 (64 columnas), destino +0x20 
 HL_MAS_A:		; Utilidad: HL += A
 	push de			;d123
 	ld e,a			;d124
-	ld d,000h		;d125
+	ld d,000h		;d125   ; D a cero: A se toma sin signo
 	add hl,de			;d127
 	pop de			;d128
 	ret			;d129
 ANIMA_CASILLAS:		; Cada 8 frames avanza un fotograma las casillas especiales
-	ld a,(0db75h)		;d12a
+	ld a,(0db75h)		;d12a   ; Solo una vez cada ocho frames
 	and 007h		;d12d
 	ret nz			;d12f
-	ld hl,0dd79h		;d130
-	ld de,0e57ah		;d133
+	ld hl,0dd79h		;d130   ; Una casilla antes del mapa: la lista guarda distancias, y la primera ya lleva su +1
+	ld de,0e57ah		;d133   ; La lista de casillas animables que armo LISTA_ESPECIALES
 L_D136:
-	ld a,(de)			;d136
+	ld a,(de)			;d136   ; 0xFF cierra la lista
 	cp 0ffh		;d137
 	ret z			;d139
-	call HL_MAS_A		;d13a
+	call HL_MAS_A		;d13a   ; Avanza por el mapa lo que diga la distancia
 	ld a,(hl)			;d13d
-	inc a			;d13e
+	inc a			;d13e   ; Los dos bits bajos son el fotograma: 0, 1, 2, 3 y vuelta a empezar
 	and 003h		;d13f
 	ld b,a			;d141
 	ld a,(hl)			;d142
@@ -181,63 +181,63 @@ L_D136:
 	jr L_D136		;d148
 VUELCA_MAPA:		; Manda las 8 filas del mapa a VRAM 0x1900 con OTIR
 	ld hl,018ffh		;d14a
-	call 00050h		;d14d   ; BIOS SETRD - Enables VDP to read
-	ld hl,0dd7ah		;d150
+	call 00050h		;d14d   ; BIOS SETRD - Enables VDP to read | Deja el VDP en 0x18FF; el OTIR empieza a escribir en 0x1900, la fila 8
+	ld hl,0dd7ah		;d150   ; El mapa, desplazado a la columna de camara
 	ld a,(0db54h)		;d153
 	call HL_MAS_A		;d156
-	ld a,(00007h)		;d159
+	ld a,(00007h)		;d159   ; En 0x0007 el BIOS guarda el puerto de escritura del VDP
 	ld c,a			;d15c
-	ld b,008h		;d15d
+	ld b,008h		;d15d   ; Ocho filas
 L_D15F:
 	push bc			;d15f
-	ld b,020h		;d160
+	ld b,020h		;d160   ; 32 casillas por fila
 	push hl			;d162
 	di			;d163
 	otir		;d164
 	pop hl			;d166
-	inc h			;d167
+	inc h			;d167   ; Cada fila del mapa son 256 bytes: se avanza sumando 1 al byte alto
 	pop bc			;d168
 	djnz L_D15F		;d169
 	ei			;d16b
-	jp L_D49A		;d16c
+	jp MARCA_PROGRESO		;d16c   ; Y de paso se recoloca la marca de avance
 LEE_MANDO:		; GTSTCK: primero teclas de cursor, luego joystick 1
-	xor a			;d16f
+	xor a			;d16f   ; Cursor: es el 0 de GTSTCK
 	call 000d5h		;d170   ; BIOS GTSTCK - Returns the joystick status
 	and a			;d173
 	ret nz			;d174
-	inc a			;d175
+	inc a			;d175   ; Y si no, el joystick del puerto 1
 	call 000d5h		;d176   ; BIOS GTSTCK - Returns the joystick status
 	and a			;d179
 	ret			;d17a
-L_D17B:
-	call LEE_MANDO		;d17b
-	ld e,000h		;d17e
+LEE_MANDO_VERTICAL:		; Devuelve E = +1 abajo, -1 arriba, 0 si nada
+	call LEE_MANDO		;d17b   ; Direccion pulsada, de 1 a 8
+	ld e,000h		;d17e   ; Sin nada pulsado no hay movimiento vertical
 	ret z			;d180
 	ld c,a			;d181
-	and 003h		;d182
-	cp 003h		;d184
+	and 003h		;d182   ; Direcciones 1, 2 y 3 son las de arriba
+	cp 003h		;d184   ; La 3 es diagonal pura: se descarta
 	ret z			;d186
-	inc e			;d187
+	inc e			;d187   ; De momento, hacia abajo
 	ld a,c			;d188
-	and 004h		;d189
+	and 004h		;d189   ; Las direcciones 5, 6 y 7 llevan el bit 2: son las de abajo
 	ret z			;d18b
-	dec e			;d18c
+	dec e			;d18c   ; Dos hacia atras: queda -1, hacia arriba
 	dec e			;d18d
 	ret			;d18e
-L_D18F:
-	cp 00ah		;d18f
+PINTA_DIGITO:		; Pinta un digito de 2x3 casillas en la posicion del cursor del BIOS
+	cp 00ah		;d18f   ; Solo digitos del 0 al 9
 	ret nc			;d191
 	push hl			;d192
 	push de			;d193
 	ld hl,(0f3dch)		;d194
-	call L_D1B6		;d197
-	sla a		;d19a
+	call VRAM_DEL_CURSOR		;d197
+	sla a		;d19a   ; Cada digito ocupa 2x3 casillas, o sea 6 patrones, a partir del 0x0B
 	ld b,a			;d19c
 	sla a		;d19d
 	add a,b			;d19f
 	add a,00bh		;d1a0
-	ld b,003h		;d1a2
-	ld de,0001fh		;d1a4
+	ld b,003h		;d1a2   ; Tres filas
+	ld de,0001fh		;d1a4   ; De una fila a la siguiente: 32 menos las 2 casillas ya escritas
 L_D1A7:
 	call 0004dh		;d1a7   ; BIOS WRTVRM - Writes data in VRAM
 	inc hl			;d1aa
@@ -249,29 +249,29 @@ L_D1A7:
 	pop de			;d1b3
 	pop hl			;d1b4
 	ret			;d1b5
-L_D1B6:
+VRAM_DEL_CURSOR:		; HL = 0x1800 + CSRY*32 + CSRX, la casilla que apuntan 0xF3DC/0xF3DD
 	push de			;d1b6
 	ld e,h			;d1b7
 	ld h,000h		;d1b8
 	ld b,005h		;d1ba
 L_D1BC:
-	add hl,hl			;d1bc
+	add hl,hl			;d1bc   ; Fila por 32
 	djnz L_D1BC		;d1bd
 	ld d,000h		;d1bf
 	add hl,de			;d1c1
-	ld de,01800h		;d1c2
+	ld de,01800h		;d1c2   ; Y la tabla de nombres empieza en 0x1800
 	add hl,de			;d1c5
 	pop de			;d1c6
 	ret			;d1c7
-L_D1C8:
-	ld hl,0db59h		;d1c8
-	ld de,00b12h		;d1cb
+PINTA_MARCADOR:		; Los seis digitos del marcador, de derecha a izquierda
+	ld hl,0db59h		;d1c8   ; El marcador, tres bytes en BCD
+	ld de,00b12h		;d1cb   ; Fila 18, columna 11
 	ld (0f3dch),de		;d1ce
-	ld b,006h		;d1d2
+	ld b,006h		;d1d2   ; Seis digitos
 L_D1D4:
 	push bc			;d1d4
 	ld a,(hl)			;d1d5
-	bit 0,b		;d1d6
+	bit 0,b		;d1d6   ; Se alterna: primero el digito bajo del byte, luego el alto
 	jr z,L_D1E3		;d1d8
 	srl a		;d1da
 	srl a		;d1dc
@@ -280,7 +280,7 @@ L_D1D4:
 	inc hl			;d1e2
 L_D1E3:
 	and 00fh		;d1e3
-	call L_D18F		;d1e5
+	call PINTA_DIGITO		;d1e5   ; Pinta y retrocede dos columnas, que es lo que ocupa un digito
 	push hl			;d1e8
 	ld hl,0f3ddh		;d1e9
 	dec (hl)			;d1ec
@@ -289,18 +289,18 @@ L_D1E3:
 	pop bc			;d1ef
 	djnz L_D1D4		;d1f0
 	ret			;d1f2
-L_D1F3:
-	inc (hl)			;d1f3
+SUMA_375:		; Suma 375 al marcador en BCD y gasta la casilla recogida
+	inc (hl)			;d1f3   ; La casilla recogida pasa a valer dos mas: cambia de dibujo y deja de dar puntos
 	inc (hl)			;d1f4
-	ld hl,0db59h		;d1f5
+	ld hl,0db59h		;d1f5   ; Marcador de seis cifras en tres bytes BCD
 	ld a,075h		;d1f8
-	add a,(hl)			;d1fa
+	add a,(hl)			;d1fa   ; Suma 375: 0x75 al byte bajo
 	daa			;d1fb
 	ld (hl),a			;d1fc
 	inc hl			;d1fd
 	ld a,000h		;d1fe
 	adc a,(hl)			;d200
-	inc a			;d201
+	inc a			;d201   ; Mas 3 al byte de en medio, con el acarreo del anterior
 	inc a			;d202
 	inc a			;d203
 	daa			;d204
@@ -310,36 +310,36 @@ L_D1F3:
 	adc a,(hl)			;d209
 	daa			;d20a
 	ld (hl),a			;d20b
-	ld hl,0dae1h		;d20c
-	call L_D986		;d20f
+	ld hl,0dae1h		;d20c   ; Sonido de recoger
+	call CARGA_PSG		;d20f
 	ld bc,00078h		;d212
-	call L_DA7B		;d215
+	call PONE_TONO_A		;d215
 	ld a,00fh		;d218
 	ld e,00ch		;d21a
 	call 00093h		;d21c   ; BIOS WRTPSG - Writes data to PSG-register
 	ld a,002h		;d21f
 	ld (0db6dh),a		;d221
-	jp L_D1C8		;d224
+	jp PINTA_MARCADOR		;d224   ; Y a repintar el marcador
 LISTA_ESPECIALES:		; Recorre el mapa y arma en 0xE57A la lista de casillas animables, guardando distancias en vez de posiciones
-	ld hl,0dd79h		;d227
+	ld hl,0dd79h		;d227   ; Recorre el mapa entero, 2048 bytes
 	ld (0db61h),hl		;d22a
 	ld de,0e57ah		;d22d
-	ld bc,0e57ah		;d230
+	ld bc,0e57ah		;d230   ; El limite: 0xDD7A mas 0x800
 L_D233:
 	inc hl			;d233
 	push hl			;d234
 	sbc hl,bc		;d235
 	pop hl			;d237
 	jr nc,L_D255		;d238
-	ld a,(hl)			;d23a
+	ld a,(hl)			;d23a   ; Solo cuentan los seis bits bajos: los otros dos son atributos de la casilla
 	and 03fh		;d23b
-	cp 018h		;d23d
+	cp 018h		;d23d   ; Se anotan las casillas por debajo de 0x18, que son las que se animan
 	jr nc,L_D233		;d23f
 	push de			;d241
 	ld de,(0db61h)		;d242
 	ld (0db61h),hl		;d246
 	and a			;d249
-	sbc hl,de		;d24a
+	sbc hl,de		;d24a   ; Se guarda la distancia desde la anterior, no la posicion: un byte por casilla
 	ld a,l			;d24c
 	pop de			;d24d
 	ld (de),a			;d24e
@@ -348,93 +348,93 @@ L_D233:
 	jr L_D233		;d253
 L_D255:
 	ex de,hl			;d255
-	ld (hl),0ffh		;d256
+	ld (hl),0ffh		;d256   ; 0xFF cierra la lista
 	ret			;d258
-L_D259:
-	xor a			;d259
+LEE_DISPARO:		; Flanco de pulsacion del disparo: 0xDB58 guarda el estado anterior
+	xor a			;d259   ; Gatillo A: la barra de espacio y el boton del joystick 1
 	call 000d8h		;d25a   ; BIOS GTTRIG - Returns current trigger status
 	ld b,a			;d25d
 	push bc			;d25e
-	ld a,001h		;d25f
+	ld a,001h		;d25f   ; Gatillo B: el boton del joystick 2
 	call 000d8h		;d261   ; BIOS GTTRIG - Returns current trigger status
 	pop bc			;d264
 	or b			;d265
 	ld b,a			;d266
-	ld hl,0db58h		;d267
+	ld hl,0db58h		;d267   ; 0xDB58 guarda como estaba antes
 	ld a,(hl)			;d26a
 	ld (hl),b			;d26b
-	cpl			;d26c
+	cpl			;d26c   ; Solo pasan los botones que antes no estaban pulsados
 	and b			;d26d
 	ret			;d26e
-L_D26F:
-	call LEE_MANDO		;d26f
+LEE_MANDO_HORIZONTAL:		; Devuelve D = +1 derecha, -1 izquierda, 0 si nada
+	call LEE_MANDO		;d26f   ; Direccion pulsada, de 1 a 8
 	ld d,000h		;d272
-	dec a			;d274
+	dec a			;d274   ; Sin nada pulsado no hay movimiento horizontal
 	ret m			;d275
 	ld c,a			;d276
-	and 003h		;d277
+	and 003h		;d277   ; Las direcciones 1, 2 y 3 son las de arriba y la derecha
 	ret z			;d279
-	inc d			;d27a
+	inc d			;d27a   ; De momento, hacia la derecha
 	ld a,c			;d27b
-	and 004h		;d27c
+	and 004h		;d27c   ; Las direcciones 5, 6 y 7 llevan el bit 2: izquierda
 	ret z			;d27e
-	dec d			;d27f
+	dec d			;d27f   ; Dos hacia atras: queda -1
 	dec d			;d280
 	ret			;d281
 APLICA_VELOCIDAD:		; Izquierda/derecha cambian la VELOCIDAD (0xDB60), no la posicion
-	call L_D26F		;d282
+	call LEE_MANDO_HORIZONTAL		;d282   ; Izquierda y derecha no mueven al jugador: cambian su velocidad
 	ld hl,0db60h		;d285
 	ld a,(hl)			;d288
 	add a,d			;d289
-	ret m			;d28a
-	cp 027h		;d28b
+	ret m			;d28a   ; Por debajo de cero no se baja
+	cp 027h		;d28b   ; Y el tope son 38 columnas por 256 frames
 	jr nc,L_D291		;d28d
 	ld (hl),a			;d28f
 	ret			;d290
 L_D291:
-	dec (hl)			;d291
+	dec (hl)			;d291   ; Pasado el tope, se frena dos
 	dec (hl)			;d292
 	ret			;d293
 APLICA_ALTURA:		; Arriba/abajo mueven en diagonal
-	call L_D17B		;d294
-	ld hl,0db56h		;d297
+	call LEE_MANDO_VERTICAL		;d294   ; Arriba y abajo si mueven
+	ld hl,0db56h		;d297   ; 0xDB56 es la posicion sobre la diagonal
 	ld a,(hl)			;d29a
 	add a,e			;d29b
-	cp 0b0h		;d29c
+	cp 0b0h		;d29c   ; Los topes del carril: por encima de 0xAF no se sube
 	ret nc			;d29e
-	cp 071h		;d29f
+	cp 071h		;d29f   ; Ni por debajo de 0x71 se baja
 	ret c			;d2a1
 	ld (hl),a			;d2a2
-	jp L_D2B3		;d2a3
+	jp Y_DESDE_X		;d2a3
 AVANZA_CAMARA:		; Adelanta la columna de camara (0xDB54)
-	ld a,(0db60h)		;d2a6
-	ld hl,(0db53h)		;d2a9
+	ld a,(0db60h)		;d2a6   ; Se avanza la velocidad, que son 256avos de columna
+	ld hl,(0db53h)		;d2a9   ; 0xDB53 es la parte fraccionaria y 0xDB54 la columna entera
 	call HL_MAS_A		;d2ac
 	ld (0db53h),hl		;d2af
 	ret			;d2b2
-L_D2B3:
-	ld a,(0db56h)		;d2b3
+Y_DESDE_X:		; Y = 0xE0 - X: el jugador va clavado a una diagonal de 45 grados
+	ld a,(0db56h)		;d2b3   ; La altura sale de la posicion sobre la diagonal: al ir a la derecha se sube
 	sub 0e0h		;d2b6
 	neg		;d2b8
 	ld (0db55h),a		;d2ba
 	ret			;d2bd
 DESCOMPRIME:		; Descompresor RLE de 16 bits. Destino fijo: el buffer 0xDD7A
-	ld de,0dd7ah		;d2be
+	ld de,0dd7ah		;d2be   ; Destino fijo: el buffer de 2048 bytes
 L_D2C1:
-	ld c,(hl)			;d2c1
+	ld c,(hl)			;d2c1   ; Cada tramo empieza por una cuenta de 16 bits
 	inc hl			;d2c2
 	ld b,(hl)			;d2c3
 	inc hl			;d2c4
-	bit 7,b		;d2c5
+	bit 7,b		;d2c5   ; Con el bit 15 puesto es un tramo repetido
 	jr z,L_D2DD		;d2c7
 	ld a,0ffh		;d2c9
-	cp b			;d2cb
+	cp b			;d2cb   ; Y si la cuenta entera es 0xFFFF, se acabo
 	jr nz,L_D2D0		;d2cc
 	cp c			;d2ce
 	ret z			;d2cf
 L_D2D0:
-	res 7,b		;d2d0
-	ld a,(hl)			;d2d2
+	res 7,b		;d2d0   ; Quitado el bit 15 queda la cuenta de repeticiones
+	ld a,(hl)			;d2d2   ; El mismo byte, tantas veces como diga la cuenta
 	ld (de),a			;d2d3
 	inc de			;d2d4
 	dec bc			;d2d5
@@ -444,32 +444,32 @@ L_D2D0:
 	inc hl			;d2da
 	jr L_D2C1		;d2db
 L_D2DD:
-	ldir		;d2dd
+	ldir		;d2dd   ; Sin el bit 15, copia literal de BC bytes
 	jr L_D2C1		;d2df
 CLASE_DE_CASILLA:		; Calcula que casilla pisa el jugador y devuelve su clase (0..14)
-	ld a,(0db55h)		;d2e1
-	sub 030h		;d2e4
-	srl a		;d2e6
+	ld a,(0db55h)		;d2e1   ; La Y del jugador
+	sub 030h		;d2e4   ; La primera fila del mapa esta en Y = 0x30
+	srl a		;d2e6   ; Cada casilla mide 8 pixeles: la division da la fila, de 0 a 7
 	srl a		;d2e8
 	srl a		;d2ea
 	ld h,a			;d2ec
-	ld a,(0db54h)		;d2ed
+	ld a,(0db54h)		;d2ed   ; La columna de camara
 	ld l,a			;d2f0
-	ld a,(0db56h)		;d2f1
+	ld a,(0db56h)		;d2f1   ; Mas la posicion del jugador dentro de la pantalla
 	srl a		;d2f4
 	srl a		;d2f6
 	srl a		;d2f8
 	add a,l			;d2fa
 	ld l,a			;d2fb
-	ld de,0dd7ah		;d2fc
+	ld de,0dd7ah		;d2fc   ; El mapa: 8 filas de 256 columnas
 	add hl,de			;d2ff
-	ld (0db77h),hl		;d300
+	ld (0db77h),hl		;d300   ; Se apunta la casilla pisada para quien quiera cambiarla
 	ld a,(hl)			;d303
-	and 03fh		;d304
-	ld hl,0dacdh		;d306
+	and 03fh		;d304   ; De la casilla solo interesan los seis bits bajos
+	ld hl,0dacdh		;d306   ; Una antes de los umbrales, que el bucle empieza incrementando
 	ld c,0ffh		;d309
 L_D30B:
-	inc hl			;d30b
+	inc hl			;d30b   ; La clase es cuantos umbrales quedan por debajo: de 0 a 14
 	inc c			;d30c
 	cp (hl)			;d30d
 	jr nc,L_D30B		;d30e
@@ -477,34 +477,34 @@ L_D30B:
 	ld hl,(0db77h)		;d311
 	ret			;d314
 COLISION:		; Despacha segun la clase de casilla: 9 casos distintos
-	call CLASE_DE_CASILLA		;d315
-	and a			;d318
-	jp z,L_D3F7		;d319
-	cp 006h		;d31c
-	jp z,L_D429		;d31e
-	cp 007h		;d321
-	jp z,L_D1F3		;d323
-	cp 001h		;d326
+	call CLASE_DE_CASILLA		;d315   ; Que se esta pisando
+	and a			;d318   ; Clase 0: obstaculo
+	jp z,CHOQUE		;d319
+	cp 006h		;d31c   ; Clase 6: agujero
+	jp z,CAIDA		;d31e
+	cp 007h		;d321   ; Clase 7: puntos
+	jp z,SUMA_375		;d323
+	cp 001h		;d326   ; Clase 1: solo la casilla 0x0E hace algo
 	jp z,L_D423		;d328
-	cp 002h		;d32b
-	jp z,L_D4C7		;d32d
-	cp 00dh		;d330
-	jp z,L_D4F9		;d332
-	cp 00bh		;d335
-	jp z,L_D526		;d337
-	cp 00ah		;d33a
-	jp z,L_D58F		;d33c
-	cp 003h		;d33f
+	cp 002h		;d32b   ; Clase 2: tiempo
+	jp z,BONUS_TIEMPO		;d32d
+	cp 00dh		;d330   ; Clase 13: tramo rapido
+	jp z,CASILLA_RAPIDA		;d332
+	cp 00bh		;d335   ; Clase 11: trampolin
+	jp z,TRAMPOLIN		;d337
+	cp 00ah		;d33a   ; Clase 10: arrastre
+	jp z,ARRASTRE		;d33c
+	cp 003h		;d33f   ; Clase 3: vida extra
 	jp z,L_D5D5		;d341
-	ret			;d344
+	ret			;d344   ; Las clases 4, 5, 8, 9, 12 y 14 son suelo: no hacen nada
 INTERRUPCION:		; Manejador propio, enganchado en H.TIMI. Cuenta frames y mueve el sonido
 	in a,(099h)		;d345   ; Descarta la vuelta al manejador del BIOS y desapila a mano: interrupcion rapida
-	pop hl			;d347
+	pop hl			;d347   ; Tira la direccion de vuelta: al manejador del BIOS no se le devuelve el control
 	di			;d348
-	ld hl,0db75h		;d349
+	ld hl,0db75h		;d349   ; Contador de frames: lo miran la animacion y los efectos
 	inc (hl)			;d34c
-	call SONIDO_FRAME		;d34d
-	pop ix		;d350
+	call SONIDO_FRAME		;d34d   ; Los efectos del PSG se mueven aqui, no en el bucle de juego
+	pop ix		;d350   ; El BIOS ha apilado todos los registros antes de llamar al hook
 	pop iy		;d352
 	pop af			;d354
 	pop bc			;d355
@@ -519,31 +519,31 @@ INTERRUPCION:		; Manejador propio, enganchado en H.TIMI. Cuenta frames y mueve e
 	ei			;d35e
 	ret			;d35f
 PATRON_SEGUN_FRAME:		; Elige el fotograma de la animacion del protagonista
-	ld a,(0db75h)		;d360
+	ld a,(0db75h)		;d360   ; Los bits 2 y 3 del contador dan cuatro fotogramas de andar
 	and 00ch		;d363
 	ld (0db67h),a		;d365
 	ret			;d368
 PINTA_JUGADOR:		; Monta los 3 planos de color del sprite y los escribe en los atributos
-	ld iy,0daddh		;d369
-	ld hl,0db6eh		;d36d
-	ld b,003h		;d370
+	ld iy,0daddh		;d369   ; Los cuatro bytes de atributo que se van montando
+	ld hl,0db6eh		;d36d   ; Los tres colores del jugador
+	ld b,003h		;d370   ; Tres pasadas, una por plano: asi se pinta un sprite multicolor en el MSX1
 L_D372:
 	ld a,(0db55h)		;d372
 	ld c,a			;d375
-	ld a,(0db57h)		;d376
+	ld a,(0db57h)		;d376   ; A la Y se le suma el desplazamiento del salto
 	add a,c			;d379
 	ld (iy+000h),a		;d37a
 	ld a,(0db56h)		;d37d
 	ld (iy+001h),a		;d380
-	ld a,(0db67h)		;d383
+	ld a,(0db67h)		;d383   ; Cada plano usa el patron siguiente
 	sub b			;d386
 	add a,003h		;d387
-	sla a		;d389
+	sla a		;d389   ; Por 4, que es lo que ocupa un patron de 16x16
 	sla a		;d38b
 	ld (iy+002h),a		;d38d
 	ld a,(hl)			;d390
 	ld (iy+003h),a		;d391
-	ld a,004h		;d394
+	ld a,004h		;d394   ; Los planos van en los sprites 3, 2 y 1
 	sub b			;d396
 	call ESCRIBE_SPRITE		;d397
 	inc hl			;d39a
@@ -551,12 +551,12 @@ L_D372:
 	ret			;d39d
 VUELVE_AL_TITULO:		; Desengancha la interrupcion, silencia el PSG y salta a 0xC000
 	ld hl,0fd9fh		;d39e
-	ld (hl),0c9h		;d3a1
+	ld (hl),0c9h		;d3a1   ; Un RET en el hook H.TIMI deja la interrupcion como estaba
 	call 00090h		;d3a3   ; BIOS GICINI - Initialises PSG and sets initial value for the PLAY statement
 	xor a			;d3a6
 	jp 0c000h		;d3a7
 PONE_REGISTROS_VDP:		; Escribe los 8 registros del VDP desde la tabla de 0xDAB2
-	ld hl,0dab2h		;d3aa
+	ld hl,0dab2h		;d3aa   ; Los ocho valores, del registro 0 al 7
 	ld c,000h		;d3ad
 L_D3AF:
 	push bc			;d3af
@@ -570,81 +570,81 @@ L_D3AF:
 	ret z			;d3ba
 	jr L_D3AF		;d3bb
 CUENTA_ATRAS:		; Lleva el contador de tiempo de la partida
-	ld hl,0db72h		;d3bd
+	ld hl,0db72h		;d3bd   ; 0xDB72 divide entre 5: el reloj baja una unidad cada cinco frames
 	dec (hl)			;d3c0
 	ret nz			;d3c1
 	ld (hl),005h		;d3c2
-	ld hl,0db5dh		;d3c4
+	ld hl,0db5dh		;d3c4   ; Los tres digitos del reloj, el mas bajo primero
 	ld b,003h		;d3c7
 	scf			;d3c9
 L_D3CA:
-	ld a,(hl)			;d3ca
+	ld a,(hl)			;d3ca   ; Resta 1 al digito con el acarreo que traiga
 	sbc a,000h		;d3cb
 	ld (hl),a			;d3cd
-	jr nc,L_D3D8		;d3ce
-	ld (hl),009h		;d3d0
+	jr nc,PINTA_TIEMPO		;d3ce
+	ld (hl),009h		;d3d0   ; Si se pasa de 0, ese digito vuelve a 9 y el acarreo sigue
 	inc hl			;d3d2
 	djnz L_D3CA		;d3d3
-	jp c,L_D4A3		;d3d5
-L_D3D8:
-	ld hl,01d12h		;d3d8
+	jp c,FIN_DE_PARTIDA		;d3d5   ; Si los tres se pasan, se acabo el tiempo
+PINTA_TIEMPO:		; Los tres digitos de la cuenta atras, en la fila 18
+	ld hl,01d12h		;d3d8   ; Fila 18, columna 29
 	ld (0f3dch),hl		;d3db
 	ld hl,0f3ddh		;d3de
-	ld de,0db5dh		;d3e1
+	ld de,0db5dh		;d3e1   ; Unidades, decenas y centenas
 	ld a,(de)			;d3e4
-	call L_D18F		;d3e5
+	call PINTA_DIGITO		;d3e5
 	dec (hl)			;d3e8
 	dec (hl)			;d3e9
 	dec (hl)			;d3ea
 	inc de			;d3eb
 	ld a,(de)			;d3ec
-	call L_D18F		;d3ed
+	call PINTA_DIGITO		;d3ed
 	dec (hl)			;d3f0
 	dec (hl)			;d3f1
 	inc de			;d3f2
 	ld a,(de)			;d3f3
-	jp L_D18F		;d3f4
-L_D3F7:
-	ld hl,(0db53h)		;d3f7
+	jp PINTA_DIGITO		;d3f4
+CHOQUE:		; Clase 0: la camara retrocede 0x28 y suena el golpe
+	ld hl,(0db53h)		;d3f7   ; Contra un obstaculo la camara retrocede 0x28
 	ld de,00028h		;d3fa
 	sbc hl,de		;d3fd
 	ld (0db53h),hl		;d3ff
-	ld a,(0db75h)		;d402
+	ld a,(0db75h)		;d402   ; El bit 1 del contador de frames hace temblar al jugador
 	and 002h		;d405
 	ld (0db57h),a		;d407
-	ld a,02ch		;d40a
+	ld a,02ch		;d40a   ; Fotograma de choque
 	ld (0db67h),a		;d40c
 	ld hl,0dae1h		;d40f
-	call L_D986		;d412
+	call CARGA_PSG		;d412
 	ld bc,003e8h		;d415
-	call L_DA7B		;d418
-	ld a,008h		;d41b
+	call PONE_TONO_A		;d418
+	ld a,008h		;d41b   ; Efecto 8: ruido mientras se siga pegado al obstaculo
 	ld (0db6dh),a		;d41d
 	jp PINTA_JUGADOR		;d420
 L_D423:
-	ld a,(hl)			;d423
+	ld a,(hl)			;d423   ; De la clase 1 solo la casilla 0x0E se traga al jugador
 	and 03fh		;d424
 	cp 00eh		;d426
 	ret nz			;d428
-L_D429:
-	ld hl,020e9h		;d429
+CAIDA:		; Se cae, se pierde una vida
+	ld hl,020e9h		;d429   ; Mascara 0x20E9: se cae sin poder hacer nada
 	ld (0db69h),hl		;d42c
-	ld hl,0db60h		;d42f
+	ld hl,0db60h		;d42f   ; La caida arranca a velocidad 0x14
 	ld (hl),014h		;d432
-	ld a,0ebh		;d434
-	call L_DA85		;d436
+	ld a,0ebh		;d434   ; 0xDB6B = 0xEB: el tiron hacia arriba antes de desaparecer
+	call LANZA_SALTO		;d436
 	ld hl,0dae1h		;d439
-	call L_D986		;d43c
+	call CARGA_PSG		;d43c
 	ld bc,00100h		;d43f
-	call L_DA7B		;d442
-	ld a,007h		;d445
+	call PONE_TONO_A		;d442
+	ld a,007h		;d445   ; Efecto 7: ruido que va bajando
 	ld (0db6dh),a		;d447
 L_D44A:
-	ld hl,0db75h		;d44a
+	ld hl,0db75h		;d44a   ; La fisica del salto solo corre en los frames pares
 	bit 0,(hl)		;d44d
-	call z,L_D471		;d44f
+	call z,FISICA_SALTO		;d44f
 	jr z,L_D46A		;d452
-	ld hl,0dabah		;d454
+	ld hl,0dabah		;d454   ; Ocho fotogramas de caida, uno cada dos frames
 	ld a,(0db75h)		;d457
 	sra a		;d45a
 	and 007h		;d45c
@@ -654,56 +654,56 @@ L_D44A:
 	call FRAME		;d465
 	jr L_D44A		;d468
 L_D46A:
-	ld hl,0db68h		;d46a
+	ld hl,0db68h		;d46a   ; Al tocar suelo se paga con una vida
 	dec (hl)			;d46d
-	jp L_D480		;d46e
-L_D471:
-	ld hl,0db6bh		;d471
+	jp PINTA_VIDAS		;d46e
+FISICA_SALTO:		; Un paso de la parabola: 0xDB6B sube de uno en uno y su cuarta parte se acumula en 0xDB57
+	ld hl,0db6bh		;d471   ; 0xDB6B sube de uno en uno: es el tiempo del salto
 	inc (hl)			;d474
 	ld a,(hl)			;d475
-	sra a		;d476
+	sra a		;d476   ; Su cuarta parte con signo es la velocidad vertical
 	sra a		;d478
 	ld hl,0db57h		;d47a
-	add a,(hl)			;d47d
+	add a,(hl)			;d47d   ; Que se acumula en el desplazamiento del sprite
 	ld (hl),a			;d47e
 	ret			;d47f
-L_D480:
-	ld a,(0db68h)		;d480
+PINTA_VIDAS:		; Las vidas se ven en el patron del sprite 10
+	ld a,(0db68h)		;d480   ; 0xFF vidas es haberse quedado sin ninguna
 	cp 0ffh		;d483
-	jp z,L_D4A3		;d485
-	sla a		;d488
+	jp z,FIN_DE_PARTIDA		;d485
+	sla a		;d488   ; Patron = (0x13 - 4*vidas) * 4
 	sla a		;d48a
 	neg		;d48c
 	add a,013h		;d48e
 	sla a		;d490
 	sla a		;d492
-	ld hl,01b2ah		;d494
+	ld hl,01b2ah		;d494   ; El patron del sprite 10, el indicador de vidas
 	jp 0004dh		;d497   ; BIOS WRTVRM - Writes data in VRAM
-L_D49A:
-	ld a,(0db54h)		;d49a
+MARCA_PROGRESO:		; La X del sprite 12 es la columna de camara: la marca de avance del nivel
+	ld a,(0db54h)		;d49a   ; La X del sprite 12 marca por donde va el nivel
 	ld hl,01b31h		;d49d
 	jp 0004dh		;d4a0   ; BIOS WRTVRM - Writes data in VRAM
-L_D4A3:
-	ld a,02ch		;d4a3
+FIN_DE_PARTIDA:		; Sin vidas o sin tiempo: apaga los sprites y vuelve al titulo
+	ld a,02ch		;d4a3   ; Fotograma de derrota
 	ld (0db67h),a		;d4a5
 	call PINTA_JUGADOR		;d4a8
-	ld b,064h		;d4ab
-	call L_D954		;d4ad
-	ld hl,01b00h		;d4b0
+	ld b,064h		;d4ab   ; Dos segundos parado
+	call ESPERA_B_FRAMES		;d4ad
+	ld hl,01b00h		;d4b0   ; Y = 0xC0 en el sprite 0 apaga todos los sprites
 	ld a,0c0h		;d4b3
 	call 0004dh		;d4b5   ; BIOS WRTVRM - Writes data in VRAM
-	ld hl,0bd00h		;d4b8
+	ld hl,0bd00h		;d4b8   ; La pantalla de titulo esta en 0xBD00
 	ld de,01800h		;d4bb
 	ld bc,00300h		;d4be
 	call 0005ch		;d4c1   ; BIOS LDIRVM - Block transfers to VRAM from memory
 	call VUELVE_AL_TITULO		;d4c4
-L_D4C7:
-	ld a,(hl)			;d4c7
+BONUS_TIEMPO:		; Clase 2: la casilla se gasta y suma 20 al reloj
+	ld a,(hl)			;d4c7   ; La casilla recogida pasa a 0x18, que ya no colisiona ni se anima
 	and 0c0h		;d4c8
 	or 018h		;d4ca
 	ld (hl),a			;d4cc
-	call LISTA_ESPECIALES		;d4cd
-	ld hl,0db5eh		;d4d0
+	call LISTA_ESPECIALES		;d4cd   ; Ha cambiado el mapa: hay que rehacer la lista de animables
+	ld hl,0db5eh		;d4d0   ; 0xDB5E son las decenas del reloj: +2 son 20 segundos
 	ld a,(hl)			;d4d3
 	add a,002h		;d4d4
 	daa			;d4d6
@@ -712,73 +712,73 @@ L_D4C7:
 	ld (hl),a			;d4da
 	pop af			;d4db
 	inc hl			;d4dc
-	srl a		;d4dd
+	srl a		;d4dd   ; El acarreo de las decenas pasa a las centenas
 	srl a		;d4df
 	srl a		;d4e1
 	srl a		;d4e3
 	add a,(hl)			;d4e5
 	ld (hl),a			;d4e6
-	ld hl,0dae1h		;d4e7
-	call L_D986		;d4ea
+	ld hl,0dae1h		;d4e7   ; Efecto 1: tono que baja
+	call CARGA_PSG		;d4ea
 	ld bc,00032h		;d4ed
-	call L_DA7B		;d4f0
+	call PONE_TONO_A		;d4f0
 	ld a,001h		;d4f3
 	ld (0db6dh),a		;d4f5
 	ret			;d4f8
-L_D4F9:
-	ld a,028h		;d4f9
+CASILLA_RAPIDA:		; Clase 13: fuerza la velocidad a 0x28 y arranca el sonido ondulante
+	ld a,028h		;d4f9   ; Fotograma de tramo rapido
 	ld (0db67h),a		;d4fb
-	ld a,028h		;d4fe
+	ld a,028h		;d4fe   ; Y velocidad fija 0x28
 	ld (0db60h),a		;d500
-	ld a,(0db6dh)		;d503
+	ld a,(0db6dh)		;d503   ; Si ya esta sonando, solo repinta
 	cp 006h		;d506
 	jp z,PINTA_JUGADOR		;d508
 	ld hl,0dae1h		;d50b
-	call L_D986		;d50e
+	call CARGA_PSG		;d50e
 	ld bc,00046h		;d511
-	call L_DA7B		;d514
-	ld e,00ah		;d517
+	call PONE_TONO_A		;d514
+	ld e,00ah		;d517   ; Volumen del canal A
 	ld a,008h		;d519
 	call 00093h		;d51b   ; BIOS WRTPSG - Writes data to PSG-register
-	ld a,006h		;d51e
+	ld a,006h		;d51e   ; Efecto 6: ondula mientras se siga en el tramo
 	ld (0db6dh),a		;d520
 	jp PINTA_JUGADOR		;d523
-L_D526:
-	push hl			;d526
+TRAMPOLIN:		; Clase 11: dibuja el trampolin y sale despedido hacia arriba
+	push hl			;d526   ; Efecto 1 al pisar el trampolin
 	ld hl,0dae1h		;d527
-	call L_D986		;d52a
+	call CARGA_PSG		;d52a
 	ld bc,00200h		;d52d
-	call L_DA7B		;d530
+	call PONE_TONO_A		;d530
 	ld a,001h		;d533
 	ld (0db6dh),a		;d535
 	pop hl			;d538
-	ld a,(hl)			;d539
+	ld a,(hl)			;d539   ; El trampolin ocupa dos columnas: se busca la izquierda
 	and 001h		;d53a
 	jr z,L_D53F		;d53c
 	dec hl			;d53e
 L_D53F:
-	ld b,000h		;d53f
+	ld b,000h		;d53f   ; Primer fotograma del trampolin
 	ld (0db77h),hl		;d541
-	call L_D56A		;d544
-	ld a,0e6h		;d547
-	call L_DA85		;d549
-	ld a,03ch		;d54c
+	call DIBUJA_TRAMPOLIN		;d544
+	ld a,0e6h		;d547   ; 0xDB6B = 0xE6: el impulso mas fuerte del juego
+	call LANZA_SALTO		;d549
+	ld a,03ch		;d54c   ; Y sale disparado a velocidad 0x3C
 	ld (0db60h),a		;d54e
-	call L_D471		;d551
-	ld b,004h		;d554
-	call L_D56A		;d556
-	call L_D471		;d559
+	call FISICA_SALTO		;d551
+	ld b,004h		;d554   ; Segundo fotograma, cuatro casillas mas alla en el juego de graficos
+	call DIBUJA_TRAMPOLIN		;d556
+	call FISICA_SALTO		;d559
 	ld a,028h		;d55c
-	ld (0db67h),a		;d55e
-	ld hl,020e9h		;d561
+	ld (0db67h),a		;d55e   ; Fotograma en el aire
+	ld hl,020e9h		;d561   ; Mascara del salto
 	ld (0db69h),hl		;d564
-	jp L_D08B		;d567
-L_D56A:
-	ld hl,(0db77h)		;d56a
+	jp BUCLE_EN_EL_AIRE		;d567
+DIBUJA_TRAMPOLIN:		; Escribe en el mapa un bloque de 2x2 casillas a partir de la 0x2A
+	ld hl,(0db77h)		;d56a   ; El trampolin se dibuja en la fila de arriba y en la del jugador
 	dec h			;d56d
 	ld a,(hl)			;d56e
-	and 0c0h		;d56f
-	or 02ah		;d571
+	and 0c0h		;d56f   ; Se respetan los dos bits altos de la casilla
+	or 02ah		;d571   ; Las cuatro casillas van seguidas a partir de la 0x2A
 	add a,b			;d573
 	ld (hl),a			;d574
 	inc hl			;d575
@@ -791,90 +791,90 @@ L_D56A:
 	inc hl			;d57c
 	inc a			;d57d
 	ld (hl),a			;d57e
-	ld hl,020e1h		;d57f
+	ld hl,020e1h		;d57f   ; Mascara 0x20E1: solo fondo, mapa, animacion y jugador
 	ld (0db69h),hl		;d582
-	ld b,004h		;d585
+	ld b,004h		;d585   ; Cuatro frames para que se vea
 L_D587:
 	push bc			;d587
 	call FRAME		;d588
 	pop bc			;d58b
 	djnz L_D587		;d58c
 	ret			;d58e
-L_D58F:
-	ld hl,020edh		;d58f
+ARRASTRE:		; Clase 10: 231 frames a velocidad 0x64 con un sprite extra encima
+	ld hl,020edh		;d58f   ; Mascara 0x20ED: se conserva el mando vertical
 	ld (0db69h),hl		;d592
-	ld a,019h		;d595
+	ld a,019h		;d595   ; El contador de frames arranca en 0x19: da 231 frames hasta que vuelva a 0
 	ld (0db75h),a		;d597
-	ld a,038h		;d59a
+	ld a,038h		;d59a   ; Fotograma de arrastre
 	ld (0db67h),a		;d59c
-	ld a,064h		;d59f
+	ld a,064h		;d59f   ; Velocidad 0x64, la mayor del juego
 	ld (0db60h),a		;d5a1
-	xor a			;d5a4
+	xor a			;d5a4   ; Sin efectos: la lista del PSG se pone entera
 	ld (0db6dh),a		;d5a5
 	ld hl,0db0ah		;d5a8
-	call L_D986		;d5ab
+	call CARGA_PSG		;d5ab
 L_D5AE:
-	call FRAME		;d5ae
-	ld bc,0ec01h		;d5b1
-	call L_D8A0		;d5b4
-	ld a,(0db75h)		;d5b7
+	call FRAME		;d5ae   ; Un frame de juego
+	ld bc,0ec01h		;d5b1   ; Y encima del jugador, el sprite 0 con el patron 0xEC
+	call PINTA_SPRITE_0		;d5b4
+	ld a,(0db75h)		;d5b7   ; Se acaba al dar la vuelta el contador de frames
 	and a			;d5ba
 	jr z,L_D5CA		;d5bb
-	call CLASE_DE_CASILLA		;d5bd
+	call CLASE_DE_CASILLA		;d5bd   ; O antes, si se llega a un obstaculo o a un agujero
 	cp 001h		;d5c0
 	jr z,L_D5CA		;d5c2
 	cp 006h		;d5c4
 	jr z,L_D5CA		;d5c6
 	jr L_D5AE		;d5c8
 L_D5CA:
-	ld hl,01b00h		;d5ca
+	ld hl,01b00h		;d5ca   ; Apaga los sprites
 	ld a,0c0h		;d5cd
 	call 0004dh		;d5cf   ; BIOS WRTVRM - Writes data in VRAM
 	jp 00090h		;d5d2   ; BIOS GICINI - Initialises PSG and sets initial value for the PLAY statement
 L_D5D5:
-	ld a,(hl)			;d5d5
+	ld a,(hl)			;d5d5   ; La casilla recogida pasa a 0x19: ya no colisiona ni se anima
 	and 0c0h		;d5d6
 	or 019h		;d5d8
 	ld (hl),a			;d5da
-	call LISTA_ESPECIALES		;d5db
-	ld hl,0dae1h		;d5de
-	call L_D986		;d5e1
+	call LISTA_ESPECIALES		;d5db   ; El mapa ha cambiado: se rehace la lista de animables
+	ld hl,0dae1h		;d5de   ; Efecto 5
+	call CARGA_PSG		;d5e1
 	ld bc,000ffh		;d5e4
-	call L_DA7B		;d5e7
+	call PONE_TONO_A		;d5e7
 	ld a,005h		;d5ea
 	ld (0db6dh),a		;d5ec
-	ld a,(0db68h)		;d5ef
+	ld a,(0db68h)		;d5ef   ; Cuatro vidas es el tope
 	cp 004h		;d5f2
 	ret z			;d5f4
 	inc a			;d5f5
 	ld (0db68h),a		;d5f6
-	jp L_D480		;d5f9
+	jp PINTA_VIDAS		;d5f9
 CARGA_GRAFICOS:		; Recorre una tabla de pares (origen comprimido, destino VRAM) hasta el 0x0000
 	nop			;d5fc
-	ld e,(hl)			;d5fd
+	ld e,(hl)			;d5fd   ; Origen: el bloque comprimido
 	inc hl			;d5fe
 	ld d,(hl)			;d5ff
 	inc hl			;d600
-	ld a,d			;d601
+	ld a,d			;d601   ; Un 0x0000 cierra la tabla
 	or e			;d602
 	ret z			;d603
 	push hl			;d604
 	ex de,hl			;d605
-	call DESCOMPRIME		;d606
+	call DESCOMPRIME		;d606   ; Se descomprime al buffer
 	pop hl			;d609
-	ld e,(hl)			;d60a
+	ld e,(hl)			;d60a   ; Destino: la direccion de VRAM
 	inc hl			;d60b
 	ld d,(hl)			;d60c
 	inc hl			;d60d
 	push hl			;d60e
-	ld bc,00800h		;d60f
+	ld bc,00800h		;d60f   ; Cada bloque son 2048 bytes de VRAM
 	ld hl,0dd7ah		;d612
 	di			;d615
 	call 0005ch		;d616   ; BIOS LDIRVM - Block transfers to VRAM from memory
 	pop hl			;d619
 	jr CARGA_GRAFICOS		;d61a
 CARGA_NIVEL:		; Trae mapa y fondo desde la pagina 0. Con el nivel 6 se acaba el juego
-	ld a,(0db5ch)		;d61c
+	ld a,(0db5ch)		;d61c   ; El nivel en curso, de 0 a 5
 	cp 006h		;d61f
 	jp z,0c000h		;d621   ; Nivel 6 = fin del juego: se vuelve a la pantalla de titulo
 	ld l,000h		;d624   ; HL = nivel * 0x800: cada mapa ocupa 2048 bytes
@@ -887,15 +887,15 @@ CARGA_NIVEL:		; Trae mapa y fondo desde la pagina 0. Con el nivel 6 se acaba el 
 	ld de,0dd7ah		;d631
 	ld bc,00800h		;d634
 	pop hl			;d637
-	nop			;d638
+	nop			;d638   ; Los 2048 bytes del mapa: 8 filas de 256 columnas
 	ldir		;d639
-	ld a,(0db5ch)		;d63b
+	ld a,(0db5ch)		;d63b   ; El fondo del nivel esta en 0x3000 + nivel * 512
 	add a,018h		;d63e
 	ld h,a			;d640
 	sla h		;d641
 	ld l,000h		;d643
 	ld de,0db7ah		;d645
-	ld bc,00200h		;d648
+	ld bc,00200h		;d648   ; 512 bytes: 8 filas de 64 columnas
 	ldir		;d64b
 	call 0f000h		;d64d   ; Devuelve la ROM del BIOS a la pagina 0
 	nop			;d650
@@ -903,22 +903,22 @@ CARGA_NIVEL:		; Trae mapa y fondo desde la pagina 0. Con el nivel 6 se acaba el 
 	nop			;d652
 	nop			;d653
 	ei			;d654
-	xor a			;d655
+	xor a			;d655   ; Sin salto pendiente, a velocidad cero
 	ld (0db57h),a		;d656
 	ld (0db60h),a		;d659
 	ld (0db6bh),a		;d65c
-	ld a,050h		;d65f
+	ld a,050h		;d65f   ; Altura de partida
 	ld (0db55h),a		;d661
-	ld a,004h		;d664
+	ld a,004h		;d664   ; Cuatro vidas
 	ld (0db68h),a		;d666
-	call L_D480		;d669
-	call L_D958		;d66c
-	ld hl,L_D000		;d66f
+	call PINTA_VIDAS		;d669   ; Se pintan las vidas
+	call PONE_TIEMPO_300		;d66c   ; Y el reloj arranca en 300
+	ld hl,L_D000		;d66f   ; 0xD000 aqui es un numero: camara en la columna 0xD0 y fraccion a cero
 	ld (0db53h),hl		;d672
-	call L_DA8D		;d675
-	jp LISTA_ESPECIALES		;d678
+	call PRESENTA_NIVEL		;d675   ; El nivel entra desplazandose de la columna 0xD0 a la 0
+	jp LISTA_ESPECIALES		;d678   ; Y se anota que casillas hay que animar
 EMPIEZA_PARTIDA:		; Inicializacion de la fase: pila, paginacion, interrupcion, graficos y marcador
-	ld sp,0f37fh		;d67b
+	ld sp,0f37fh		;d67b   ; La pila, justo debajo de las variables del BIOS
 	push af			;d67e
 	push hl			;d67f
 	push de			;d680
@@ -928,7 +928,7 @@ EMPIEZA_PARTIDA:		; Inicializacion de la fase: pila, paginacion, interrupcion, g
 	pop de			;d686
 	pop hl			;d687
 	pop af			;d688
-	nop			;d689
+	nop			;d689   ; Hueco de 38 NOP: sitio reservado para parches
 	nop			;d68a
 	nop			;d68b
 	nop			;d68c
@@ -966,55 +966,55 @@ EMPIEZA_PARTIDA:		; Inicializacion de la fase: pila, paginacion, interrupcion, g
 	nop			;d6ac
 	nop			;d6ad
 	nop			;d6ae
-	ld hl,INTERRUPCION		;d6af
+	ld hl,INTERRUPCION		;d6af   ; Se engancha la interrupcion propia en H.TIMI
 	ld (0fda0h),hl		;d6b2
 	ld a,0c3h		;d6b5
 	ld (0fd9fh),a		;d6b7
-	call PONE_REGISTROS_VDP		;d6ba
-	ld hl,01b00h		;d6bd
+	call PONE_REGISTROS_VDP		;d6ba   ; SCREEN 2 con sprites de 16x16
+	ld hl,01b00h		;d6bd   ; Y = 0xC0 en el sprite 0: apagados todos mientras se carga
 	ld a,0c0h		;d6c0
 	call 0004dh		;d6c2   ; BIOS WRTVRM - Writes data in VRAM
-	ld hl,0db17h		;d6c5
+	ld hl,0db17h		;d6c5   ; El juego de graficos de la partida
 	call CARGA_GRAFICOS		;d6c8
-	ld hl,04500h		;d6cb
+	ld hl,04500h		;d6cb   ; El marcador, 256 bytes: las filas 16 a 23 de la pantalla
 	ld bc,00100h		;d6ce
 	ld de,01a00h		;d6d1
 	call 0005ch		;d6d4   ; BIOS LDIRVM - Block transfers to VRAM from memory
-	ld hl,01b00h		;d6d7
+	ld hl,01b00h		;d6d7   ; Se limpian los 32 atributos de sprite
 	ld bc,00080h		;d6da
 	ld a,0c0h		;d6dd
 	call 00056h		;d6df   ; BIOS FILVRM - Fills VRAM with value
-	ld hl,0dac2h		;d6e2
+	ld hl,0dac2h		;d6e2   ; Y se ponen los tres sprites fijos del marcador: vidas, adorno y marca de avance
 	ld de,01b28h		;d6e5
 	ld bc,0000ch		;d6e8
 	call 0005ch		;d6eb   ; BIOS LDIRVM - Block transfers to VRAM from memory
-	ld ix,0db59h		;d6ee
+	ld ix,0db59h		;d6ee   ; Marcador a cero
 	ld (ix+000h),000h		;d6f2
 	ld (ix+001h),000h		;d6f6
 	ld (ix+002h),000h		;d6fa
-	ld a,090h		;d6fe
+	ld a,090h		;d6fe   ; Posicion de partida sobre la diagonal
 	ld (0db56h),a		;d700
-	xor a			;d703
+	xor a			;d703   ; Se empieza por el nivel 0
 	ld (0db5ch),a		;d704
 	call CARGA_NIVEL		;d707
 BUCLE_PRINCIPAL:		; Tres instrucciones: reponer la pila, llamar a FRAME y rearmar la mascara
 	ld sp,0f37fh		;d70a   ; La pila se repone en cada vuelta: los manejadores de colision saltan sin limpiarla
-	call FRAME		;d70d
-	ld hl,0e0ffh		;d710
+	call FRAME		;d70d   ; Una vuelta de juego
+	ld hl,0e0ffh		;d710   ; Y se rearma la mascara completa: lo que la haya cambiado solo valia para su bucle
 	ld (0db69h),hl		;d713
 	jr BUCLE_PRINCIPAL		;d716
-L_D718:
-	ld hl,0dd7bh		;d718
+SCROLL_INTERMEDIO:		; Corre una columna a la izquierda las 16 filas del buffer y lo vuelca a 0x1800
+	ld hl,0dd7bh		;d718   ; Buffer de 16 filas de 32 casillas
 	ld de,0dd7ah		;d71b
-	ld a,010h		;d71e
+	ld a,010h		;d71e   ; Dieciseis filas
 L_D720:
 	ld (0db73h),a		;d720
 	push bc			;d723
 	push hl			;d724
 	push de			;d725
-	ldir		;d726
-	ld a,0ffh		;d728
-	bit 0,(ix+001h)		;d72a
+	ldir		;d726   ; La fila se corre una casilla a la izquierda
+	ld a,0ffh		;d728   ; Por defecto entra una casilla vacia
+	bit 0,(ix+001h)		;d72a   ; El bit 0 de 0xDB6A elige si entra dibujo de verdad
 	jr z,L_D73E		;d72e
 	push de			;d730
 	ld de,0979ah		;d731
@@ -1024,141 +1024,141 @@ L_D720:
 	ld a,(hl)			;d73c
 	pop de			;d73d
 L_D73E:
-	ld (de),a			;d73e
+	ld (de),a			;d73e   ; La casilla que entra por la derecha
 	pop hl			;d73f
 	pop de			;d740
 	pop bc			;d741
-	ld a,020h		;d742
+	ld a,020h		;d742   ; De una fila a la siguiente, 32 casillas
 	call HL_MAS_A		;d744
 	ex de,hl			;d747
 	call HL_MAS_A		;d748
 	ld a,(0db73h)		;d74b
 	dec a			;d74e
 	jr nz,L_D720		;d74f
-	ld hl,0db74h		;d751
+	ld hl,0db74h		;d751   ; Una columna mas metida
 	inc (hl)			;d754
-	ld hl,0dd7ah		;d755
+	ld hl,0dd7ah		;d755   ; Y el buffer entero a las 16 primeras filas de pantalla
 	ld de,01800h		;d758
 	ld bc,00200h		;d75b
 	jp 0005ch		;d75e   ; BIOS LDIRVM - Block transfers to VRAM from memory
-L_D761:
-	ld sp,0f37fh		;d761
-	ld a,(0db57h)		;d764
+FIN_DE_NIVEL:		; Se llega al final: bonus, pantalla intermedia y siguiente nivel
+	ld sp,0f37fh		;d761   ; Se tira la pila que dejaran los manejadores de colision
+	ld a,(0db57h)		;d764   ; Si se llega en el aire, primero se aterriza
 	and a			;d767
 	jr z,L_D777		;d768
 	halt			;d76a
 	ld hl,0db56h		;d76b
 	inc (hl)			;d76e
 	call PINTA_JUGADOR		;d76f
-	call L_D471		;d772
-	jr L_D761		;d775
+	call FISICA_SALTO		;d772
+	jr FIN_DE_NIVEL		;d775
 L_D777:
-	halt			;d777
+	halt			;d777   ; El jugador sigue andando hasta salirse por la derecha
 	call PATRON_SEGUN_FRAME		;d778
 	call PINTA_JUGADOR		;d77b
 	ld hl,0db56h		;d77e
 	inc (hl)			;d781
 	jr nz,L_D777		;d782
-	call L_D964		;d784
-	ld hl,04300h		;d787
+	call BONUS_FINAL		;d784   ; Bonus: lo que quede de reloj se convierte en puntos
+	ld hl,04300h		;d787   ; Fondo de la pantalla intermedia, 16 filas
 	ld de,01800h		;d78a
 	ld bc,00200h		;d78d
 	call 0005ch		;d790   ; BIOS LDIRVM - Block transfers to VRAM from memory
-	ld hl,0db35h		;d793
+	ld hl,0db35h		;d793   ; Y su juego de graficos
 	call CARGA_GRAFICOS		;d796
-	ld a,04fh		;d799
+	ld a,04fh		;d799   ; El jugador entra por la izquierda
 	ld (0db55h),a		;d79b
 	xor a			;d79e
 	ld (0db57h),a		;d79f
-	ld hl,0daeeh		;d7a2
-	call L_D986		;d7a5
+	ld hl,0daeeh		;d7a2   ; Musica de la pantalla intermedia
+	call CARGA_PSG		;d7a5
 L_D7A8:
 	call PATRON_SEGUN_FRAME		;d7a8
 	call PINTA_JUGADOR		;d7ab
-	ld bc,07c05h		;d7ae
-	call L_D8A0		;d7b1
+	ld bc,07c05h		;d7ae   ; Un sprite mas encima del jugador
+	call PINTA_SPRITE_0		;d7b1
 	ld hl,0db56h		;d7b4
 	inc (hl)			;d7b7
 	halt			;d7b8
 	ld a,(hl)			;d7b9
-	cp 029h		;d7ba
+	cp 029h		;d7ba   ; Anda hasta la columna 0x29
 	jr c,L_D7A8		;d7bc
 	xor a			;d7be
 	ld (0db67h),a		;d7bf
-	ld a,0e8h		;d7c2
+	ld a,0e8h		;d7c2   ; Salto largo
 	ld (0db6bh),a		;d7c4
-	ld a,003h		;d7c7
+	ld a,003h		;d7c7   ; Tres pixeles por frame
 	ld (0db53h),a		;d7c9
-	call L_D8BF		;d7cc
+	call AVANZA_SALTANDO		;d7cc
 	ld a,004h		;d7cf
 	ld (0db6dh),a		;d7d1
-	ld hl,04300h		;d7d4
+	ld hl,04300h		;d7d4   ; El fondo tambien pasa al buffer de scroll
 	ld de,0dd7ah		;d7d7
 	ld bc,00200h		;d7da
 	ldir		;d7dd
 	xor a			;d7df
 	ld (0db74h),a		;d7e0
 L_D7E3:
-	ld a,(0db74h)		;d7e3
-	sub 010h		;d7e6
+	ld a,(0db74h)		;d7e3   ; Dieciseis columnas de scroll
+	sub 010h		;d7e6   ; Cada columna espera menos frames que la anterior: el scroll acelera
 	jr z,L_D7FC		;d7e8
 	neg		;d7ea
 	ld b,a			;d7ec
-	call L_D954		;d7ed
+	call ESPERA_B_FRAMES		;d7ed
 	ld bc,0000bh		;d7f0
-	res 0,(ix+001h)		;d7f3
-	call L_D718		;d7f7
+	res 0,(ix+001h)		;d7f3   ; Las columnas que entran van vacias
+	call SCROLL_INTERMEDIO		;d7f7
 	jr L_D7E3		;d7fa
 L_D7FC:
-	call L_D8D9		;d7fc
-	ld hl,0dafdh		;d7ff
-	call L_D986		;d802
+	call BARRAS_MUSICA		;d7fc   ; Ahora si: las barras de la musica
+	ld hl,0dafdh		;d7ff   ; Segunda musica de la pantalla intermedia
+	call CARGA_PSG		;d802
 	xor a			;d805
 	ld (0db74h),a		;d806
 	ld a,0f0h		;d809
 	ld (0db6bh),a		;d80b
 L_D80E:
-	ld bc,0001fh		;d80e
+	ld bc,0001fh		;d80e   ; Doce columnas mas de scroll
 	ld ix,0db69h		;d811
-	set 0,(ix+001h)		;d815
+	set 0,(ix+001h)		;d815   ; Estas si traen dibujo
 	halt			;d819
-	call L_D718		;d81a
-	call L_D471		;d81d
+	call SCROLL_INTERMEDIO		;d81a
+	call FISICA_SALTO		;d81d
 	call PINTA_JUGADOR		;d820
 	ld bc,07c05h		;d823
-	call L_D8A0		;d826
+	call PINTA_SPRITE_0		;d826
 	ld hl,01b11h		;d829
-	call L_DA9B		;d82c
-	ld a,(0db74h)		;d82f
+	call CORRE_BARRAS		;d82c   ; Y las barras van corriendose
+	ld a,(0db74h)		;d82f   ; Doce columnas
 	cp 00ch		;d832
 	jr nz,L_D80E		;d834
-	ld a,001h		;d836
+	ld a,001h		;d836   ; Un pixel por frame
 	ld (0db53h),a		;d838
-	call L_D8BF		;d83b
+	call AVANZA_SALTANDO		;d83b
 L_D83E:
-	call PATRON_SEGUN_FRAME		;d83e
+	call PATRON_SEGUN_FRAME		;d83e   ; El jugador se va por la derecha
 	call PINTA_JUGADOR		;d841
 	ld bc,07c05h		;d844
-	call L_D8A0		;d847
+	call PINTA_SPRITE_0		;d847
 	ld hl,0db56h		;d84a
 	inc (hl)			;d84d
 	halt			;d84e
 	jr nz,L_D83E		;d84f
-	call L_DA74		;d851
-	ld hl,01b10h		;d854
+	call APAGA_SONIDO		;d851   ; Se corta el sonido
+	ld hl,01b10h		;d854   ; Y se apagan las barras
 	ld bc,00010h		;d857
 	xor a			;d85a
 	call 00056h		;d85b   ; BIOS FILVRM - Fills VRAM with value
-	ld hl,0db17h		;d85e
+	ld hl,0db17h		;d85e   ; Vuelve el juego de graficos de la partida
 	call CARGA_GRAFICOS		;d861
-	ld hl,0db5ch		;d864
+	ld hl,0db5ch		;d864   ; Siguiente nivel
 	inc (hl)			;d867
 	call CARGA_NIVEL		;d868
-	halt			;d86b
+	halt			;d86b   ; Se pinta la pantalla del nivel nuevo antes de que se vea al jugador
 	call VUELCA_FONDO		;d86c
 	call VUELCA_MAPA		;d86f
 L_D872:
-	call PATRON_SEGUN_FRAME		;d872
+	call PATRON_SEGUN_FRAME		;d872   ; Que entra andando por la izquierda hasta la columna 0x90
 	call PINTA_JUGADOR		;d875
 	ld hl,0db56h		;d878
 	inc (hl)			;d87b
@@ -1168,23 +1168,23 @@ L_D872:
 	jr c,L_D872		;d880
 	jp BUCLE_PRINCIPAL		;d882
 ESCRIBE_SPRITE:		; Vuelca 4 bytes de atributo al sprite n
-	push hl			;d885
+	push hl			;d885   ; Sprite numero A
 	push bc			;d886
 	push de			;d887
-	sla a		;d888
+	sla a		;d888   ; Cada atributo son cuatro bytes
 	sla a		;d88a
 	ld hl,01b00h		;d88c
 	call HL_MAS_A		;d88f
 	ex de,hl			;d892
-	ld hl,0daddh		;d893
+	ld hl,0daddh		;d893   ; Y, X, patron y color
 	ld bc,00004h		;d896
 	call 0005ch		;d899   ; BIOS LDIRVM - Block transfers to VRAM from memory
 	pop de			;d89c
 	pop bc			;d89d
 	pop hl			;d89e
 	ret			;d89f
-L_D8A0:
-	ld a,(0db55h)		;d8a0
+PINTA_SPRITE_0:		; Sprite 0 sobre el jugador, con el patron B y el color C
+	ld a,(0db55h)		;d8a0   ; A la Y se le suma el salto, igual que en el jugador
 	ld d,a			;d8a3
 	ld a,(0db57h)		;d8a4
 	add a,d			;d8a7
@@ -1192,30 +1192,30 @@ L_D8A0:
 	ld (iy+000h),a		;d8ac
 	ld a,(0db56h)		;d8af
 	ld (iy+001h),a		;d8b2
-	ld (iy+002h),b		;d8b5
+	ld (iy+002h),b		;d8b5   ; El patron y el color vienen en B y C
 	ld (iy+003h),c		;d8b8
-	xor a			;d8bb
+	xor a			;d8bb   ; Siempre el sprite 0
 	jp ESCRIBE_SPRITE		;d8bc
-L_D8BF:
-	ld hl,0db56h		;d8bf
+AVANZA_SALTANDO:		; Avanza (0xDB53) pixeles por frame hasta que el salto toca suelo
+	ld hl,0db56h		;d8bf   ; Avanza por la diagonal lo que diga 0xDB53
 	ld a,(0db53h)		;d8c2
 	add a,(hl)			;d8c5
 	ld (hl),a			;d8c6
-	call L_D471		;d8c7
+	call FISICA_SALTO		;d8c7   ; Un paso de la parabola
 	push af			;d8ca
 	call PINTA_JUGADOR		;d8cb
 	ld bc,07c05h		;d8ce
-	call L_D8A0		;d8d1
+	call PINTA_SPRITE_0		;d8d1
 	pop af			;d8d4
-	ret z			;d8d5
+	ret z			;d8d5   ; Hasta que el salto se acaba
 	halt			;d8d6
-	jr L_D8BF		;d8d7
-L_D8D9:
-	ld ix,0daddh		;d8d9
+	jr AVANZA_SALTANDO		;d8d7
+BARRAS_MUSICA:		; Coloca los sprites 4 a 7, las barras que se mueven con la musica
+	ld ix,0daddh		;d8d9   ; Cuatro barras, todas con el mismo patron y color
 	ld (ix+001h),000h		;d8dd
 	ld (ix+002h),06ch		;d8e1
 	ld (ix+003h),005h		;d8e5
-	ld (ix+000h),00ah		;d8e9
+	ld (ix+000h),00ah		;d8e9   ; Cada una a su altura
 	ld a,004h		;d8ed
 	call ESCRIBE_SPRITE		;d8ef
 	ld (ix+000h),025h		;d8f2
@@ -1228,27 +1228,27 @@ L_D8D9:
 	ld a,007h		;d908
 	call ESCRIBE_SPRITE		;d90a
 L_D90D:
-	ld b,004h		;d90d
+	ld b,004h		;d90d   ; Las cuatro barras, un frame
 	halt			;d90f
 L_D910:
 	push bc			;d910
 	ld a,008h		;d911
 	sub b			;d913
-	call L_D920		;d914
+	call MUEVE_BARRA		;d914
 	pop bc			;d917
 	djnz L_D910		;d918
-	call L_D259		;d91a
+	call LEE_DISPARO		;d91a   ; Se sale al pulsar disparo
 	ret nz			;d91d
 	jr L_D90D		;d91e
-L_D920:
-	ld hl,01b00h		;d920
+MUEVE_BARRA:		; La X de la barra sigue al registro 6 del PSG y el color va cambiando
+	ld hl,01b00h		;d920   ; El atributo X de la barra
 	push af			;d923
 	sla a		;d924
 	sla a		;d926
 	call HL_MAS_A		;d928
 	inc hl			;d92b
 	push hl			;d92c
-	ld a,006h		;d92d
+	ld a,006h		;d92d   ; El registro 6 del PSG es el periodo del ruido: es lo que mueve las barras
 	call 00096h		;d92f   ; BIOS RDPSG - Reads value from PSG-register
 	pop hl			;d932
 	sub 00fh		;d933
@@ -1262,53 +1262,53 @@ L_D920:
 	add a,e			;d940
 	jp c,0004dh		;d941   ; BIOS WRTVRM - Writes data in VRAM
 	call 0004dh		;d944   ; BIOS WRTVRM - Writes data in VRAM
-	ld a,r		;d947
+	ld a,r		;d947   ; El registro R da un color distinto cada vez
 	rrc a		;d949
 	and 081h		;d94b
 	add a,004h		;d94d
 	inc hl			;d94f
 	inc hl			;d950
 	jp 0004dh		;d951   ; BIOS WRTVRM - Writes data in VRAM
-L_D954:
-	halt			;d954
-	djnz L_D954		;d955
+ESPERA_B_FRAMES:		; B esperas de retrazo
+	halt			;d954   ; B esperas de retrazo
+	djnz ESPERA_B_FRAMES		;d955
 	ret			;d957
-L_D958:
-	ld hl,0db5dh		;d958
+PONE_TIEMPO_300:		; Deja la cuenta atras en 300
+	ld hl,0db5dh		;d958   ; Reloj a 300: unidades, decenas y centenas
 	ld (hl),000h		;d95b
 	inc hl			;d95d
 	ld (hl),000h		;d95e
 	inc hl			;d960
 	ld (hl),003h		;d961
 	ret			;d963
-L_D964:
-	call CUENTA_ATRAS		;d964
+BONUS_FINAL:		; Al acabar el nivel, cada unidad de tiempo que sobra vale 375 puntos
+	call CUENTA_ATRAS		;d964   ; Se descuenta el reloj a toda velocidad
 	ld a,(0db5dh)		;d967
 	and a			;d96a
-	jr nz,L_D964		;d96b
-	ld hl,00000h		;d96d
-	call L_D1F3		;d970
-	xor a			;d973
+	jr nz,BONUS_FINAL		;d96b
+	ld hl,00000h		;d96d   ; El 0 es una direccion de la ROM: el inc (hl) de SUMA_375 no estropea nada
+	call SUMA_375		;d970
+	xor a			;d973   ; Se acaba cuando los tres digitos estan a cero
 	ld ix,0db5dh		;d974
 	or (ix+000h)		;d978
 	or (ix+001h)		;d97b
 	or (ix+002h)		;d97e
 	ret z			;d981
-	halt			;d982
+	halt			;d982   ; Dos frames por unidad
 	halt			;d983
-	jr L_D964		;d984
-L_D986:
-	ld a,(hl)			;d986
+	jr BONUS_FINAL		;d984
+CARGA_PSG:		; Vuelca una lista de pares registro/valor al PSG, terminada en 0xFF
+	ld a,(hl)			;d986   ; 0xFF cierra la lista
 	cp 0ffh		;d987
 	ret z			;d989
 	inc hl			;d98a
-	ld e,(hl)			;d98b
+	ld e,(hl)			;d98b   ; Pares registro, valor
 	inc hl			;d98c
 	call 00093h		;d98d   ; BIOS WRTPSG - Writes data to PSG-register
-	jr L_D986		;d990
+	jr CARGA_PSG		;d990
 SONIDO_FRAME:		; Motor de efectos del PSG, llamado desde la interrupcion
-	ld a,(0db6dh)		;d992
-	and a			;d995
+	ld a,(0db6dh)		;d992   ; Que efecto esta sonando, de 1 a 8
+	and a			;d995   ; El 0 es no sonar nada
 	ret z			;d996
 	cp 001h		;d997
 	jp z,L_D9C0		;d999
@@ -1328,17 +1328,17 @@ SONIDO_FRAME:		; Motor de efectos del PSG, llamado desde la interrupcion
 	jp z,L_DA63		;d9bc
 	ret			;d9bf
 L_D9C0:
-	ld a,(0db75h)		;d9c0
+	ld a,(0db75h)		;d9c0   ; Instruccion sin efecto: A se pisa en la linea siguiente
 	xor a			;d9c3
-	call 00096h		;d9c4   ; BIOS RDPSG - Reads value from PSG-register
+	call 00096h		;d9c4   ; BIOS RDPSG - Reads value from PSG-register | Se lee el periodo del canal A tal y como quedo
 	ld l,a			;d9c7
 	ld a,001h		;d9c8
 	call 00096h		;d9ca   ; BIOS RDPSG - Reads value from PSG-register
 	ld h,a			;d9cd
 	and a			;d9ce
-	ld de,00014h		;d9cf
+	ld de,00014h		;d9cf   ; Baja 0x14 por frame, y al pasarse se calla
 	sbc hl,de		;d9d2
-	jp c,L_DA74		;d9d4
+	jp c,APAGA_SONIDO		;d9d4
 	xor a			;d9d7
 	ld e,l			;d9d8
 	call 00093h		;d9d9   ; BIOS WRTPSG - Writes data to PSG-register
@@ -1349,15 +1349,15 @@ L_D9E2:
 	xor a			;d9e2
 	call 00096h		;d9e3   ; BIOS RDPSG - Reads value from PSG-register
 	ld b,a			;d9e6
-	srl b		;d9e7
+	srl b		;d9e7   ; Se le quita la mitad al periodo: el tono sube deprisa
 	sub b			;d9e9
 	cp 001h		;d9ea
-	jp z,L_DA74		;d9ec
+	jp z,APAGA_SONIDO		;d9ec
 	ld e,a			;d9ef
 	xor a			;d9f0
 	jp 00093h		;d9f1   ; BIOS WRTPSG - Writes data to PSG-register
 L_D9F4:
-	ld a,(0db57h)		;d9f4
+	ld a,(0db57h)		;d9f4   ; El tono sale del desplazamiento vertical: suena mas agudo cuanto mas alto
 	sla a		;d9f7
 	ld hl,04000h		;d9f9
 	call HL_MAS_A		;d9fc
@@ -1366,21 +1366,21 @@ L_D9F4:
 	call 00093h		;da01   ; BIOS WRTPSG - Writes data to PSG-register
 	ld e,h			;da04
 	inc a			;da05
-	ld e,h			;da06
+	ld e,h			;da06   ; Instruccion repetida: E ya valia H
 	jp 00093h		;da07   ; BIOS WRTPSG - Writes data to PSG-register
 L_DA0A:
-	ld a,(0db75h)		;da0a
+	ld a,(0db75h)		;da0a   ; Solo una vez cada ocho frames
 	and 007h		;da0d
 	ret nz			;da0f
 	xor a			;da10
 	call 00096h		;da11   ; BIOS RDPSG - Reads value from PSG-register
-	dec a			;da14
+	dec a			;da14   ; Baja de uno en uno hasta 0x32
 	cp 032h		;da15
 	ret c			;da17
 	ld e,a			;da18
 	xor a			;da19
 	call 00093h		;da1a   ; BIOS WRTPSG - Writes data to PSG-register
-	sra e		;da1d
+	sra e		;da1d   ; Y la octava parte del periodo va al ruido
 	sra e		;da1f
 	sra e		;da21
 	ld a,006h		;da23
@@ -1388,23 +1388,23 @@ L_DA0A:
 L_DA28:
 	ld a,000h		;da28
 	call 00096h		;da2a   ; BIOS RDPSG - Reads value from PSG-register
-	sub 01eh		;da2d
-	jp c,L_DA74		;da2f
+	sub 01eh		;da2d   ; Baja 0x1E por frame
+	jp c,APAGA_SONIDO		;da2f
 	ld e,a			;da32
 	xor a			;da33
 	jp 00093h		;da34   ; BIOS WRTPSG - Writes data to PSG-register
 L_DA37:
-	call CLASE_DE_CASILLA		;da37
+	call CLASE_DE_CASILLA		;da37   ; Solo suena mientras se pise el tramo rapido
 	cp 00dh		;da3a
-	jp nz,L_DA74		;da3c
+	jp nz,APAGA_SONIDO		;da3c
 	xor a			;da3f
 	call 00096h		;da40   ; BIOS RDPSG - Reads value from PSG-register
 	ld e,a			;da43
-	inc e			;da44
+	inc e			;da44   ; El periodo sube y baja dos: de ahi la ondulacion
 	inc e			;da45
 	xor a			;da46
 	ld hl,0db75h		;da47
-	bit 2,(hl)		;da4a
+	bit 2,(hl)		;da4a   ; Cada cuatro frames cambia el sentido
 	jp z,00093h		;da4c   ; BIOS WRTPSG - Writes data to PSG-register
 	dec e			;da4f
 	dec e			;da50
@@ -1412,7 +1412,7 @@ L_DA37:
 	dec e			;da52
 	jp 00093h		;da53   ; BIOS WRTPSG - Writes data to PSG-register
 L_DA56:
-	ld a,r		;da56
+	ld a,r		;da56   ; El registro R hace de generador de numeros al azar
 	ld b,a			;da58
 	xor a			;da59
 	call 00096h		;da5a   ; BIOS RDPSG - Reads value from PSG-register
@@ -1421,50 +1421,50 @@ L_DA56:
 	xor a			;da5f
 	jp 00093h		;da60   ; BIOS WRTPSG - Writes data to PSG-register
 L_DA63:
-	call CLASE_DE_CASILLA		;da63
+	call CLASE_DE_CASILLA		;da63   ; Solo suena mientras se siga contra el obstaculo
 	and a			;da66
-	jp nz,L_DA74		;da67
-	ld a,r		;da6a
+	jp nz,APAGA_SONIDO		;da67
+	ld a,r		;da6a   ; Volumen al azar en el canal A
 	and 00fh		;da6c
 	ld e,a			;da6e
 	ld a,008h		;da6f
 	jp 00093h		;da71   ; BIOS WRTPSG - Writes data to PSG-register
-L_DA74:
-	xor a			;da74
+APAGA_SONIDO:		; Cancela el efecto en curso y llama a GICINI
+	xor a			;da74   ; Efecto cancelado
 	ld (0db6dh),a		;da75
 	jp 00090h		;da78   ; BIOS GICINI - Initialises PSG and sets initial value for the PLAY statement
-L_DA7B:
+PONE_TONO_A:		; Periodo del canal A: registro 0 = C, registro 1 = B
 	xor a			;da7b
 	ld e,c			;da7c
 	call 00093h		;da7d   ; BIOS WRTPSG - Writes data to PSG-register
 	inc a			;da80
 	ld e,b			;da81
 	jp 00093h		;da82   ; BIOS WRTPSG - Writes data to PSG-register
-L_DA85:
-	ld (0db6bh),a		;da85
+LANZA_SALTO:		; Arranca la parabola: 0xDB6B = A y desplazamiento vertical a cero
+	ld (0db6bh),a		;da85   ; El impulso inicial del salto
 	xor a			;da88
-	ld (0db57h),a		;da89
+	ld (0db57h),a		;da89   ; Y se parte de altura cero
 	ret			;da8c
-L_DA8D:
-	ld hl,0db54h		;da8d
+PRESENTA_NIVEL:		; Lleva la camara de la columna 0xD0 a la 0, redibujando: el nivel entra desplazandose
+	ld hl,0db54h		;da8d   ; Una columna menos por frame
 	dec (hl)			;da90
 	ret z			;da91
-	halt			;da92
+	halt			;da92   ; Redibujando mapa y fondo: el nivel entra desplazandose
 	call VUELCA_MAPA		;da93
 	call VUELCA_FONDO		;da96
-	jr L_DA8D		;da99
-L_DA9B:
-	call 0004ah		;da9b   ; BIOS RDVRM - Reads the content of VRAM
+	jr PRESENTA_NIVEL		;da99
+CORRE_BARRAS:		; Baja 8 pixeles la X de los cuatro sprites de barra
+	call 0004ah		;da9b   ; BIOS RDVRM - Reads the content of VRAM | La X de la barra, 8 pixeles a la izquierda
 	sub 008h		;da9e
 	call 0004dh		;daa0   ; BIOS WRTVRM - Writes data in VRAM
 	ld a,004h		;daa3
-	call HL_MAS_A		;daa5
-	ld de,01b20h		;daa8
+	call HL_MAS_A		;daa5   ; Cada atributo son cuatro bytes
+	ld de,01b20h		;daa8   ; Hasta el sprite 8
 	and a			;daab
 	sbc hl,de		;daac
 	ret nc			;daae
 	add hl,de			;daaf
-	jr L_DA9B		;dab0
+	jr CORRE_BARRAS		;dab0
 
 ; ----------------------------------------------------------------------
 ; DATOS registros_vdp: Los 8 registros del VDP: 02 62 06 ff 03 36 07 01. R0/R1
@@ -1488,8 +1488,10 @@ DATA_registros_vdp:
 	defb 001h	; dab9
 
 ; ----------------------------------------------------------------------
-; DATOS tabla_DABA: 8 bytes (10 10 10 10 14 18 1C 20) que lee 0xD454. Van
-;   creciendo: tiene pinta de tabla de tiempos o de fuerza del salto
+; DATOS tabla_DABA: Los ocho patrones de la animacion de caida (10 10 10 10 14
+;   18 1C 20). 0xD454 los mete en 0xDB67, que es el numero de patron del
+;   sprite. La pantalla de titulo lleva los mismos ocho bytes en 0xC3E4 y les
+;   da el mismo uso en 0xC1F5
 ;   0xdaba..0xdac2  (8 bytes)
 DATA_tabla_DABA:
 	defb 010h,010h,010h,010h,014h,018h,01ch,020h	; daba  ....... 

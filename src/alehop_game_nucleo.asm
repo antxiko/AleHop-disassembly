@@ -104,8 +104,8 @@ ARRANQUE:		; Punto de entrada del juego
 	nop			;c034
 	nop			;c035
 	nop			;c036
-	call LIMPIA_PANTALLA		;c037
-	ld hl,0c3ceh		;c03a
+	call LIMPIA_PANTALLA		;c037   ; Borra los 16 KB de VRAM antes de nada
+	ld hl,0c3ceh		;c03a   ; Tabla de pares registro/valor del VDP para la pantalla de titulo
 	call L_C2AE		;c03d
 	ld hl,01b00h		;c040   ; Apaga los 32 sprites poniendolos fuera de pantalla (Y = 0xC0)
 	ld a,0c0h		;c043
@@ -115,7 +115,7 @@ ARRANQUE:		; Punto de entrada del juego
 	ld (0fda0h),hl		;c04e
 	ld a,0c3h		;c051
 	ld (0fd9fh),a		;c053
-	call ARRANCA_MUSICA		;c056
+	call ARRANCA_MUSICA		;c056   ; Las tres voces de la musica arrancan antes de dibujar
 	ld a,(0c52eh)		;c059   ; Segun la bandera, portada normal o pantalla de final de partida
 	and a			;c05c
 	jr z,L_C074		;c05d
@@ -123,9 +123,9 @@ ARRANQUE:		; Punto de entrada del juego
 	ld de,01800h		;c062
 	ld bc,00300h		;c065
 	call 0005ch		;c068   ; BIOS LDIRVM - Block transfers to VRAM from memory
-	ld hl,0c510h		;c06b
+	ld hl,0c510h		;c06b   ; El juego de graficos de la presentacion
 	call CARGA_GRAFICOS_2		;c06e
-	jp SCROLL_MENSAJE		;c071
+	jp SCROLL_MENSAJE		;c071   ; Al terminar el juego no hay atraccion: se pasa el mensaje de despedida
 L_C074:
 	ld hl,04000h		;c074   ; Vuelca el mapa de la pantalla de presentacion (0x4000)
 	ld bc,00300h		;c077
@@ -141,37 +141,37 @@ BUCLE_ATRACCION:		; El bucle del modo atraccion: encadena las cinco escenas y vu
 	call ESCENA_5		;c092
 	jr BUCLE_ATRACCION		;c095
 ESCENA_1:		; Primera escena: coloca la bola y la deja rebotando hasta que se pulsa disparo
-	xor a			;c097
+	xor a			;c097   ; X a cero y sin altura de bote
 	ld (0c532h),a		;c098
 	ld (0c533h),a		;c09b
-	ld a,04ch		;c09e
+	ld a,04ch		;c09e   ; 0x4C es la Y de partida: 0xC531 es la fila, no la columna
 	ld (0c531h),a		;c0a0
 L_C0A3:
-	call PREPARA_BOLA		;c0a3   ; 0x4C es la columna de partida de la bola
-	ld a,0edh		;c0a6
-	call L_C282		;c0a8
-	ld a,024h		;c0ab
+	call PREPARA_BOLA		;c0a3   ; Cada bote empieza con el fotograma de agacharse
+	ld a,0edh		;c0a6   ; 0xC535 = 0xED, o sea -19: el mismo impulso que el salto del juego
+	call LANZA_BOTE		;c0a8
+	ld a,024h		;c0ab   ; Fotograma en el aire
 	ld (0c534h),a		;c0ad
 L_C0B0:
-	call LEE_DISPARO_2		;c0b0
+	call FISICA_BOTE		;c0b0   ; Un paso de la parabola; al tocar suelo se vuelve a botar
 	jr z,L_C0A3		;c0b3
-	ld hl,0c532h		;c0b5
+	ld hl,0c532h		;c0b5   ; La X avanza de uno en uno y se acaba al dar la vuelta
 	inc (hl)			;c0b8
 	ret z			;c0b9
 	call PINTA_BOLA		;c0ba
 	halt			;c0bd   ; Espera al retrazo: la animacion va a 50/60 fotogramas por segundo
 	jr L_C0B0		;c0be
 PREPARA_BOLA:		; Deja la bola en su fotograma inicial y pinta los cuatro sprites
-	ld a,00ch		;c0c0
+	ld a,00ch		;c0c0   ; Fotograma de agacharse
 	ld (0c534h),a		;c0c2
 	call PINTA_BOLA		;c0c5
-	ld b,004h		;c0c8
-	call PINTA_N_SPRITES		;c0ca
+	ld b,004h		;c0c8   ; Cuatro frames de espera
+	call ESPERA_B_FRAMES		;c0ca
 	ret			;c0cd
 HL_MAS_A:		; Utilidad: HL += A. La misma que 0xD123 en el motor
 	push de			;c0ce
 	ld e,a			;c0cf
-	ld d,000h		;c0d0
+	ld d,000h		;c0d0   ; D a cero: A se toma sin signo
 	add hl,de			;c0d2
 	pop de			;c0d3
 	ret			;c0d4
@@ -185,22 +185,22 @@ LEE_DISPARO:		; GTTRIG: mira el espacio y tambien el boton del joystick
 	and a			;c0e0
 	ret			;c0e1
 DESCOMPRIME_2:		; El mismo descompresor RLE que 0xD2BE, pero volcando a 0xC540
-	ld de,0c540h		;c0e2
+	ld de,0c540h		;c0e2   ; Destino fijo: el buffer de 2048 bytes de 0xC540
 L_C0E5:
-	ld c,(hl)			;c0e5
+	ld c,(hl)			;c0e5   ; Cada tramo empieza por una cuenta de 16 bits
 	inc hl			;c0e6
 	ld b,(hl)			;c0e7
 	inc hl			;c0e8
-	bit 7,b		;c0e9
+	bit 7,b		;c0e9   ; Con el bit 15 puesto es un tramo repetido
 	jr z,L_C101		;c0eb
 	ld a,0ffh		;c0ed
-	cp b			;c0ef
+	cp b			;c0ef   ; Y si la cuenta entera es 0xFFFF, se acabo
 	jr nz,L_C0F4		;c0f0
 	cp c			;c0f2
 	ret z			;c0f3
 L_C0F4:
-	res 7,b		;c0f4
-	ld a,(hl)			;c0f6
+	res 7,b		;c0f4   ; Quitado el bit 15 queda la cuenta de repeticiones
+	ld a,(hl)			;c0f6   ; El mismo byte, tantas veces como diga la cuenta
 	ld (de),a			;c0f7
 	inc de			;c0f8
 	dec bc			;c0f9
@@ -210,15 +210,15 @@ L_C0F4:
 	inc hl			;c0fe
 	jr L_C0E5		;c0ff
 L_C101:
-	ldir		;c101
+	ldir		;c101   ; Sin el bit 15, copia literal de BC bytes
 	jr L_C0E5		;c103
 INTERRUPCION_TITULO:		; Manejador enganchado en H.TIMI durante el titulo
-	in a,(099h)		;c105
-	pop hl			;c107
+	in a,(099h)		;c105   ; Lee el estado del VDP, que es lo que baja la senal de interrupcion
+	pop hl			;c107   ; Tira la direccion de vuelta: al manejador del BIOS no se le devuelve el control
 	ld hl,0c53bh		;c108
 	inc (hl)			;c10b   ; Contador de frames del titulo, el equivalente a 0xDB75 en la partida
 	call 0b036h		;c10c   ; Mueve la musica: el reproductor va enganchado a la interrupcion
-	pop ix		;c10f
+	pop ix		;c10f   ; El BIOS ha apilado todos los registros antes de llamar al hook
 	pop iy		;c111
 	pop af			;c113
 	pop bc			;c114
@@ -250,31 +250,31 @@ FOTOGRAMA_BOLA:		; Saca el fotograma de la bola de los bits 2-3 del contador de 
 	ld (0c534h),a		;c130
 	ret			;c133
 PINTA_BOLA:		; Monta los tres planos de color de la bola y los escribe como sprites
-	ld iy,0c3ech		;c134   ; Tres pasadas, una por plano de color: asi se hace un sprite multicolor en el MSX1
+	ld iy,0c3ech		;c134   ; Tres pasadas, una por plano de color: asi se hace un sprite multicolor en el MSX1. Los colores son 01 0F 0B, los mismos tres del jugador
 	ld hl,0c537h		;c138
 	ld b,003h		;c13b
 L_C13D:
-	ld a,(0c531h)		;c13d
+	ld a,(0c531h)		;c13d   ; La Y del protagonista
 	ld c,a			;c140
-	ld a,(0c533h)		;c141
+	ld a,(0c533h)		;c141   ; Mas el desplazamiento del bote
 	add a,c			;c144
 	ld (iy+000h),a		;c145
-	ld a,(0c532h)		;c148
+	ld a,(0c532h)		;c148   ; Y la X, tal cual
 	ld (iy+001h),a		;c14b
-	ld a,(0c534h)		;c14e
+	ld a,(0c534h)		;c14e   ; Cada plano usa el patron siguiente
 	sub b			;c151
 	add a,003h		;c152
 	sla a		;c154
 	sla a		;c156
 	ld (iy+002h),a		;c158   ; El numero de patron va multiplicado por 4 porque los sprites son de 16x16
-	ld a,(hl)			;c15b
+	ld a,(hl)			;c15b   ; Un color por plano
 	ld (iy+003h),a		;c15c
-	ld a,004h		;c15f
+	ld a,004h		;c15f   ; Los planos van en los sprites 3, 2 y 1
 	sub b			;c161
 	call ESCRIBE_SPRITE_2		;c162
 	inc hl			;c165
 	djnz L_C13D		;c166
-	call LEE_DISPARO		;c168
+	call LEE_DISPARO		;c168   ; Se mira el disparo en cada repintado: por eso vale desde cualquier escena
 	jp nz,EMPIEZA_PARTIDA		;c16b
 	ret			;c16e
 EMPIEZA_PARTIDA:		; Desengancha la interrupcion, silencia el PSG y salta al motor
@@ -282,56 +282,56 @@ EMPIEZA_PARTIDA:		; Desengancha la interrupcion, silencia el PSG y salta al moto
 	ld (hl),0c9h		;c172   ; Mete un RET en el hook H.TIMI para desenganchar la interrupcion del titulo
 	call 00090h		;c174   ; BIOS GICINI - Initialises PSG and sets initial value for the PLAY statement | BIOS GICINI: calla el PSG antes de entrar en la partida
 	jp 0d000h		;c177   ; Al pulsar disparo se salta al motor del juego: es la unica entrada a 0xD000
-LEE_DISPARO_2:		; Otra lectura del disparo, la que usan las escenas
-	ld hl,0c535h		;c17a
+FISICA_BOTE:		; Un paso de la parabola del bote: 0xC535 sube de uno en uno y su cuarta parte se acumula en 0xC533. Gemela de 0xD471
+	ld hl,0c535h		;c17a   ; 0xC535 sube de uno en uno: es el tiempo del bote
 	inc (hl)			;c17d
 	ld a,(hl)			;c17e
-	sra a		;c17f
+	sra a		;c17f   ; Su cuarta parte con signo es la velocidad vertical
 	sra a		;c181
 	ld hl,0c533h		;c183
-	add a,(hl)			;c186
+	add a,(hl)			;c186   ; Que se acumula en el desplazamiento del sprite
 	ld (hl),a			;c187
 	ret			;c188
 ESCENA_5:		; Ultima escena del modo atraccion
-	ld a,038h		;c189
+	ld a,038h		;c189   ; Fotograma de la ultima escena
 	ld (0c534h),a		;c18b
-	xor a			;c18e
+	xor a			;c18e   ; Sin altura y pegado al borde izquierdo
 	ld (0c533h),a		;c18f
 	ld (0c532h),a		;c192
 	ld a,04ah		;c195
 	ld (0c531h),a		;c197
 L_C19A:
-	ld bc,0ec01h		;c19a
-	call L_C245		;c19d
+	ld bc,0ec01h		;c19a   ; Un sprite mas encima del protagonista, patron 0xEC
+	call PINTA_SPRITE_0_2		;c19d
 	call PINTA_BOLA		;c1a0
-	ld hl,0c532h		;c1a3
+	ld hl,0c532h		;c1a3   ; La X avanza de tres en tres: la escena mas rapida
 	ld a,003h		;c1a6
 	add a,(hl)			;c1a8
 	ld (hl),a			;c1a9
 	halt			;c1aa
 	jr nc,L_C19A		;c1ab
-	ld hl,01b00h		;c1ad
+	ld hl,01b00h		;c1ad   ; Y al salirse de pantalla, apaga los sprites
 	ld a,0c0h		;c1b0
 	jp 0004dh		;c1b2   ; BIOS WRTVRM - Writes data in VRAM
 ESCENA_3:		; Tercera escena
-	xor a			;c1b5
+	xor a			;c1b5   ; Esta escena reinicia tambien el contador de frames
 	ld (0c532h),a		;c1b6
 	ld (0c533h),a		;c1b9
 	ld (0c53bh),a		;c1bc
 	ld a,04ah		;c1bf
 	ld (0c531h),a		;c1c1
-	ld a,028h		;c1c4
+	ld a,028h		;c1c4   ; Fotograma de tramo rapido
 	ld (0c534h),a		;c1c6
 L_C1C9:
-	call PINTA_BOLA		;c1c9
+	call PINTA_BOLA		;c1c9   ; De dos en dos, hasta dar la vuelta
 	ld hl,0c532h		;c1cc
 	inc (hl)			;c1cf
 	inc (hl)			;c1d0
 	ret z			;c1d1
 	halt			;c1d2
-	ld hl,0c533h		;c1d3
+	ld hl,0c533h		;c1d3   ; Va bajando un pixel por frame
 	inc (hl)			;c1d6
-	ld a,(0c53bh)		;c1d7
+	ld a,(0c53bh)		;c1d7   ; Menos cuando el bit 2 del contador esta puesto: entonces sube
 	and 004h		;c1da
 	jr z,L_C1C9		;c1dc
 	dec (hl)			;c1de
@@ -344,61 +344,61 @@ ESCENA_4:		; Cuarta escena
 	ld a,04ah		;c1e9
 	ld (0c531h),a		;c1eb
 L_C1EE:
-	ld a,(0c53bh)		;c1ee
+	ld a,(0c53bh)		;c1ee   ; Un fotograma nuevo cada dos frames
 	sra a		;c1f1
 	and 007h		;c1f3
-	ld hl,0c3e4h		;c1f5
+	ld hl,0c3e4h		;c1f5   ; Los ocho patrones de la animacion, los mismos ocho de 0xDABA
 	call HL_MAS_A		;c1f8
 	ld a,(hl)			;c1fb
 	ld (0c534h),a		;c1fc
 	call PINTA_BOLA		;c1ff
-	ld hl,0c532h		;c202
+	ld hl,0c532h		;c202   ; De dos en dos, hasta dar la vuelta
 	inc (hl)			;c205
 	inc (hl)			;c206
 	ret z			;c207
 	halt			;c208
 	jr L_C1EE		;c209
 CARGA_GRAFICOS_2:		; Gemelo de 0xD5FC: recorre una tabla de pares (origen, destino VRAM)
-	nop			;c20b
+	nop			;c20b   ; Origen: el bloque comprimido
 	ld e,(hl)			;c20c
 	inc hl			;c20d
 	ld d,(hl)			;c20e
 	inc hl			;c20f
-	ld a,d			;c210
+	ld a,d			;c210   ; Un 0x0000 cierra la tabla
 	or e			;c211
 	ret z			;c212
 	push hl			;c213
 	ex de,hl			;c214
-	call DESCOMPRIME_2		;c215
+	call DESCOMPRIME_2		;c215   ; Se descomprime al buffer
 	pop hl			;c218
-	ld e,(hl)			;c219
+	ld e,(hl)			;c219   ; Destino: la direccion de VRAM
 	inc hl			;c21a
 	ld d,(hl)			;c21b
 	inc hl			;c21c
 	push hl			;c21d
-	ld bc,00800h		;c21e
+	ld bc,00800h		;c21e   ; Cada bloque son 2048 bytes de VRAM
 	ld hl,0c540h		;c221
 	call 0005ch		;c224   ; BIOS LDIRVM - Block transfers to VRAM from memory
 	pop hl			;c227
 	jr CARGA_GRAFICOS_2		;c228
 ESCRIBE_SPRITE_2:		; Vuelca los 4 bytes de atributo de un sprite. Gemelo de 0xD885
-	push hl			;c22a
+	push hl			;c22a   ; Sprite numero A
 	push bc			;c22b
 	push de			;c22c
-	sla a		;c22d
+	sla a		;c22d   ; Cada atributo son cuatro bytes
 	sla a		;c22f
 	ld hl,01b00h		;c231
 	call HL_MAS_A		;c234
 	ex de,hl			;c237
-	ld hl,0c3ech		;c238
+	ld hl,0c3ech		;c238   ; Y, X, patron y color
 	ld bc,00004h		;c23b
 	call 0005ch		;c23e   ; BIOS LDIRVM - Block transfers to VRAM from memory
 	pop de			;c241
 	pop bc			;c242
 	pop hl			;c243
 	ret			;c244
-L_C245:
-	ld a,(0c531h)		;c245
+PINTA_SPRITE_0_2:		; Sprite 0 en la posicion del protagonista, con el patron B y el color C. Gemela de 0xD8A0
+	ld a,(0c531h)		;c245   ; A la Y se le suma el bote, igual que en el protagonista
 	ld d,a			;c248
 	ld a,(0c533h)		;c249
 	add a,d			;c24c
@@ -406,9 +406,9 @@ L_C245:
 	ld (iy+000h),a		;c251
 	ld a,(0c532h)		;c254
 	ld (iy+001h),a		;c257
-	ld (iy+002h),b		;c25a
+	ld (iy+002h),b		;c25a   ; El patron y el color vienen en B y C
 	ld (iy+003h),c		;c25d
-	xor a			;c260
+	xor a			;c260   ; Siempre el sprite 0
 	jp ESCRIBE_SPRITE_2		;c261
 
 ; ----------------------------------------------------------------------
@@ -434,48 +434,48 @@ DATA_codigo_muerto_1:
 ; ======================================================================
 
 
-PINTA_N_SPRITES:		; Pinta B sprites seguidos
-	halt			;c27e
-	djnz PINTA_N_SPRITES		;c27f
+ESPERA_B_FRAMES:		; B esperas de retrazo. Gemela de 0xD954
+	halt			;c27e   ; B esperas de retrazo
+	djnz ESPERA_B_FRAMES		;c27f
 	ret			;c281
-L_C282:
-	ld (0c535h),a		;c282
+LANZA_BOTE:		; Arranca la parabola: 0xC535 = A y desplazamiento vertical a cero. Gemela de 0xDA85
+	ld (0c535h),a		;c282   ; El impulso inicial del bote
 	xor a			;c285
-	ld (0c533h),a		;c286
+	ld (0c533h),a		;c286   ; Y se parte de altura cero
 	ret			;c289
 ESCENA_2:		; Segunda escena
-	xor a			;c28a
+	xor a			;c28a   ; Desde el borde izquierdo y sin altura
 	ld (0c532h),a		;c28b
 	ld (0c533h),a		;c28e
 	ld a,04ah		;c291
 	ld (0c531h),a		;c293
 L_C296:
-	call FOTOGRAMA_BOLA		;c296
+	call FOTOGRAMA_BOLA		;c296   ; Aqui si se anima: cuatro fotogramas de andar
 	call PINTA_BOLA		;c299
-	ld hl,0c532h		;c29c
+	ld hl,0c532h		;c29c   ; Un pixel por frame, hasta dar la vuelta
 	inc (hl)			;c29f
 	ret z			;c2a0
 	halt			;c2a1
 	jr L_C296		;c2a2
 LIMPIA_PANTALLA:		; Prepara la pantalla antes de dibujar
-	ld hl,00000h		;c2a4
+	ld hl,00000h		;c2a4   ; Los 16 KB enteros de VRAM a cero
 	ld bc,04000h		;c2a7
 	xor a			;c2aa
 	jp 00056h		;c2ab   ; BIOS FILVRM - Fills VRAM with value
 L_C2AE:
-	ld c,(hl)			;c2ae
+	ld c,(hl)			;c2ae   ; Pares registro, valor
 	inc hl			;c2af
 	ld b,(hl)			;c2b0
 	inc hl			;c2b1
 	ld a,c			;c2b2
 	or b			;c2b3
-	ret z			;c2b4
+	ret z			;c2b4   ; Un 0x0000 cierra la tabla
 	push hl			;c2b5
 	call 00047h		;c2b6   ; BIOS WRTVDP - Writes data in the VDP-register
 	pop hl			;c2b9
 	jr L_C2AE		;c2ba
 SCROLL_MENSAJE:		; Hace pasar el mensaje de fin de partida, letra a letra y pixel a pixel
-	call REINICIA_SCROLL		;c2bc
+	call REINICIA_SCROLL		;c2bc   ; Renglon limpio y puntero al principio
 L_C2BF:
 	ld hl,(0c53dh)		;c2bf
 	inc hl			;c2c2
@@ -496,16 +496,16 @@ L_C2D1:
 	rl d		;c2dc
 	sla e		;c2de
 	rl d		;c2e0
-	ld hl,00800h		;c2e2
+	ld hl,00800h		;c2e2   ; La tipografia ya esta en VRAM: la letra se lee de alli
 	add hl,de			;c2e5
-	ld de,0cde0h		;c2e6
+	ld de,0cde0h		;c2e6   ; Los ocho bytes de la letra van al final del renglon
 	ld bc,00008h		;c2e9
 	call 00059h		;c2ec   ; BIOS LDIRMV - Block transfers to memory from VRAM | BIOS LDIRMV: se lee el dibujo de la letra desde la propia VRAM
-	ld b,008h		;c2ef
+	ld b,008h		;c2ef   ; Ocho pasadas: una letra son ocho pixeles
 L_C2F1:
 	push bc			;c2f1
 	call DESPLAZA_UNA_FILA		;c2f2
-	ld hl,0cd40h		;c2f5
+	ld hl,0cd40h		;c2f5   ; El renglon entero, 20 casillas de 8 bytes, a los patrones de 0x0800
 	ld de,00800h		;c2f8
 	ld bc,000a0h		;c2fb
 	call 0005ch		;c2fe   ; BIOS LDIRVM - Block transfers to VRAM from memory
@@ -517,10 +517,10 @@ L_C2F1:
 	jp nz,EMPIEZA_PARTIDA		;c309
 	jr L_C2BF		;c30c
 DESPLAZA_UNA_FILA:		; Rota un pixel a la izquierda las 8 filas del renglon
-	ld b,008h		;c30e
+	ld b,008h		;c30e   ; Ocho filas de pixeles
 L_C310:
 	push bc			;c310
-	ld hl,0cddfh		;c311
+	ld hl,0cddfh		;c311   ; Se empieza por el byte de la letra que esta entrando
 	ld a,b			;c314
 	call HL_MAS_A		;c315
 	call L_C31F		;c318
@@ -528,32 +528,32 @@ L_C310:
 	djnz L_C310		;c31c
 	ret			;c31e
 L_C31F:
-	rl (hl)		;c31f
+	rl (hl)		;c31f   ; Un bit a la izquierda, y el que sale entra en el byte anterior
 	push af			;c321
 	pop bc			;c322
-	ld de,0fff8h		;c323
+	ld de,0fff8h		;c323   ; De una casilla a la anterior hay 8 bytes
 	add hl,de			;c326
 	ld de,0cd40h		;c327
 	and a			;c32a
-	sbc hl,de		;c32b
+	sbc hl,de		;c32b   ; Hasta el principio del renglon
 	ret c			;c32d
 	add hl,de			;c32e
 	push bc			;c32f
 	pop af			;c330
 	jr L_C31F		;c331
 REINICIA_SCROLL:		; Limpia el renglon y vuelve a poner el puntero al principio del mensaje
-	ld hl,0cd40h		;c333
+	ld hl,0cd40h		;c333   ; Renglon a cero, 0xA6 bytes
 	ld de,0cd41h		;c336
 	ld bc,000a6h		;c339
 	ld (hl),000h		;c33c
 	ldir		;c33e
-	ld hl,0c3efh		;c340
+	ld hl,0c3efh		;c340   ; El mensaje empieza en 0xC3EF
 	ld (0c53dh),hl		;c343
-	ld hl,00d58h		;c346
+	ld hl,00d58h		;c346   ; 0xE0 bytes de la tabla de patrones
 	ld bc,000e0h		;c349
 L_C34C:
 	call 0004ah		;c34c   ; BIOS RDVRM - Reads the content of VRAM
-	cpl			;c34f
+	cpl			;c34f   ; Solo se invierten los bytes que traian el bit 7 puesto
 	bit 7,a		;c350
 	call z,0004dh		;c352   ; BIOS WRTVRM - Writes data in VRAM
 	inc hl			;c355
@@ -561,15 +561,15 @@ L_C34C:
 	ld a,b			;c357
 	or c			;c358
 	jr nz,L_C34C		;c359
-	ld hl,02800h		;c35b
+	ld hl,02800h		;c35b   ; La tabla de color de las 20 casillas del renglon
 	ld bc,000a0h		;c35e
 L_C361:
-	push hl			;c361
+	push hl			;c361   ; Posicion dentro del renglon
 	ld de,02800h		;c362
 	and a			;c365
 	sbc hl,de		;c366
 	ld a,l			;c368
-	and 007h		;c369
+	and 007h		;c369   ; Cuatro colores, uno cada dos filas de pixeles
 	sra a		;c36b
 	ld hl,0c3e0h		;c36d
 	call HL_MAS_A		;c370
@@ -581,8 +581,8 @@ L_C361:
 	ld a,c			;c37a
 	or b			;c37b
 	jr nz,L_C361		;c37c
-	ld hl,019d9h		;c37e
-	ld a,013h		;c381
+	ld hl,019d9h		;c37e   ; Fila 14, columna 25
+	ld a,013h		;c381   ; Las 20 casillas del renglon llevan los patrones 0x13 a 0x00, escritos de derecha a izquierda
 L_C383:
 	push af			;c383
 	call 0004dh		;c384   ; BIOS WRTVRM - Writes data in VRAM
@@ -620,13 +620,13 @@ DATA_codigo_muerto_2:
 
 
 ARRANCA_MUSICA:		; Pone las tres voces de la musica del titulo, una por canal del PSG
-	ld de,0b593h		;c3b9
+	ld de,0b593h		;c3b9   ; Voz 1 al canal A
 	xor a			;c3bc
 	call 0b015h		;c3bd
-	ld de,0b640h		;c3c0
+	ld de,0b640h		;c3c0   ; Voz 2 al canal B
 	inc a			;c3c3
 	call 0b015h		;c3c4
-	ld de,0b877h		;c3c7
+	ld de,0b877h		;c3c7   ; Voz 3 al canal C
 	inc a			;c3ca
 	jp 0b015h		;c3cb
 

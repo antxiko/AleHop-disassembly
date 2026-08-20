@@ -43,7 +43,7 @@ Los créditos, leídos del propio binario:
 
 ![La pantalla de presentación](docs/presentacion.png)
 
-Y así es el nivel 1: el fondo con parallax arriba, la pista en medio y el
+Y así es el nivel 1: el fondo repetido arriba, la pista en medio y el
 marcador abajo. Las tres bandas usan tercios distintos de la pantalla, cada uno
 con su propio juego de patrones y de colores.
 

@@ -22,7 +22,7 @@ B 0xD000 de comportamiento (jugando, muriendo, cambiando de nivel) sin
 B 0xD000 mas que cambiar la mascara. La mascara normal es 0xE0FF.
 L 0xD003 FRAME              Una vuelta de juego: HALT y despacho por la mascara 0xDB69
 L 0xD05E SALTO              Disparo: dispara el salto y lleva su fisica
-L 0xD0A4 VUELCA_FONDO       Manda el fondo a VRAM 0x1800. El `and 0x3F` de la camara es lo que hace el parallax
+L 0xD0A4 VUELCA_FONDO       Manda el fondo a VRAM 0x1800. El `and 0x3F` de la camara NO frena el fondo: la columna sube igual que la de la pista y la mascara solo hace que el mapa de 64 columnas se repita cuatro veces por nivel
 L 0xD109 COPIA_FILA         Copia una fila a VRAM: origen +0x40 (64 columnas), destino +0x20 (32)
 L 0xD123 HL_MAS_A           Utilidad: HL += A
 L 0xD12A ANIMA_CASILLAS     Cada 8 frames avanza un fotograma las casillas especiales
@@ -61,7 +61,7 @@ B 0xDAB2 DATOS DEL MOTOR (200 bytes, no se ejecutan nunca)
 B 0xDAB2 ############################################################
 D 0xDAB2 0xDABA registros_vdp    Los 8 registros del VDP: 02 62 06 ff 03 36 07 01. R0/R1 = SCREEN 2 con sprites de 16x16; R2 = nombres en 0x1800; R5 = atributos de sprite en 0x1B00; R6 = patrones de sprite en 0x3800
 F 0xDAB2 1
-D 0xDABA 0xDAC2 tabla_DABA       8 bytes (10 10 10 10 14 18 1C 20) que lee 0xD454. Van creciendo: tiene pinta de tabla de tiempos o de fuerza del salto
+D 0xDABA 0xDAC2 tabla_DABA       Los ocho patrones de la animacion de caida (10 10 10 10 14 18 1C 20). 0xD454 los mete en 0xDB67, que es el numero de patron del sprite. La pantalla de titulo lleva los mismos ocho bytes en 0xC3E4 y les da el mismo uso en 0xC1F5
 D 0xDAC2 0xDACE sprites_fijos    12 bytes que 0xD6E2 vuelca a VRAM 0x1B28: los atributos de los sprites 10, 11 y 12 (Y, X, patron, color cada uno)
 F 0xDAC2 4
 D 0xDACE 0xDADD umbrales_casilla Los 15 umbrales que convierten los 6 bits bajos de una casilla en su clase de terreno: 0C 10 14 18 19 1A 20 22 24 26 28 32 38 3E FF. El puntero se carga en 0xDACD y la comparacion empieza con un `inc hl`, por eso el primer umbral util es este
@@ -75,3 +75,379 @@ F 0xDB17 w2
 D 0xDB35 0xDB53 tabla_graficos_B Juego de graficos de la PRESENTACION. Comparte con el A el tercio 2 y los sprites
 F 0xDB35 w2
 D 0xDB53 0xDB7A variables_partida Las variables de la partida, 39 bytes. Identificadas por quien las toca: 0xDB53 puntero de 16 bits; 0xDB54 COLUMNA DE CAMARA (el scroll); 0xDB55 Y del jugador; 0xDB56 X del jugador; 0xDB57 desplazamiento vertical del salto; 0xDB59 marcador; 0xDB5C NIVEL en curso (0..5); 0xDB5D cuenta atras; 0xDB60 VELOCIDAD (0..0x26); 0xDB61 y 0xDB63 punteros de volcado a VRAM; 0xDB67 fotograma del sprite; 0xDB68 VIDAS (empieza en 4); 0xDB69 MASCARA DE TAREAS de 16 bits que gobierna la rutina de frame; 0xDB6E-0xDB70 los tres colores del sprite (01 0F 0B: negro, blanco y amarillo claro); 0xDB75 contador de frames que lleva la interrupcion; 0xDB77 direccion de la casilla que pisa el jugador
+
+# ---------------------------------------------------------------------------
+# Segunda pasada de comentarios de linea (motor del juego).
+# ---------------------------------------------------------------------------
+
+L 0xD08B BUCLE_EN_EL_AIRE   Mientras dura el salto: fisica, un frame, y vuelta
+L 0xD096 POSTURA_DE_IMPULSO Fotograma de agacharse y cuatro frames de espera antes de despegar
+L 0xD17B LEE_MANDO_VERTICAL Devuelve E = +1 abajo, -1 arriba, 0 si nada
+L 0xD18F PINTA_DIGITO       Pinta un digito de 2x3 casillas en la posicion del cursor del BIOS
+L 0xD1B6 VRAM_DEL_CURSOR    HL = 0x1800 + CSRY*32 + CSRX, la casilla que apuntan 0xF3DC/0xF3DD
+L 0xD1C8 PINTA_MARCADOR     Los seis digitos del marcador, de derecha a izquierda
+L 0xD1F3 SUMA_375           Suma 375 al marcador en BCD y gasta la casilla recogida
+L 0xD259 LEE_DISPARO        Flanco de pulsacion del disparo: 0xDB58 guarda el estado anterior
+L 0xD26F LEE_MANDO_HORIZONTAL Devuelve D = +1 derecha, -1 izquierda, 0 si nada
+L 0xD2B3 Y_DESDE_X          Y = 0xE0 - X: el jugador va clavado a una diagonal de 45 grados
+L 0xD3D8 PINTA_TIEMPO       Los tres digitos de la cuenta atras, en la fila 18
+L 0xD3F7 CHOQUE             Clase 0: la camara retrocede 0x28 y suena el golpe
+L 0xD429 CAIDA              Se cae, se pierde una vida
+L 0xD471 FISICA_SALTO       Un paso de la parabola: 0xDB6B sube de uno en uno y su cuarta parte se acumula en 0xDB57
+L 0xD480 PINTA_VIDAS        Las vidas se ven en el patron del sprite 10
+L 0xD49A MARCA_PROGRESO     La X del sprite 12 es la columna de camara: la marca de avance del nivel
+L 0xD4A3 FIN_DE_PARTIDA     Sin vidas o sin tiempo: apaga los sprites y vuelve al titulo
+L 0xD4C7 BONUS_TIEMPO       Clase 2: la casilla se gasta y suma 20 al reloj
+L 0xD4F9 CASILLA_RAPIDA     Clase 13: fuerza la velocidad a 0x28 y arranca el sonido ondulante
+L 0xD526 TRAMPOLIN          Clase 11: dibuja el trampolin y sale despedido hacia arriba
+L 0xD56A DIBUJA_TRAMPOLIN   Escribe en el mapa un bloque de 2x2 casillas a partir de la 0x2A
+L 0xD58F ARRASTRE           Clase 10: 231 frames a velocidad 0x64 con un sprite extra encima
+L 0xD718 SCROLL_INTERMEDIO  Corre una columna a la izquierda las 16 filas del buffer y lo vuelca a 0x1800
+L 0xD761 FIN_DE_NIVEL       Se llega al final: bonus, pantalla intermedia y siguiente nivel
+L 0xD8A0 PINTA_SPRITE_0     Sprite 0 sobre el jugador, con el patron B y el color C
+L 0xD8BF AVANZA_SALTANDO    Avanza (0xDB53) pixeles por frame hasta que el salto toca suelo
+L 0xD8D9 BARRAS_MUSICA      Coloca los sprites 4 a 7, las barras que se mueven con la musica
+L 0xD920 MUEVE_BARRA        La X de la barra sigue al registro 6 del PSG y el color va cambiando
+L 0xD954 ESPERA_B_FRAMES    B esperas de retrazo
+L 0xD958 PONE_TIEMPO_300    Deja la cuenta atras en 300
+L 0xD964 BONUS_FINAL        Al acabar el nivel, cada unidad de tiempo que sobra vale 375 puntos
+L 0xD986 CARGA_PSG          Vuelca una lista de pares registro/valor al PSG, terminada en 0xFF
+L 0xDA74 APAGA_SONIDO       Cancela el efecto en curso y llama a GICINI
+L 0xDA7B PONE_TONO_A        Periodo del canal A: registro 0 = C, registro 1 = B
+L 0xDA85 LANZA_SALTO        Arranca la parabola: 0xDB6B = A y desplazamiento vertical a cero
+L 0xDA8D PRESENTA_NIVEL     Lleva la camara de la columna 0xD0 a la 0, redibujando: el nivel entra desplazandose
+L 0xDA9B CORRE_BARRAS       Baja 8 pixeles la X de los cuatro sprites de barra
+
+C 0xD007 HALT: una vuelta de juego por interrupcion de video
+C 0xD008 Bit 7 de 0xDB69: volcar el mapa
+C 0xD00F Bit 6: volcar el fondo
+C 0xD016 Bit 5: animar las casillas
+C 0xD01D Bit 4: izquierda y derecha
+C 0xD024 Bit 3: adelantar la camara
+C 0xD02B Bit 2: arriba y abajo
+C 0xD032 Bit 1: elegir fotograma
+C 0xD039 Bit 0: pintar al jugador
+C 0xD040 Bit 7 de 0xDB6A: mirar que casilla se pisa
+C 0xD047 Bit 6: leer el disparo
+C 0xD04E Bit 5: descontar el tiempo
+C 0xD055 0xDB54 es la columna de camara, de 0 a 255
+C 0xD058 A partir de la columna 224 ya no queda mapa por delante: nivel superado
+C 0xD05E Solo con el flanco: tener el boton apretado no encadena saltos
+C 0xD062 Sobre casilla de clase 0 no se salta: es un obstaculo
+C 0xD067 Canal A con envolvente de caida (registros 7, 1, 8, 13, 12 y 0)
+C 0xD06D Periodo de tono de partida del salto
+C 0xD073 Efecto 3: el tono va siguiendo a la altura
+C 0xD07B 0xDB6B = 0xED, o sea -19: el impulso inicial hacia arriba
+C 0xD080 Fotograma del salto
+C 0xD085 Mascara 0x20E9: en el aire no hay mando, ni colision, ni disparo
+C 0xD08B Se sale cuando el desplazamiento vertical vuelve a cero, o sea al aterrizar
+C 0xD096 Fotograma de agacharse
+C 0xD0A4 0xDB7A es el fondo: 8 filas de 64 columnas
+C 0xD0A7 La columna de camara, tomada modulo 64: el fondo se repite cuatro veces por nivel
+C 0xD0B3 Destino: filas 0 a 7 de la tabla de nombres
+C 0xD0BC Ocho filas
+C 0xD0BD Una fila de pantalla son 32 casillas
+C 0xD0C5 Si la ventana se sale de las 64 columnas del fondo, solo se copia hasta el final de la fila
+C 0xD0D6 Y si se ha salido, el resto de cada fila se trae del principio del fondo
+C 0xD0E1 Donde se corto la primera mitad
+C 0xD0F7 Longitud de la segunda mitad, la que completa las 32 casillas
+C 0xD109 Copia BC casillas de memoria a VRAM
+C 0xD10C El fondo tiene 64 columnas por fila y la pantalla 32: de ahi los dos incrementos distintos
+C 0xD11A 0x40 entre 2 = 0x20
+C 0xD12A Solo una vez cada ocho frames
+C 0xD130 Una casilla antes del mapa: la lista guarda distancias, y la primera ya lleva su +1
+C 0xD133 La lista de casillas animables que armo LISTA_ESPECIALES
+C 0xD136 0xFF cierra la lista
+C 0xD13A Avanza por el mapa lo que diga la distancia
+C 0xD13E Los dos bits bajos son el fotograma: 0, 1, 2, 3 y vuelta a empezar
+C 0xD14D Deja el VDP en 0x18FF; el OTIR empieza a escribir en 0x1900, la fila 8
+C 0xD150 El mapa, desplazado a la columna de camara
+C 0xD159 En 0x0007 el BIOS guarda el puerto de escritura del VDP
+C 0xD15D Ocho filas
+C 0xD160 32 casillas por fila
+C 0xD167 Cada fila del mapa son 256 bytes: se avanza sumando 1 al byte alto
+C 0xD16C Y de paso se recoloca la marca de avance
+C 0xD16F Cursor: es el 0 de GTSTCK
+C 0xD175 Y si no, el joystick del puerto 1
+C 0xD17B Direccion pulsada, de 1 a 8
+C 0xD17E Sin nada pulsado no hay movimiento vertical
+C 0xD182 Direcciones 1, 2 y 3 son las de arriba
+C 0xD184 La 3 es diagonal pura: se descarta
+C 0xD187 De momento, hacia abajo
+C 0xD189 Las direcciones 5, 6 y 7 llevan el bit 2: son las de abajo
+C 0xD18C Dos hacia atras: queda -1, hacia arriba
+C 0xD18F Solo digitos del 0 al 9
+C 0xD19A Cada digito ocupa 2x3 casillas, o sea 6 patrones, a partir del 0x0B
+C 0xD1A2 Tres filas
+C 0xD1A4 De una fila a la siguiente: 32 menos las 2 casillas ya escritas
+C 0xD1BC Fila por 32
+C 0xD1C2 Y la tabla de nombres empieza en 0x1800
+C 0xD1C8 El marcador, tres bytes en BCD
+C 0xD1CB Fila 18, columna 11
+C 0xD1D2 Seis digitos
+C 0xD1D6 Se alterna: primero el digito bajo del byte, luego el alto
+C 0xD1E5 Pinta y retrocede dos columnas, que es lo que ocupa un digito
+C 0xD1F3 La casilla recogida pasa a valer dos mas: cambia de dibujo y deja de dar puntos
+C 0xD1F5 Marcador de seis cifras en tres bytes BCD
+C 0xD1FA Suma 375: 0x75 al byte bajo
+C 0xD201 Mas 3 al byte de en medio, con el acarreo del anterior
+C 0xD20C Sonido de recoger
+C 0xD224 Y a repintar el marcador
+C 0xD227 Recorre el mapa entero, 2048 bytes
+C 0xD230 El limite: 0xDD7A mas 0x800
+C 0xD23A Solo cuentan los seis bits bajos: los otros dos son atributos de la casilla
+C 0xD23D Se anotan las casillas por debajo de 0x18, que son las que se animan
+C 0xD24A Se guarda la distancia desde la anterior, no la posicion: un byte por casilla
+C 0xD256 0xFF cierra la lista
+C 0xD259 Gatillo A: la barra de espacio y el boton del joystick 1
+C 0xD25F Gatillo B: el boton del joystick 2
+C 0xD267 0xDB58 guarda como estaba antes
+C 0xD26C Solo pasan los botones que antes no estaban pulsados
+C 0xD26F Direccion pulsada, de 1 a 8
+C 0xD274 Sin nada pulsado no hay movimiento horizontal
+C 0xD277 Las direcciones 1, 2 y 3 son las de arriba y la derecha
+C 0xD27A De momento, hacia la derecha
+C 0xD27C Las direcciones 5, 6 y 7 llevan el bit 2: izquierda
+C 0xD27F Dos hacia atras: queda -1
+C 0xD282 Izquierda y derecha no mueven al jugador: cambian su velocidad
+C 0xD28A Por debajo de cero no se baja
+C 0xD28B Y el tope son 38 columnas por 256 frames
+C 0xD291 Pasado el tope, se frena dos
+C 0xD294 Arriba y abajo si mueven
+C 0xD297 0xDB56 es la posicion sobre la diagonal
+C 0xD29C Los topes del carril: por encima de 0xAF no se sube
+C 0xD29F Ni por debajo de 0x71 se baja
+C 0xD2A6 Se avanza la velocidad, que son 256avos de columna
+C 0xD2A9 0xDB53 es la parte fraccionaria y 0xDB54 la columna entera
+C 0xD2B3 La altura sale de la posicion sobre la diagonal: al ir a la derecha se sube
+C 0xD2BE Destino fijo: el buffer de 2048 bytes
+C 0xD2C1 Cada tramo empieza por una cuenta de 16 bits
+C 0xD2C5 Con el bit 15 puesto es un tramo repetido
+C 0xD2CB Y si la cuenta entera es 0xFFFF, se acabo
+C 0xD2D0 Quitado el bit 15 queda la cuenta de repeticiones
+C 0xD2D2 El mismo byte, tantas veces como diga la cuenta
+C 0xD2DD Sin el bit 15, copia literal de BC bytes
+C 0xD2E1 La Y del jugador
+C 0xD2E4 La primera fila del mapa esta en Y = 0x30
+C 0xD2E6 Cada casilla mide 8 pixeles: la division da la fila, de 0 a 7
+C 0xD2ED La columna de camara
+C 0xD2F1 Mas la posicion del jugador dentro de la pantalla
+C 0xD2FC El mapa: 8 filas de 256 columnas
+C 0xD300 Se apunta la casilla pisada para quien quiera cambiarla
+C 0xD304 De la casilla solo interesan los seis bits bajos
+C 0xD306 Una antes de los umbrales, que el bucle empieza incrementando
+C 0xD30B La clase es cuantos umbrales quedan por debajo: de 0 a 14
+C 0xD315 Que se esta pisando
+C 0xD318 Clase 0: obstaculo
+C 0xD31C Clase 6: agujero
+C 0xD321 Clase 7: puntos
+C 0xD326 Clase 1: solo la casilla 0x0E hace algo
+C 0xD32B Clase 2: tiempo
+C 0xD330 Clase 13: tramo rapido
+C 0xD335 Clase 11: trampolin
+C 0xD33A Clase 10: arrastre
+C 0xD33F Clase 3: vida extra
+C 0xD344 Las clases 4, 5, 8, 9, 12 y 14 son suelo: no hacen nada
+C 0xD347 Tira la direccion de vuelta: al manejador del BIOS no se le devuelve el control
+C 0xD349 Contador de frames: lo miran la animacion y los efectos
+C 0xD34D Los efectos del PSG se mueven aqui, no en el bucle de juego
+C 0xD350 El BIOS ha apilado todos los registros antes de llamar al hook
+C 0xD360 Los bits 2 y 3 del contador dan cuatro fotogramas de andar
+C 0xD369 Los cuatro bytes de atributo que se van montando
+C 0xD36D Los tres colores del jugador
+C 0xD370 Tres pasadas, una por plano: asi se pinta un sprite multicolor en el MSX1
+C 0xD376 A la Y se le suma el desplazamiento del salto
+C 0xD383 Cada plano usa el patron siguiente
+C 0xD389 Por 4, que es lo que ocupa un patron de 16x16
+C 0xD394 Los planos van en los sprites 3, 2 y 1
+C 0xD3A1 Un RET en el hook H.TIMI deja la interrupcion como estaba
+C 0xD3AA Los ocho valores, del registro 0 al 7
+C 0xD3BD 0xDB72 divide entre 5: el reloj baja una unidad cada cinco frames
+C 0xD3C4 Los tres digitos del reloj, el mas bajo primero
+C 0xD3CA Resta 1 al digito con el acarreo que traiga
+C 0xD3D0 Si se pasa de 0, ese digito vuelve a 9 y el acarreo sigue
+C 0xD3D5 Si los tres se pasan, se acabo el tiempo
+C 0xD3D8 Fila 18, columna 29
+C 0xD3E1 Unidades, decenas y centenas
+C 0xD3F7 Contra un obstaculo la camara retrocede 0x28
+C 0xD402 El bit 1 del contador de frames hace temblar al jugador
+C 0xD40A Fotograma de choque
+C 0xD41B Efecto 8: ruido mientras se siga pegado al obstaculo
+C 0xD423 De la clase 1 solo la casilla 0x0E se traga al jugador
+C 0xD429 Mascara 0x20E9: se cae sin poder hacer nada
+C 0xD42F La caida arranca a velocidad 0x14
+C 0xD434 0xDB6B = 0xEB: el tiron hacia arriba antes de desaparecer
+C 0xD445 Efecto 7: ruido que va bajando
+C 0xD44A La fisica del salto solo corre en los frames pares
+C 0xD454 Ocho fotogramas de caida, uno cada dos frames
+C 0xD46A Al tocar suelo se paga con una vida
+C 0xD471 0xDB6B sube de uno en uno: es el tiempo del salto
+C 0xD476 Su cuarta parte con signo es la velocidad vertical
+C 0xD47D Que se acumula en el desplazamiento del sprite
+C 0xD480 0xFF vidas es haberse quedado sin ninguna
+C 0xD488 Patron = (0x13 - 4*vidas) * 4
+C 0xD494 El patron del sprite 10, el indicador de vidas
+C 0xD49A La X del sprite 12 marca por donde va el nivel
+C 0xD4A3 Fotograma de derrota
+C 0xD4AB Dos segundos parado
+C 0xD4B0 Y = 0xC0 en el sprite 0 apaga todos los sprites
+C 0xD4B8 La pantalla de titulo esta en 0xBD00
+C 0xD4C7 La casilla recogida pasa a 0x18, que ya no colisiona ni se anima
+C 0xD4CD Ha cambiado el mapa: hay que rehacer la lista de animables
+C 0xD4D0 0xDB5E son las decenas del reloj: +2 son 20 segundos
+C 0xD4DD El acarreo de las decenas pasa a las centenas
+C 0xD4E7 Efecto 1: tono que baja
+C 0xD4F9 Fotograma de tramo rapido
+C 0xD4FE Y velocidad fija 0x28
+C 0xD503 Si ya esta sonando, solo repinta
+C 0xD517 Volumen del canal A
+C 0xD51E Efecto 6: ondula mientras se siga en el tramo
+C 0xD526 Efecto 1 al pisar el trampolin
+C 0xD539 El trampolin ocupa dos columnas: se busca la izquierda
+C 0xD53F Primer fotograma del trampolin
+C 0xD547 0xDB6B = 0xE6: el impulso mas fuerte del juego
+C 0xD54C Y sale disparado a velocidad 0x3C
+C 0xD554 Segundo fotograma, cuatro casillas mas alla en el juego de graficos
+C 0xD55E Fotograma en el aire
+C 0xD561 Mascara del salto
+C 0xD56A El trampolin se dibuja en la fila de arriba y en la del jugador
+C 0xD56F Se respetan los dos bits altos de la casilla
+C 0xD571 Las cuatro casillas van seguidas a partir de la 0x2A
+C 0xD57F Mascara 0x20E1: solo fondo, mapa, animacion y jugador
+C 0xD585 Cuatro frames para que se vea
+C 0xD58F Mascara 0x20ED: se conserva el mando vertical
+C 0xD595 El contador de frames arranca en 0x19: da 231 frames hasta que vuelva a 0
+C 0xD59A Fotograma de arrastre
+C 0xD59F Velocidad 0x64, la mayor del juego
+C 0xD5A4 Sin efectos: la lista del PSG se pone entera
+C 0xD5AE Un frame de juego
+C 0xD5B1 Y encima del jugador, el sprite 0 con el patron 0xEC
+C 0xD5B7 Se acaba al dar la vuelta el contador de frames
+C 0xD5BD O antes, si se llega a un obstaculo o a un agujero
+C 0xD5CA Apaga los sprites
+C 0xD5D5 La casilla recogida pasa a 0x19: ya no colisiona ni se anima
+C 0xD5DB El mapa ha cambiado: se rehace la lista de animables
+C 0xD5DE Efecto 5
+C 0xD5EF Cuatro vidas es el tope
+C 0xD5FD Origen: el bloque comprimido
+C 0xD601 Un 0x0000 cierra la tabla
+C 0xD606 Se descomprime al buffer
+C 0xD60A Destino: la direccion de VRAM
+C 0xD60F Cada bloque son 2048 bytes de VRAM
+C 0xD61C El nivel en curso, de 0 a 5
+C 0xD638 Los 2048 bytes del mapa: 8 filas de 256 columnas
+C 0xD63B El fondo del nivel esta en 0x3000 + nivel * 512
+C 0xD648 512 bytes: 8 filas de 64 columnas
+C 0xD655 Sin salto pendiente, a velocidad cero
+C 0xD65F Altura de partida
+C 0xD664 Cuatro vidas
+C 0xD669 Se pintan las vidas
+C 0xD66C Y el reloj arranca en 300
+C 0xD66F 0xD000 aqui es un numero: camara en la columna 0xD0 y fraccion a cero
+C 0xD675 El nivel entra desplazandose de la columna 0xD0 a la 0
+C 0xD678 Y se anota que casillas hay que animar
+C 0xD67B La pila, justo debajo de las variables del BIOS
+C 0xD689 Hueco de 38 NOP: sitio reservado para parches
+C 0xD6AF Se engancha la interrupcion propia en H.TIMI
+C 0xD6BA SCREEN 2 con sprites de 16x16
+C 0xD6BD Y = 0xC0 en el sprite 0: apagados todos mientras se carga
+C 0xD6C5 El juego de graficos de la partida
+C 0xD6CB El marcador, 256 bytes: las filas 16 a 23 de la pantalla
+C 0xD6D7 Se limpian los 32 atributos de sprite
+C 0xD6E2 Y se ponen los tres sprites fijos del marcador: vidas, adorno y marca de avance
+C 0xD6EE Marcador a cero
+C 0xD6FE Posicion de partida sobre la diagonal
+C 0xD703 Se empieza por el nivel 0
+C 0xD70D Una vuelta de juego
+C 0xD710 Y se rearma la mascara completa: lo que la haya cambiado solo valia para su bucle
+C 0xD718 Buffer de 16 filas de 32 casillas
+C 0xD71E Dieciseis filas
+C 0xD726 La fila se corre una casilla a la izquierda
+C 0xD728 Por defecto entra una casilla vacia
+C 0xD72A El bit 0 de 0xDB6A elige si entra dibujo de verdad
+C 0xD73E La casilla que entra por la derecha
+C 0xD742 De una fila a la siguiente, 32 casillas
+C 0xD751 Una columna mas metida
+C 0xD755 Y el buffer entero a las 16 primeras filas de pantalla
+C 0xD761 Se tira la pila que dejaran los manejadores de colision
+C 0xD764 Si se llega en el aire, primero se aterriza
+C 0xD777 El jugador sigue andando hasta salirse por la derecha
+C 0xD784 Bonus: lo que quede de reloj se convierte en puntos
+C 0xD787 Fondo de la pantalla intermedia, 16 filas
+C 0xD793 Y su juego de graficos
+C 0xD799 El jugador entra por la izquierda
+C 0xD7A2 Musica de la pantalla intermedia
+C 0xD7AE Un sprite mas encima del jugador
+C 0xD7BA Anda hasta la columna 0x29
+C 0xD7C2 Salto largo
+C 0xD7C7 Tres pixeles por frame
+C 0xD7D4 El fondo tambien pasa al buffer de scroll
+C 0xD7E3 Dieciseis columnas de scroll
+C 0xD7E6 Cada columna espera menos frames que la anterior: el scroll acelera
+C 0xD7F3 Las columnas que entran van vacias
+C 0xD7FC Ahora si: las barras de la musica
+C 0xD7FF Segunda musica de la pantalla intermedia
+C 0xD80E Doce columnas mas de scroll
+C 0xD815 Estas si traen dibujo
+C 0xD82C Y las barras van corriendose
+C 0xD82F Doce columnas
+C 0xD836 Un pixel por frame
+C 0xD83E El jugador se va por la derecha
+C 0xD851 Se corta el sonido
+C 0xD854 Y se apagan las barras
+C 0xD85E Vuelve el juego de graficos de la partida
+C 0xD864 Siguiente nivel
+C 0xD86B Se pinta la pantalla del nivel nuevo antes de que se vea al jugador
+C 0xD872 Que entra andando por la izquierda hasta la columna 0x90
+C 0xD885 Sprite numero A
+C 0xD888 Cada atributo son cuatro bytes
+C 0xD893 Y, X, patron y color
+C 0xD8A0 A la Y se le suma el salto, igual que en el jugador
+C 0xD8B5 El patron y el color vienen en B y C
+C 0xD8BB Siempre el sprite 0
+C 0xD8BF Avanza por la diagonal lo que diga 0xDB53
+C 0xD8C7 Un paso de la parabola
+C 0xD8D5 Hasta que el salto se acaba
+C 0xD8D9 Cuatro barras, todas con el mismo patron y color
+C 0xD8E9 Cada una a su altura
+C 0xD90D Las cuatro barras, un frame
+C 0xD91A Se sale al pulsar disparo
+C 0xD920 El atributo X de la barra
+C 0xD92D El registro 6 del PSG es el periodo del ruido: es lo que mueve las barras
+C 0xD947 El registro R da un color distinto cada vez
+C 0xD954 B esperas de retrazo
+C 0xD958 Reloj a 300: unidades, decenas y centenas
+C 0xD964 Se descuenta el reloj a toda velocidad
+C 0xD96D El 0 es una direccion de la ROM: el inc (hl) de SUMA_375 no estropea nada
+C 0xD973 Se acaba cuando los tres digitos estan a cero
+C 0xD982 Dos frames por unidad
+C 0xD986 0xFF cierra la lista
+C 0xD98B Pares registro, valor
+C 0xD992 Que efecto esta sonando, de 1 a 8
+C 0xD995 El 0 es no sonar nada
+C 0xD9C0 Instruccion sin efecto: A se pisa en la linea siguiente
+C 0xD9C4 Se lee el periodo del canal A tal y como quedo
+C 0xD9CF Baja 0x14 por frame, y al pasarse se calla
+C 0xD9E7 Se le quita la mitad al periodo: el tono sube deprisa
+C 0xD9F4 El tono sale del desplazamiento vertical: suena mas agudo cuanto mas alto
+C 0xDA06 Instruccion repetida: E ya valia H
+C 0xDA0A Solo una vez cada ocho frames
+C 0xDA14 Baja de uno en uno hasta 0x32
+C 0xDA1D Y la octava parte del periodo va al ruido
+C 0xDA2D Baja 0x1E por frame
+C 0xDA37 Solo suena mientras se pise el tramo rapido
+C 0xDA44 El periodo sube y baja dos: de ahi la ondulacion
+C 0xDA4A Cada cuatro frames cambia el sentido
+C 0xDA56 El registro R hace de generador de numeros al azar
+C 0xDA63 Solo suena mientras se siga contra el obstaculo
+C 0xDA6A Volumen al azar en el canal A
+C 0xDA74 Efecto cancelado
+C 0xDA85 El impulso inicial del salto
+C 0xDA89 Y se parte de altura cero
+C 0xDA8D Una columna menos por frame
+C 0xDA92 Redibujando mapa y fondo: el nivel entra desplazandose
+C 0xDA9B La X de la barra, 8 pixeles a la izquierda
+C 0xDAA5 Cada atributo son cuatro bytes
+C 0xDAA8 Hasta el sprite 8
+C 0xD0FE La longitud del trozo que falta, la calculada arriba
+C 0xD125 D a cero: A se toma sin signo

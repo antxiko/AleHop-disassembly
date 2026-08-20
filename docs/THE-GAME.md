@@ -22,19 +22,22 @@ thirds and gives each its own pattern and colour tables, which is how you get
 
 | rows | what goes there | source |
 |---|---|---|
-| 0-7 | The background, with parallax | 64x8 map at `0x3000 + level*0x200` |
+| 0-7 | The background, repeating four times | 64x8 map at `0x3000 + level*0x200` |
 | 8-15 | The playable track | 256x8 map at `level*0x800` |
 | 16-23 | The scoreboard | fixed 32x8 map at `0x4500` |
 
-## Parallax in one instruction
+## The background has no parallax, however much it looks like it
 
-The background moves slower than the track, and the trick fits on one line. Both
-blit routines read the same variable — the camera column at 0xDB54 — but:
+Both blit routines read the same variable — the camera column at 0xDB54 — but
+the track's uses the whole byte, with its 256-column map, and the background's
+does `and 0x3F` on it, with a 64-column one.
 
-- the track's uses the whole byte, and its map is **256** columns wide;
-- the background's does `and 0x3F` on it, and its map is **64**.
-
-The background therefore walks its map four times slower. Depth, for free.
+It is tempting to read a parallax into that, and this page used to. But **a mask
+does not slow anything down**: the column goes up by one for both of them, so
+the background advances at exactly the same rate as the track. What the
+`and 0x3F` does is wrap it round at 64, so the same background **repeats four
+times per level**. To go four times slower you would need a shift — two `rrca` —
+not an `and`.
 
 ## The six levels
 

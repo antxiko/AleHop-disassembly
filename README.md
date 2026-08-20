@@ -45,7 +45,7 @@ out of the binary itself:
 
 ![The title screen](docs/presentacion.png)
 
-And this is level 1: parallax background on top, the track in the middle, the
+And this is level 1: the repeating background on top, the track in the middle, the
 scoreboard at the bottom. The three bands use different thirds of the screen,
 each with its own pattern and colour tables.
 

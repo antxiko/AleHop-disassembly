@@ -70,7 +70,10 @@ L 0xC4D7 CARGA_TURBO      Lee un bloque de cinta a (IX), longitud DE
 C 0xC4D7 Mete 0xC580 en la pila: al hacer RET se ira a apagar el motor
 C 0xC4DC Escribe en el PPI para arrancar el motor del cassette
 L 0xC580 PARA_MOTOR       Apaga el motor del cassette y restaura el registro 1 del VDP
-C 0xC584 PPI: motor del cassette parado
+# 0xC580..0xC58E sale como bloque de datos (el trazador no lo alcanza: se llega
+# por una direccion metida a mano en la pila en 0xC4D7), asi que un comentario
+# de linea ahi no se puede anclar. Lo que decia: "C 0xC584 PPI: motor del
+# cassette parado".
 
 B 0xC58F ############################################################
 B 0xC58F ENTRADA DEL CARGADOR  (BLOAD "cas:",R)

@@ -445,15 +445,18 @@ DATA_mapa_nivel_6:
 
 ; ----------------------------------------------------------------------
 ; ############################################################
-; MAPAS DE FONDO (el parallax)
+; MAPAS DE FONDO
 ; ############################################################
 ; 64 columnas x 8 filas = 512 bytes por nivel, en la banda
 ; superior de la pantalla (filas 0-7, VRAM 0x1800).
-; El truco del parallax esta en una sola instruccion: el volcado
-; del fondo (0xD0A4) hace `and 0x3F` sobre la columna de camara,
-; mientras que el del primer plano usa los 8 bits enteros. Como
-; el fondo tiene 64 columnas y el mapa 256, el fondo se desplaza
-; cuatro veces mas despacio.
+; AQUI NO HAY PARALLAX, y conviene decirlo porque lo parece: el
+; volcado del fondo (0xD0A4) hace `and 0x3F` sobre la columna de
+; camara y el del primer plano usa los ocho bits enteros, pero
+; una mascara no frena nada. La columna sube de uno en uno para
+; los dos, asi que el fondo va al MISMO ritmo que la pista; lo
+; que hace el `and` es darle la vuelta cada 64 columnas, o sea
+; que el fondo se repite cuatro veces por nivel. Para ir cuatro
+; veces mas despacio haria falta un desplazamiento, no un and.
 ; Los carga 0xD61C: HL = (0x18 + nivel) * 0x200.
 ; ----------------------------------------------------------------------
 DATA_fondo_nivel_1:

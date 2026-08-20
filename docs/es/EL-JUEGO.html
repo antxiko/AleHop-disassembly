@@ -75,11 +75,10 @@ footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
 <blockquote><b>PROGRAMA:</b> ALBERTO L. NAVARRO <b>GRÁFICOS:</b> LUIGILOPEZ TOPO SOFT 1988</blockquote>
 <h2>Cómo está montada la pantalla</h2>
 <p>Las tres bandas horizontales no son un capricho de diseño: son las tres que regala el modo <b>SCREEN 2</b> del MSX. Ese modo parte la pantalla en tres tercios de 8 filas y le da a cada uno su propio juego de patrones y de colores, lo que permite tener 768 dibujos distintos en pantalla en vez de 256.</p>
-<table><tr><th>filas</th><th>qué va ahí</th><th>de dónde sale</th></tr><tr><td>0-7</td><td>El fondo, con parallax</td><td>mapa de 64x8 en <code>0x3000 + nivel*0x200</code></td></tr><tr><td>8-15</td><td>La pista jugable</td><td>mapa de 256x8 en <code>nivel*0x800</code></td></tr><tr><td>16-23</td><td>El marcador</td><td>mapa fijo de 32x8 en <code>0x4500</code></td></tr></table>
-<h2>El parallax, en una instrucción</h2>
-<p>El fondo se mueve más despacio que la pista, y el truco cabe en una línea. Las dos rutinas de volcado leen la misma variable —la columna de cámara, en 0xDB54— pero:</p>
-<ul><li>la de la pista usa el byte entero, y su mapa tiene <b>256</b> columnas;</li><li>la del fondo hace <code>and 0x3F</code> sobre ella, y su mapa tiene <b>64</b>.</li></ul>
-<p>Resultado: el fondo recorre su mapa cuatro veces más despacio. Efecto de profundidad conseguido sin gastar ni un ciclo de más.</p>
+<table><tr><th>filas</th><th>qué va ahí</th><th>de dónde sale</th></tr><tr><td>0-7</td><td>El fondo, que se repite cuatro veces</td><td>mapa de 64x8 en <code>0x3000 + nivel*0x200</code></td></tr><tr><td>8-15</td><td>La pista jugable</td><td>mapa de 256x8 en <code>nivel*0x800</code></td></tr><tr><td>16-23</td><td>El marcador</td><td>mapa fijo de 32x8 en <code>0x4500</code></td></tr></table>
+<h2>El fondo no lleva parallax, aunque lo parezca</h2>
+<p>Las dos rutinas de volcado leen la misma variable —la columna de cámara, en 0xDB54— pero la de la pista usa el byte entero, con su mapa de <b>256</b> columnas, y la del fondo hace <code>and 0x3F</code> sobre ella, con un mapa de <b>64</b>.</p>
+<p>Es tentador leer ahí un parallax, y así estuvo contado en esta página. Pero <b>una máscara no frena nada</b>: la columna sube de uno en uno para los dos, así que el fondo avanza al mismo ritmo que la pista. Lo que hace el <code>and 0x3F</code> es darle la vuelta al llegar a 64, o sea que el mismo fondo se repite <b>cuatro veces por nivel</b>. Para ir cuatro veces más despacio haría falta un desplazamiento —<code>rrca</code> dos veces—, no un <code>and</code>.</p>
 <h2>Los seis niveles</h2>
 <p>Cada nivel es una tira de 256 columnas de las que solo se ven 32 a la vez. Puestas enteras, así es el nivel 1:</p>
 <p><img src="../niveles/tira_nivel1.png" alt="Tira del nivel 1"></p>

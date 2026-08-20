@@ -33,13 +33,13 @@ L 0xC105 INTERRUPCION_TITULO  Manejador enganchado en H.TIMI durante el titulo
 L 0xC12B FOTOGRAMA_BOLA    Saca el fotograma de la bola de los bits 2-3 del contador de frames
 L 0xC134 PINTA_BOLA        Monta los tres planos de color de la bola y los escribe como sprites
 L 0xC16F EMPIEZA_PARTIDA   Desengancha la interrupcion, silencia el PSG y salta al motor
-L 0xC17A LEE_DISPARO_2     Otra lectura del disparo, la que usan las escenas
+L 0xC17A FISICA_BOTE       Un paso de la parabola del bote: 0xC535 sube de uno en uno y su cuarta parte se acumula en 0xC533. Gemela de 0xD471
 L 0xC189 ESCENA_5          Ultima escena del modo atraccion
 L 0xC1B5 ESCENA_3          Tercera escena
 L 0xC1E2 ESCENA_4          Cuarta escena
 L 0xC20B CARGA_GRAFICOS_2  Gemelo de 0xD5FC: recorre una tabla de pares (origen, destino VRAM)
 L 0xC22A ESCRIBE_SPRITE_2  Vuelca los 4 bytes de atributo de un sprite. Gemelo de 0xD885
-L 0xC27E PINTA_N_SPRITES   Pinta B sprites seguidos
+L 0xC27E ESPERA_B_FRAMES   B esperas de retrazo. Gemela de 0xD954
 L 0xC28A ESCENA_2          Segunda escena
 L 0xC2A4 LIMPIA_PANTALLA   Prepara la pantalla antes de dibujar
 L 0xC2BC SCROLL_MENSAJE    Hace pasar el mensaje de fin de partida, letra a letra y pixel a pixel
@@ -48,13 +48,13 @@ L 0xC333 REINICIA_SCROLL   Limpia el renglon y vuelve a poner el puntero al prin
 L 0xC3B9 ARRANCA_MUSICA    Pone las tres voces de la musica del titulo, una por canal del PSG
 
 C 0xC086 Las cinco escenas del modo atraccion, en bucle hasta que alguien pulse
-C 0xC0A3 0x4C es la columna de partida de la bola
+C 0xC0A3 Cada bote empieza con el fotograma de agacharse
 C 0xC0BD Espera al retrazo: la animacion va a 50/60 fotogramas por segundo
 C 0xC10B Contador de frames del titulo, el equivalente a 0xDB75 en la partida
 C 0xC10C Mueve la musica: el reproductor va enganchado a la interrupcion
 C 0xC11E Doce NOP de relleno, sitio reservado para parches
 C 0xC12E Los bits 2 y 3 del contador dan cuatro fotogramas de animacion
-C 0xC134 Tres pasadas, una por plano de color: asi se hace un sprite multicolor en el MSX1
+C 0xC134 Tres pasadas, una por plano de color: asi se hace un sprite multicolor en el MSX1. Los colores son 01 0F 0B, los mismos tres del jugador
 C 0xC158 El numero de patron va multiplicado por 4 porque los sprites son de 16x16
 C 0xC172 Mete un RET en el hook H.TIMI para desenganchar la interrupcion del titulo
 C 0xC174 BIOS GICINI: calla el PSG antes de entrar en la partida
@@ -133,3 +133,107 @@ C 0xC059 Segun la bandera, portada normal o pantalla de final de partida
 C 0xC05F Vuelca la tabla de nombres de 0xBD00 a la VRAM
 C 0xC074 Vuelca el mapa de la pantalla de presentacion (0x4000)
 C 0xC177 Al pulsar disparo se salta al motor del juego: es la unica entrada a 0xD000
+
+# ---------------------------------------------------------------------------
+# Segunda pasada de comentarios de linea (arranque y pantalla de titulo).
+#
+# La pantalla de titulo es el motor del juego en pequeno: monta el sprite con
+# tres planos de color igual que PINTA_JUGADOR, tiene su propia parabola
+# (0xC17A, gemela de 0xD471) y sus mismas variables, una por una:
+#   0xC531 = Y   0xC532 = X   0xC533 = desplazamiento vertical
+#   0xC534 = patron   0xC535 = contador del bote   0xC537..0xC539 = colores
+#   0xC53B = contador de frames   0xC53D = puntero del mensaje
+# ---------------------------------------------------------------------------
+
+L 0xC282 LANZA_BOTE        Arranca la parabola: 0xC535 = A y desplazamiento vertical a cero. Gemela de 0xDA85
+L 0xC245 PINTA_SPRITE_0_2  Sprite 0 en la posicion del protagonista, con el patron B y el color C. Gemela de 0xD8A0
+
+C 0xC037 Borra los 16 KB de VRAM antes de nada
+C 0xC03A Tabla de pares registro/valor del VDP para la pantalla de titulo
+C 0xC056 Las tres voces de la musica arrancan antes de dibujar
+C 0xC06B El juego de graficos de la presentacion
+C 0xC071 Al terminar el juego no hay atraccion: se pasa el mensaje de despedida
+C 0xC097 X a cero y sin altura de bote
+C 0xC09E 0x4C es la Y de partida: 0xC531 es la fila, no la columna
+C 0xC0A6 0xC535 = 0xED, o sea -19: el mismo impulso que el salto del juego
+C 0xC0AB Fotograma en el aire
+C 0xC0B0 Un paso de la parabola; al tocar suelo se vuelve a botar
+C 0xC0B5 La X avanza de uno en uno y se acaba al dar la vuelta
+C 0xC0C0 Fotograma de agacharse
+C 0xC0C8 Cuatro frames de espera
+C 0xC0D0 D a cero: A se toma sin signo
+C 0xC0E2 Destino fijo: el buffer de 2048 bytes de 0xC540
+C 0xC0E5 Cada tramo empieza por una cuenta de 16 bits
+C 0xC0E9 Con el bit 15 puesto es un tramo repetido
+C 0xC0EF Y si la cuenta entera es 0xFFFF, se acabo
+C 0xC0F4 Quitado el bit 15 queda la cuenta de repeticiones
+C 0xC0F6 El mismo byte, tantas veces como diga la cuenta
+C 0xC101 Sin el bit 15, copia literal de BC bytes
+C 0xC105 Lee el estado del VDP, que es lo que baja la senal de interrupcion
+C 0xC107 Tira la direccion de vuelta: al manejador del BIOS no se le devuelve el control
+C 0xC10F El BIOS ha apilado todos los registros antes de llamar al hook
+C 0xC13D La Y del protagonista
+C 0xC141 Mas el desplazamiento del bote
+C 0xC148 Y la X, tal cual
+C 0xC14E Cada plano usa el patron siguiente
+C 0xC15B Un color por plano
+C 0xC15F Los planos van en los sprites 3, 2 y 1
+C 0xC168 Se mira el disparo en cada repintado: por eso vale desde cualquier escena
+C 0xC17A 0xC535 sube de uno en uno: es el tiempo del bote
+C 0xC17F Su cuarta parte con signo es la velocidad vertical
+C 0xC186 Que se acumula en el desplazamiento del sprite
+C 0xC189 Fotograma de la ultima escena
+C 0xC18E Sin altura y pegado al borde izquierdo
+C 0xC19A Un sprite mas encima del protagonista, patron 0xEC
+C 0xC1A3 La X avanza de tres en tres: la escena mas rapida
+C 0xC1AD Y al salirse de pantalla, apaga los sprites
+C 0xC1B5 Esta escena reinicia tambien el contador de frames
+C 0xC1C4 Fotograma de tramo rapido
+C 0xC1C9 De dos en dos, hasta dar la vuelta
+C 0xC1D3 Va bajando un pixel por frame
+C 0xC1D7 Menos cuando el bit 2 del contador esta puesto: entonces sube
+C 0xC1EE Un fotograma nuevo cada dos frames
+C 0xC1F5 Los ocho patrones de la animacion, los mismos ocho de 0xDABA
+C 0xC202 De dos en dos, hasta dar la vuelta
+C 0xC20B Origen: el bloque comprimido
+C 0xC210 Un 0x0000 cierra la tabla
+C 0xC215 Se descomprime al buffer
+C 0xC219 Destino: la direccion de VRAM
+C 0xC21E Cada bloque son 2048 bytes de VRAM
+C 0xC22A Sprite numero A
+C 0xC22D Cada atributo son cuatro bytes
+C 0xC238 Y, X, patron y color
+C 0xC245 A la Y se le suma el bote, igual que en el protagonista
+C 0xC25A El patron y el color vienen en B y C
+C 0xC260 Siempre el sprite 0
+C 0xC27E B esperas de retrazo
+C 0xC282 El impulso inicial del bote
+C 0xC286 Y se parte de altura cero
+C 0xC28A Desde el borde izquierdo y sin altura
+C 0xC296 Aqui si se anima: cuatro fotogramas de andar
+C 0xC29C Un pixel por frame, hasta dar la vuelta
+C 0xC2A4 Los 16 KB enteros de VRAM a cero
+C 0xC2AE Pares registro, valor
+C 0xC2B4 Un 0x0000 cierra la tabla
+C 0xC2BC Renglon limpio y puntero al principio
+C 0xC2E2 La tipografia ya esta en VRAM: la letra se lee de alli
+C 0xC2E6 Los ocho bytes de la letra van al final del renglon
+C 0xC2EF Ocho pasadas: una letra son ocho pixeles
+C 0xC2F5 El renglon entero, 20 casillas de 8 bytes, a los patrones de 0x0800
+C 0xC30E Ocho filas de pixeles
+C 0xC311 Se empieza por el byte de la letra que esta entrando
+C 0xC31F Un bit a la izquierda, y el que sale entra en el byte anterior
+C 0xC323 De una casilla a la anterior hay 8 bytes
+C 0xC32B Hasta el principio del renglon
+C 0xC333 Renglon a cero, 0xA6 bytes
+C 0xC340 El mensaje empieza en 0xC3EF
+C 0xC346 0xE0 bytes de la tabla de patrones
+C 0xC34F Solo se invierten los bytes que traian el bit 7 puesto
+C 0xC35B La tabla de color de las 20 casillas del renglon
+C 0xC361 Posicion dentro del renglon
+C 0xC369 Cuatro colores, uno cada dos filas de pixeles
+C 0xC37E Fila 14, columna 25
+C 0xC381 Las 20 casillas del renglon llevan los patrones 0x13 a 0x00, escritos de derecha a izquierda
+C 0xC3B9 Voz 1 al canal A
+C 0xC3C0 Voz 2 al canal B
+C 0xC3C7 Voz 3 al canal C

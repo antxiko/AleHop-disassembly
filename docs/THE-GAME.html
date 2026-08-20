@@ -75,11 +75,10 @@ footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
 <blockquote><b>PROGRAMA:</b> ALBERTO L. NAVARRO <b>GRÁFICOS:</b> LUIGILOPEZ TOPO SOFT 1988</blockquote>
 <h2>How the screen is put together</h2>
 <p>The three horizontal bands aren&#x27;t a design flourish — they&#x27;re the three the MSX <b>SCREEN 2</b> mode hands you. That mode splits the display into three eight-row thirds and gives each its own pattern and colour tables, which is how you get 768 distinct tiles on screen instead of 256.</p>
-<table><tr><th>rows</th><th>what goes there</th><th>source</th></tr><tr><td>0-7</td><td>The background, with parallax</td><td>64x8 map at <code>0x3000 + level*0x200</code></td></tr><tr><td>8-15</td><td>The playable track</td><td>256x8 map at <code>level*0x800</code></td></tr><tr><td>16-23</td><td>The scoreboard</td><td>fixed 32x8 map at <code>0x4500</code></td></tr></table>
-<h2>Parallax in one instruction</h2>
-<p>The background moves slower than the track, and the trick fits on one line. Both blit routines read the same variable — the camera column at 0xDB54 — but:</p>
-<ul><li>the track&#x27;s uses the whole byte, and its map is <b>256</b> columns wide;</li><li>the background&#x27;s does <code>and 0x3F</code> on it, and its map is <b>64</b>.</li></ul>
-<p>The background therefore walks its map four times slower. Depth, for free.</p>
+<table><tr><th>rows</th><th>what goes there</th><th>source</th></tr><tr><td>0-7</td><td>The background, repeating four times</td><td>64x8 map at <code>0x3000 + level*0x200</code></td></tr><tr><td>8-15</td><td>The playable track</td><td>256x8 map at <code>level*0x800</code></td></tr><tr><td>16-23</td><td>The scoreboard</td><td>fixed 32x8 map at <code>0x4500</code></td></tr></table>
+<h2>The background has no parallax, however much it looks like it</h2>
+<p>Both blit routines read the same variable — the camera column at 0xDB54 — but the track&#x27;s uses the whole byte, with its 256-column map, and the background&#x27;s does <code>and 0x3F</code> on it, with a 64-column one.</p>
+<p>It is tempting to read a parallax into that, and this page used to. But <b>a mask does not slow anything down</b>: the column goes up by one for both of them, so the background advances at exactly the same rate as the track. What the <code>and 0x3F</code> does is wrap it round at 64, so the same background <b>repeats four times per level</b>. To go four times slower you would need a shift — two <code>rrca</code> — not an <code>and</code>.</p>
 <h2>The six levels</h2>
 <p>Each level is a 256-column strip of which you only ever see 32. Laid out whole, this is level 1:</p>
 <p><img src="niveles/tira_nivel1.png" alt="Level 1 strip"></p>
