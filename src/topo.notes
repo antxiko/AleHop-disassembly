@@ -13,7 +13,7 @@ B 0x9470 Primera cosa que se ve al cargar la cinta. Verificado en
 B 0x9470 openMSX: breakpoint en 0x9470 alcanzado a los 65,6 s.
 L 0x9470 TOPO_START       Punto de entrada (BLOAD ,R)
 C 0x9470 El codigo util empieza mas adelante; esto solo salta alli
-L 0x9473 TOPO_ANIMA       Rutina de animacion del logo
+L 0x9473 CORRE_EL_COLOR   Corre el color por las dos bandas del recuadro de abajo, de izquierda a derecha; no anima el logo. La llama TOPO_MAIN desde 0x95FA, ya con el logo dibujado
 C 0x947C Compara HL con DE para saber si ha llegado al final del recorrido
 C 0x949F Espera 3 interrupciones de barrido: asi se temporiza la animacion
 

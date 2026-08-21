@@ -31,7 +31,7 @@ l94f3h:	equ 0x094f3
 ; ----------------------------------------------------------------------
 TOPO_START:		; Punto de entrada (BLOAD ,R)
 	jp TOPO_MAIN		;9470   ; El codigo util empieza mas adelante; esto solo salta alli
-TOPO_ANIMA:		; Rutina de animacion del logo
+CORRE_EL_COLOR:		; Corre el color por las dos bandas del recuadro de abajo, de izquierda a derecha; no anima el logo. La llama TOPO_MAIN desde 0x95FA, ya con el logo dibujado
 	ld hl,02f78h		;9473   ; Primera celda de color que se retoca
 	ld de,02fb8h		;9476   ; Y la ultima, ocho caracteres mas alla
 	ld bc,000f7h		;9479   ; Salto a la segunda banda: con los ocho bytes que ya avanzo PINTA_CELDA son 255, uno menos que la fila de caracteres entera
@@ -254,7 +254,7 @@ TOPO_MAIN:		; Lo que hace el logo, de principio a fin
 	call ANIMA_TOPO		;95f1   ; Tres pasadas de la animacion
 	call ANIMA_TOPO		;95f4
 	call ANIMA_TOPO		;95f7
-	call TOPO_ANIMA		;95fa   ; El color corriendo por el recuadro
+	call CORRE_EL_COLOR		;95fa   ; El color corriendo por el recuadro
 	call ULTIMA_SECUENCIA		;95fd   ; Y la ultima lista de trozos
 	ei			;9600   ; Devuelve la interrupcion y vuelve al BASIC
 	ret			;9601
