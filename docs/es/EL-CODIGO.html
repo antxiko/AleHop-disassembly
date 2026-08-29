@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>El código por dentro — Ale Hop! (1988)</title>
 <style>
 :root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
@@ -84,7 +86,7 @@ call 0xF000        ; página 0 -&gt; ROM del BIOS
 call 0xF014        ; página 1 -&gt; RAM
 call 0xF019        ; página 2 -&gt; RAM</code></pre>
 <p>Ese conmutador tiene <b>seis puntos de entrada</b> que hacen lo mismo con parámetros distintos: tres ponen una página en la configuración del BASIC y tres en la de todo-RAM, cubriendo las páginas 0, 1 y 2.</p>
-<p>La consecuencia práctica, y conviene tenerla presente al leer el listado: **toda dirección por debajo de 0x4000 que aparezca en un <code>CALL</code> o un <code>JP</code> es el BIOS**, no datos del juego. Los 35 KB de gráficos que hay ahí debajo solo son visibles dentro del cargador de nivel.</p>
+<p>La consecuencia práctica, y conviene tenerla presente al leer el listado: <b>toda dirección por debajo de 0x4000 que aparezca en un <code>CALL</code> o un <code>JP</code> es el BIOS</b>, no datos del juego. Los 35 KB de gráficos que hay ahí debajo solo son visibles dentro del cargador de nivel.</p>
 <h2>La rutina de frame</h2>
 <p>El motor no tiene un bucle principal al uso, sino una <b>máscara de tareas</b> de 16 bits en 0xDB69. La rutina de frame espera al retrazo y luego consulta bit a bit:</p>
 <pre><code>ld ix,0xDB69

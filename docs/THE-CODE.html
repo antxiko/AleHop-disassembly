@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Inside the code — Ale Hop! (1988)</title>
 <style>
 :root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
@@ -84,7 +86,7 @@ call 0xF000        ; page 0 -&gt; BIOS ROM
 call 0xF014        ; page 1 -&gt; RAM
 call 0xF019        ; page 2 -&gt; RAM</code></pre>
 <p>That switcher has <b>six entry points</b> doing the same job with different parameters: three put a page into the BASIC configuration and three into the all-RAM one, covering pages 0, 1 and 2.</p>
-<p>The practical consequence, worth keeping in mind while reading the listing: **any address below 0x4000 appearing in a <code>CALL</code> or <code>JP</code> is the BIOS**, not game data. The 35 KB of graphics sitting underneath are only visible inside the level loader.</p>
+<p>The practical consequence, worth keeping in mind while reading the listing: <b>any address below 0x4000 appearing in a <code>CALL</code> or <code>JP</code> is the BIOS</b>, not game data. The 35 KB of graphics sitting underneath are only visible inside the level loader.</p>
 <h2>The frame routine</h2>
 <p>The engine has no conventional main loop. Instead there&#x27;s a 16-bit <b>task mask</b> at 0xDB69. The frame routine waits for the vertical blank and then checks it bit by bit:</p>
 <pre><code>ld ix,0xDB69
