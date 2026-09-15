@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Findings — Ale Hop! (1988)</title>
+<title>Preguntas abiertas — Ale Hop! (1988)</title>
 <style>
 :root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
   --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
@@ -69,13 +69,12 @@ td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
 footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
   color:var(--suave);font-size:12px}
 </style>
-<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-TAPE.html">The tape</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html" style=color:var(--tinta)>Findings</a><a href="DEAD-BYTES.html">Dead bytes</a><a href="OPEN-QUESTIONS.html">Open questions</a><a href="es/HALLAZGOS.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
-<h1>Findings</h1>
-<p>What the other pages don&#x27;t cover: two things the binary has and the game never uses.</p>
-<h2>There&#x27;s room for two levels that don&#x27;t exist</h2>
-<p>Background maps are located with <code>0x3000 + level * 0x200</code>. There&#x27;s space for eight, but only six have data: the 1024 bytes that levels 7 and 8 would occupy are <b>0xFF filler</b>, and the loader stops at the sixth with a <code>cp 6 / jp z,0xC000</code>.</p>
-<h2>135 bytes that never execute</h2>
-<p>Four stretches of perfectly coherent Z80 that no path reaches. Among them, a <b>full-screen colour effect</b> that turns every black into transparent — 3673 of the screen&#x27;s 6144 colour bytes — and which only makes sense paired with a change of backdrop colour. Half a fade that got left out.</p>
-<p><img src="efecto-muerto.png" alt="The effect that was never used"></p>
-<p>The full story of all four is in <a href="DEAD-BYTES.html">DEAD-BYTES.md</a>.</p>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="LA-CINTA.html">La cinta</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="BYTES-MUERTOS.html">Bytes muertos</a><a href="PREGUNTAS-ABIERTAS.html" style=color:var(--tinta)>Preguntas abiertas</a><a href="../OPEN-QUESTIONS.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1>Preguntas abiertas</h1>
+<p>Los 42.645 bytes del bloque del juego están explicados, los módulos reensamblan byte a byte y la cinta regenerada tiene el mismo sha256. Lo que queda abierto es poco, y va aquí.</p>
+<h2>De qué compilación es el cargador de 0x8850</h2>
+<p>Al final de los datos, detrás del último bloque de gráficos comprimidos, hay un cargador de 45 bytes que no ejecuta nadie. Salta a 0xC000 como el juego de verdad, pero <b>deja otro mapa de memoria</b>: ROM en las páginas 0 <em>y</em> 1 y RAM solo en las dos de arriba, así que en esa versión los datos vivían debajo de la ROM del BASIC y no debajo del BIOS. Usa además la variable 0xA87D, que en esta versión no existe: el bloque del juego acaba en 0xA694.</p>
+<p>Es, por tanto, un resto de <b>otra compilación</b> de Ale Hop!. Cuál era, y si llegó a salir, no se sabe. El detalle está en <a href="BYTES-MUERTOS.html">los bytes muertos</a>.</p>
+<h2>Los 66 bytes de 0x88DA</h2>
+<p>En la pieza de la portada, entre el <code>ret</code> de 0x88D9 —que devuelve el control al cargador— y la tabla de patrones de la imagen, que empieza en 0x891C, quedan 66 bytes. El listado los da como un residuo que no se ejecuta, y lo marca como suposición: qué eran no se ha averiguado.</p>
 <footer><p><em>Ale Hop!</em> lo publico Topo Soft en 1988; segun sus propios creditos, el programa es de Alberto L. Navarro y los graficos de LuigiLopez. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion.</p></footer></div>

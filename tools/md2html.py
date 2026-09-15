@@ -22,11 +22,11 @@ from estilo_web import ESTILO  # noqa: E402
 NAV_EN = [("index.html", "Home"), ("GETTING-STARTED.html", "Start"),
           ("THE-GAME.html", "The game"), ("THE-TAPE.html", "The tape"),
           ("THE-CODE.html", "The code"), ("FINDINGS.html", "Findings"),
-          ("DEAD-BYTES.html", "Dead bytes")]
+          ("DEAD-BYTES.html", "Dead bytes"), ("OPEN-QUESTIONS.html", "Open questions")]
 NAV_ES = [("index.html", "Portada"), ("EMPEZAR.html", "Empezar"),
           ("EL-JUEGO.html", "El juego"), ("LA-CINTA.html", "La cinta"),
           ("EL-CODIGO.html", "El código"), ("HALLAZGOS.html", "Hallazgos"),
-          ("BYTES-MUERTOS.html", "Bytes muertos")]
+          ("BYTES-MUERTOS.html", "Bytes muertos"), ("PREGUNTAS-ABIERTAS.html", "Preguntas abiertas")]
 
 # Cada documento tiene su pareja en el otro idioma, para el selector.
 PAREJA = {
@@ -36,6 +36,7 @@ PAREJA = {
     "THE-TAPE.html": "LA-CINTA.html",   "LA-CINTA.html": "THE-TAPE.html",
     "THE-CODE.html": "EL-CODIGO.html",  "EL-CODIGO.html": "THE-CODE.html",
     "FINDINGS.html": "HALLAZGOS.html",  "HALLAZGOS.html": "FINDINGS.html",
+    "OPEN-QUESTIONS.html": "PREGUNTAS-ABIERTAS.html", "PREGUNTAS-ABIERTAS.html": "OPEN-QUESTIONS.html",
     "DEAD-BYTES.html": "BYTES-MUERTOS.html", "BYTES-MUERTOS.html": "DEAD-BYTES.html",
 }
 

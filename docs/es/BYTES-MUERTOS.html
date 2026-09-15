@@ -69,7 +69,7 @@ td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
 footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
   color:var(--suave);font-size:12px}
 </style>
-<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="LA-CINTA.html">La cinta</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="BYTES-MUERTOS.html" style=color:var(--tinta)>Bytes muertos</a><a href="../DEAD-BYTES.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="LA-CINTA.html">La cinta</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="BYTES-MUERTOS.html" style=color:var(--tinta)>Bytes muertos</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../DEAD-BYTES.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
 <h1>Los 135 bytes que no se ejecutan nunca</h1>
 <p>Dentro del bloque del juego hay cuatro trozos que desensamblan como código Z80 perfectamente coherente y a los que <b>no llega ningún camino</b>: ni un <code>CALL</code>, ni un <code>JP</code>, ni un puntero en ninguna tabla. Son 135 bytes de los 42645.</p>
 <p>Se han buscado uno a uno: para cada dirección se ha rastreado su puntero (los dos bytes en little-endian) por <b>todo</b> el binario —las tres zonas de código, las tablas del motor y los 35 KB de datos de la página 0— y no aparece. Y el rastreo se hizo sobre el desensamblado real, no escaneando bytes: un escaneo ingenuo confunde operandos con opcodes y da falsos positivos.</p>

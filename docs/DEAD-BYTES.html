@@ -69,7 +69,7 @@ td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
 footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
   color:var(--suave);font-size:12px}
 </style>
-<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-TAPE.html">The tape</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html">Findings</a><a href="DEAD-BYTES.html" style=color:var(--tinta)>Dead bytes</a><a href="es/BYTES-MUERTOS.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-TAPE.html">The tape</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html">Findings</a><a href="DEAD-BYTES.html" style=color:var(--tinta)>Dead bytes</a><a href="OPEN-QUESTIONS.html">Open questions</a><a href="es/BYTES-MUERTOS.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
 <h1>The 135 bytes that never execute</h1>
 <p>Inside the game block there are four stretches that disassemble as perfectly coherent Z80 and that <b>no path reaches</b>: no <code>CALL</code>, no <code>JP</code>, no pointer in any table. 135 bytes out of 42645.</p>
 <p>They were hunted down one at a time: for each address, its pointer (the two bytes, little-endian) was searched across the <b>whole</b> binary — all three code regions, the engine&#x27;s tables, and the 35 KB of page-0 data — and it doesn&#x27;t appear. The search was done over the real disassembly, not by scanning bytes: a naive scan mistakes operands for opcodes and produces false positives.</p>
